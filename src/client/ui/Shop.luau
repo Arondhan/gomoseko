@@ -78,7 +78,7 @@ function Shop.build(parent: Instance, deps: any)
 		Size = UDim2.new(1, -130, 0, 44),
 		Text = "Crystals and luck boosts are used for Ring Summon, a random-ring feature. See the exact odds before you buy.",
 		FontFace = Theme.Fonts.Body,
-		TextSize = 12,
+		TextSize = 14,
 		TextColor3 = Theme.Muted,
 		TextWrapped = true,
 		TextXAlignment = Enum.TextXAlignment.Left,
@@ -93,7 +93,7 @@ function Shop.build(parent: Instance, deps: any)
 		AutoButtonColor = false,
 		Text = "View odds",
 		FontFace = Theme.Fonts.Title,
-		TextSize = 14,
+		TextSize = 16,
 		TextColor3 = Theme.GoldLight,
 		ZIndex = 5,
 	}, window.body)
@@ -135,7 +135,7 @@ function Shop.build(parent: Instance, deps: any)
 			Size = UDim2.new(1, -10, 0, 26),
 			Text = text,
 			FontFace = Theme.Fonts.Title,
-			TextSize = 16,
+			TextSize = 18,
 			TextColor3 = Theme.GoldLight,
 			TextXAlignment = Enum.TextXAlignment.Left,
 		})
@@ -157,10 +157,10 @@ function Shop.build(parent: Instance, deps: any)
 
 		Chrome.label(row, {
 			Position = UDim2.fromOffset(68, 8),
-			Size = UDim2.new(1, -176, 0, 20),
+			Size = UDim2.new(1, -176, 0, 22),
 			Text = item.name,
 			FontFace = Theme.Fonts.Title,
-			TextSize = 15,
+			TextSize = 17,
 			TextColor3 = Theme.GoldLight,
 			TextXAlignment = Enum.TextXAlignment.Left,
 			ZIndex = 3,
@@ -170,7 +170,7 @@ function Shop.build(parent: Instance, deps: any)
 			Size = UDim2.new(1, -176, 0, ROW_HEIGHT - 36),
 			Text = item.description,
 			FontFace = Theme.Fonts.Body,
-			TextSize = 12,
+			TextSize = 14,
 			TextColor3 = Theme.Text,
 			TextStrokeTransparency = 1,
 			TextWrapped = true,
@@ -182,9 +182,9 @@ function Shop.build(parent: Instance, deps: any)
 		local price = Chrome.label(row, {
 			AnchorPoint = Vector2.new(1, 0),
 			Position = UDim2.new(1, -10, 0, 8),
-			Size = UDim2.fromOffset(90, 18),
+			Size = UDim2.fromOffset(90, 21),
 			Text = "",
-			TextSize = 14,
+			TextSize = 16,
 			TextColor3 = Theme.Coin,
 			TextXAlignment = Enum.TextXAlignment.Right,
 			ZIndex = 3,
@@ -201,7 +201,7 @@ function Shop.build(parent: Instance, deps: any)
 			AutoButtonColor = false,
 			Text = if item.owned then "Owned" elseif item.id == 0 then "Not set up" else "Buy",
 			FontFace = Theme.Fonts.Title,
-			TextSize = 14,
+			TextSize = 16,
 			TextColor3 = if canBuy then Theme.GoldLight else Theme.Muted,
 			ZIndex = 5,
 		}, row)
@@ -234,7 +234,7 @@ function Shop.build(parent: Instance, deps: any)
 				BorderSizePixel = 0,
 				Text = "Test Grant",
 				FontFace = Theme.Fonts.Body,
-				TextSize = 12,
+				TextSize = 14,
 				TextColor3 = Color3.fromRGB(190, 255, 200),
 				ZIndex = 5,
 			}, row)

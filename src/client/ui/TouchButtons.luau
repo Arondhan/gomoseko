@@ -24,9 +24,9 @@ function TouchButtons.build(parent: Instance, deps: any): { frame: Frame }?
 	Chrome.label(frame, {
 		AnchorPoint = Vector2.new(0.5, 1),
 		Position = UDim2.new(0.5, 0, 1, -3),
-		Size = UDim2.new(1, 0, 0, 14),
+		Size = UDim2.new(1, 0, 0, 18),
 		Text = "Target",
-		TextSize = 11,
+		TextSize = 13,
 		TextColor3 = Theme.GoldLight,
 		ZIndex = 15,
 	})

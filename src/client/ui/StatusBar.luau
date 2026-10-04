@@ -81,7 +81,7 @@ function StatusBar.new(parent: Instance, position: UDim2, size: UDim2, color: Co
 		Size = UDim2.fromScale(1, 1),
 		BackgroundTransparency = 1,
 		FontFace = Theme.Fonts.Numbers,
-		TextSize = 12,
+		TextSize = 14,
 		TextColor3 = Color3.new(1, 1, 1),
 		TextStrokeTransparency = 0.25,
 		ZIndex = 5,

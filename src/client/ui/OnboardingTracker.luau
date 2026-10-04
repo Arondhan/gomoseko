@@ -29,10 +29,10 @@ function OnboardingTracker.build(parent: Instance, onComplete: (() -> ())?)
 
 	local title = Chrome.label(panel, {
 		Position = UDim2.fromOffset(26, 6),
-		Size = UDim2.new(1, -36, 0, 18),
+		Size = UDim2.new(1, -36, 0, 21),
 		Text = "",
 		FontFace = Theme.Fonts.Title,
-		TextSize = 14,
+		TextSize = 16,
 		TextColor3 = Theme.GoldLight,
 		TextXAlignment = Enum.TextXAlignment.Left,
 		ZIndex = 4,
@@ -42,7 +42,7 @@ function OnboardingTracker.build(parent: Instance, onComplete: (() -> ())?)
 		Size = UDim2.new(1, -36, 0, 34),
 		Text = "",
 		FontFace = Theme.Fonts.Body,
-		TextSize = 13,
+		TextSize = 15,
 		TextColor3 = Theme.Text,
 		TextStrokeTransparency = 0.6,
 		TextWrapped = true,

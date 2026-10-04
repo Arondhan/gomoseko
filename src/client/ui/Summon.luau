@@ -10,6 +10,13 @@ local Shared = game:GetService("ReplicatedStorage"):WaitForChild("Shared")
 local Types = require(Shared:WaitForChild("Types"))
 local GachaMath = require(Shared:WaitForChild("Gacha"):WaitForChild("GachaMath"))
 local RingsConfig = require(Shared:WaitForChild("Configs"):WaitForChild("Rings"):WaitForChild("RingsConfig"))
+local GachaConfig = require(Shared:WaitForChild("Configs"):WaitForChild("GachaConfig"))
+local Sounds = require(Shared:WaitForChild("Sounds"))
+
+local VFX = script.Parent.Parent:WaitForChild("VFX")
+local Haptics = require(VFX:WaitForChild("Haptics"))
+local RareCutscene = require(VFX:WaitForChild("RareCutscene"))
+local Sfx = require(VFX:WaitForChild("Sfx"))
 
 local Chrome = require(script.Parent.Chrome)
 local RingIcon = require(script.Parent.RingIcon)
@@ -57,7 +64,7 @@ local function makeButton(parent: Instance, size: UDim2, position: UDim2, title:
 		Position = UDim2.fromOffset(0, if subtitle then 6 else 0),
 		Text = title,
 		FontFace = Theme.Fonts.Title,
-		TextSize = 17,
+		TextSize = 19,
 		TextColor3 = Theme.GoldLight,
 		ZIndex = 6,
 	})
@@ -65,10 +72,10 @@ local function makeButton(parent: Instance, size: UDim2, position: UDim2, title:
 		titleLabel.Size = UDim2.fromScale(1, 1)
 	end
 	local subLabel = Chrome.label(button, {
-		Size = UDim2.new(1, 0, 0, 18),
+		Size = UDim2.new(1, 0, 0, 20),
 		Position = UDim2.fromOffset(0, 30),
 		Text = subtitle or "",
-		TextSize = 13,
+		TextSize = 15,
 		TextColor3 = Color3.fromRGB(150, 210, 255),
 		ZIndex = 6,
 		Visible = subtitle ~= nil,
@@ -104,8 +111,9 @@ local function makeButton(parent: Instance, size: UDim2, position: UDim2, title:
 	return api
 end
 
--- deps: { gacha = GachaController, tooltip = Tooltip, notify = (text, color?) -> (), gui = ScreenGui }
+-- deps: { gacha = GachaController, tooltip = Tooltip, notify = (text, color?) -> (), settings = SettingsController }
 function Summon.build(parent: Instance, deps: any)
+	local settings = deps.settings
 	local gacha = deps.gacha
 	local tooltip = deps.tooltip
 	local notify: (string, Color3?) -> () = deps.notify
@@ -191,7 +199,7 @@ function Summon.build(parent: Instance, deps: any)
 		Size = UDim2.new(1, 0, 0, 22),
 		Text = "Every ring is a 1-in-N find",
 		FontFace = Theme.Fonts.Body,
-		TextSize = 13,
+		TextSize = 15,
 		TextColor3 = Color3.fromRGB(210, 200, 240),
 		ZIndex = 6,
 	})
@@ -214,7 +222,7 @@ function Summon.build(parent: Instance, deps: any)
 		Size = UDim2.fromOffset(300, 26),
 		Text = "Your Luck: ×1.00",
 		FontFace = Theme.Fonts.Title,
-		TextSize = 16,
+		TextSize = 18,
 		TextColor3 = Theme.Good,
 		TextXAlignment = Enum.TextXAlignment.Left,
 	})
@@ -246,7 +254,7 @@ function Summon.build(parent: Instance, deps: any)
 		Size = UDim2.new(1, 0, 0, 20),
 		Text = "",
 		FontFace = Theme.Fonts.Body,
-		TextSize = 14,
+		TextSize = 16,
 		TextColor3 = Theme.Text,
 		TextXAlignment = Enum.TextXAlignment.Left,
 	})
@@ -264,7 +272,7 @@ function Summon.build(parent: Instance, deps: any)
 		Size = UDim2.new(1, 0, 0, 44),
 		Text = "",
 		FontFace = Theme.Fonts.Body,
-		TextSize = 13,
+		TextSize = 15,
 		TextColor3 = Theme.Warn,
 		TextWrapped = true,
 		TextXAlignment = Enum.TextXAlignment.Left,
@@ -276,7 +284,7 @@ function Summon.build(parent: Instance, deps: any)
 		Size = UDim2.new(1, 0, 0, 20),
 		Text = "",
 		FontFace = Theme.Fonts.Body,
-		TextSize = 14,
+		TextSize = 16,
 		TextColor3 = Theme.Muted,
 		TextXAlignment = Enum.TextXAlignment.Left,
 	})
@@ -286,7 +294,7 @@ function Summon.build(parent: Instance, deps: any)
 		Size = UDim2.new(1, 0, 0, 18),
 		Text = "",
 		FontFace = Theme.Fonts.Body,
-		TextSize = 12,
+		TextSize = 14,
 		TextColor3 = Theme.Muted,
 		TextXAlignment = Enum.TextXAlignment.Left,
 	})
@@ -305,7 +313,7 @@ function Summon.build(parent: Instance, deps: any)
 		Size = UDim2.new(1, -24, 0, 24),
 		Text = "Summon odds",
 		FontFace = Theme.Fonts.Title,
-		TextSize = 18,
+		TextSize = 20,
 		TextColor3 = Theme.GoldLight,
 		TextXAlignment = Enum.TextXAlignment.Left,
 		ZIndex = 42,
@@ -315,7 +323,7 @@ function Summon.build(parent: Instance, deps: any)
 		Size = UDim2.new(1, -24, 0, 34),
 		Text = "",
 		FontFace = Theme.Fonts.Body,
-		TextSize = 12,
+		TextSize = 14,
 		TextColor3 = Theme.Muted,
 		TextWrapped = true,
 		TextXAlignment = Enum.TextXAlignment.Left,
@@ -342,7 +350,7 @@ function Summon.build(parent: Instance, deps: any)
 		Size = UDim2.new(1, -160, 0, 22),
 		Text = "Total: 100%",
 		FontFace = Theme.Fonts.Numbers,
-		TextSize = 14,
+		TextSize = 16,
 		TextColor3 = Theme.Text,
 		TextXAlignment = Enum.TextXAlignment.Left,
 		ZIndex = 42,
@@ -376,7 +384,7 @@ function Summon.build(parent: Instance, deps: any)
 				Size = UDim2.new(0.5, 0, 1, 0),
 				Text = group.quality,
 				FontFace = Theme.Fonts.Title,
-				TextSize = 15,
+				TextSize = 17,
 				TextColor3 = qualityColor(group.quality),
 				TextXAlignment = Enum.TextXAlignment.Left,
 				ZIndex = 44,
@@ -386,7 +394,7 @@ function Summon.build(parent: Instance, deps: any)
 				Position = UDim2.fromScale(1, 0),
 				Size = UDim2.new(0.5, 0, 1, 0),
 				Text = group.percent .. "%",
-				TextSize = 14,
+				TextSize = 16,
 				TextColor3 = qualityColor(group.quality),
 				TextXAlignment = Enum.TextXAlignment.Right,
 				ZIndex = 44,
@@ -404,7 +412,7 @@ function Summon.build(parent: Instance, deps: any)
 					Size = UDim2.new(0.45, -12, 1, 0),
 					Text = ring.name,
 					FontFace = Theme.Fonts.Body,
-					TextSize = 13,
+					TextSize = 15,
 					TextColor3 = Theme.Text,
 					TextXAlignment = Enum.TextXAlignment.Left,
 					ZIndex = 44,
@@ -415,7 +423,7 @@ function Summon.build(parent: Instance, deps: any)
 					Size = UDim2.new(0.55, 0, 1, 0),
 					Text = string.format("%s%%   ·   %s", ring.percent, ring.effective),
 					FontFace = Theme.Fonts.Body,
-					TextSize = 13,
+					TextSize = 15,
 					TextColor3 = Color3.new(1, 1, 1),
 					TextXAlignment = Enum.TextXAlignment.Right,
 					ZIndex = 44,
@@ -470,6 +478,81 @@ function Summon.build(parent: Instance, deps: any)
 		task.delay(0.7, function()
 			f:Destroy()
 		end)
+	end
+
+	-- искры, разлетающиеся от центра (количество растёт с редкостью)
+	local function burst(color: Color3, count: number)
+		for _ = 1, count do
+			local size = math.random(6, 14)
+			local spark = Theme.new("Frame", {
+				AnchorPoint = Vector2.new(0.5, 0.5),
+				Position = UDim2.fromScale(0.5, 0.5),
+				Size = UDim2.fromOffset(size, size),
+				BackgroundColor3 = color:Lerp(Color3.new(1, 1, 1), math.random() * 0.5),
+				BorderSizePixel = 0,
+				Rotation = math.random(0, 90),
+				ZIndex = 188,
+			}, overlay)
+			local angle = math.random() * math.pi * 2
+			local distance = math.random(160, 460)
+			local time = 0.6 + math.random() * 0.5
+			TweenService:Create(spark, TweenInfo.new(time, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+				Position = UDim2.new(0.5, math.cos(angle) * distance, 0.5, math.sin(angle) * distance),
+				BackgroundTransparency = 1,
+				Size = UDim2.fromOffset(2, 2),
+			}):Play()
+			task.delay(time + 0.1, function()
+				spark:Destroy()
+			end)
+		end
+	end
+
+	-- расходящееся кольцо-ударная волна
+	local function shockwave(color: Color3)
+		local ring = Theme.new("Frame", {
+			AnchorPoint = Vector2.new(0.5, 0.5),
+			Position = UDim2.fromScale(0.5, 0.5),
+			Size = UDim2.fromOffset(30, 30),
+			BackgroundTransparency = 1,
+			ZIndex = 187,
+		}, overlay)
+		Theme.corner(ring, 999)
+		local stroke = Theme.new("UIStroke", { Color = color, Thickness = 8 }, ring)
+		TweenService:Create(ring, TweenInfo.new(0.7, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+			Size = UDim2.fromOffset(1100, 1100),
+		}):Play()
+		TweenService:Create(stroke, TweenInfo.new(0.7), { Thickness = 1, Transparency = 1 }):Play()
+		task.delay(0.8, function()
+			ring:Destroy()
+		end)
+	end
+
+	-- число «1 in N» набегает от 1 до N (быстро, потом замедляется) — момент напряжения перед раскрытием
+	local function countUp(label: TextLabel, prefix: string, target: number, time: number)
+		local value = Instance.new("NumberValue")
+		value.Value = 1
+		value.Changed:Connect(function(v: number)
+			if label.Parent then
+				label.Text = prefix .. GachaMath.formatOneIn(math.max(1, math.floor(v)))
+			end
+		end)
+		local tween = TweenService:Create(
+			value,
+			TweenInfo.new(time, Enum.EasingStyle.Quint, Enum.EasingDirection.Out),
+			{ Value = target }
+		)
+		tween.Completed:Once(function()
+			if label.Parent then
+				label.Text = prefix .. GachaMath.formatOneIn(target)
+			end
+			value:Destroy()
+		end)
+		tween:Play()
+	end
+
+	-- щелчок раскрытия: высота тона растёт с номером карточки (последовательность «нарастает»)
+	local function tickSound(index: number, volume: number)
+		Sfx.play2D(Sounds.id("RevealTick"), volume, 0.01, math.min(2, 1 + (index - 1) * 0.06))
 	end
 
 	-- карточка кольца: back (рубашка) и front (лицо); возвращает функцию flip()
@@ -538,7 +621,7 @@ function Summon.build(parent: Instance, deps: any)
 			Size = UDim2.new(1, -8, 0, if compact then 30 else 40),
 			Text = ring.Name,
 			FontFace = Theme.Fonts.Title,
-			TextSize = if compact then 11 else 16,
+			TextSize = if compact then 13 else 18,
 			TextColor3 = color,
 			TextWrapped = true,
 			ZIndex = 163,
@@ -547,7 +630,7 @@ function Summon.build(parent: Instance, deps: any)
 			Position = UDim2.fromOffset(4, textTop + (if compact then 30 else 40)),
 			Size = UDim2.new(1, -8, 0, 16),
 			Text = result.quality,
-			TextSize = if compact then 11 else 13,
+			TextSize = if compact then 13 else 15,
 			TextColor3 = color,
 			ZIndex = 163,
 		})
@@ -556,30 +639,40 @@ function Summon.build(parent: Instance, deps: any)
 			Position = UDim2.fromOffset(4, textTop + (if compact then 46 else 58)),
 			Size = UDim2.new(1, -8, 0, 16),
 			Text = tag,
-			TextSize = if compact then 11 else 14,
+			TextSize = if compact then 13 else 16,
 			TextColor3 = if result.isNew then Theme.Good else Color3.fromRGB(150, 240, 210),
 			ZIndex = 163,
 		})
+		local oddsLabel: TextLabel? = nil
 		if not compact then
-			Chrome.label(front, {
+			oddsLabel = Chrome.label(front, {
 				Position = UDim2.fromOffset(4, textTop + 78),
-				Size = UDim2.new(1, -8, 0, 16),
+				Size = UDim2.new(1, -8, 0, 19),
 				Text = "Base rarity: " .. GachaMath.formatOneIn(result.oneIn),
 				FontFace = Theme.Fonts.Body,
-				TextSize = 12,
+				TextSize = 14,
 				TextColor3 = Theme.Muted,
 				ZIndex = 163,
 			})
 		end
 
-		local function flip()
+		local function flip(index: number?)
+			local cardRank = rank(result.quality)
+			tickSound(index or 1, if cardRank >= 4 then 0.9 else 0.5)
 			Theme.tween(back, 0.12, { Size = UDim2.fromScale(0, 1) })
 			task.wait(0.12)
 			back.Visible = false
 			front.Visible = true
 			Theme.tween(front, 0.14, { Size = UDim2.fromScale(1, 1) })
-			if rank(result.quality) >= 5 then
-				flash(color, if rank(result.quality) >= 6 then 0.9 else 0.45)
+			if cardRank >= 5 then
+				flash(color, if cardRank >= 6 then 0.9 else 0.45)
+			end
+			if cardRank >= 4 then
+				burst(color, if compact then 5 + cardRank * 2 else 8 + cardRank * 4)
+				Haptics.pulse(0.2 + cardRank * 0.07, 0.12)
+			end
+			if oddsLabel and result.oneIn >= 100 then
+				countUp(oddsLabel, "Base rarity: ", result.oneIn, 0.9)
 			end
 		end
 		return flip
@@ -589,7 +682,8 @@ function Summon.build(parent: Instance, deps: any)
 	local function playReveal(results: { Types.RollResult }, onFinish: () -> (), onAgain: (() -> ())?)
 		clearOverlay()
 		overlay.Visible = true
-		local skipped = false
+		local quick = settings.getFlag("SkipAnim") -- «быстрый ролл»: без заряда, катсцены и пауз
+		local skipped = quick
 
 		local best = results[1]
 		for _, result in results do
@@ -598,6 +692,7 @@ function Summon.build(parent: Instance, deps: any)
 			end
 		end
 		local bestColor = qualityColor(best.quality)
+		local bestRank = rank(best.quality)
 
 		local function finish()
 			overlay.Visible = false
@@ -605,32 +700,62 @@ function Summon.build(parent: Instance, deps: any)
 			onFinish()
 		end
 
-		-- заряд орба
-		local charge = Theme.new("Frame", {
-			AnchorPoint = Vector2.new(0.5, 0.5),
-			Position = UDim2.fromScale(0.5, 0.5),
-			Size = UDim2.fromOffset(40, 40),
-			BackgroundColor3 = Color3.new(1, 1, 1),
-			BorderSizePixel = 0,
-			ZIndex = 170,
-		}, overlay)
-		Theme.corner(charge, 999)
-		Theme.gradient(charge, 90, Color3.fromRGB(245, 230, 255), PURPLE)
-		Theme.new("UIStroke", { Color = Theme.GoldLight, Thickness = 3 }, charge)
-		Theme.tween(charge, 0.9, { Size = UDim2.fromOffset(150, 150) })
-		task.wait(0.9)
-		flash(if #results == 1 then bestColor else Color3.new(1, 1, 1), 0.7)
-		charge:Destroy()
+		if quick then
+			flash(bestColor, 0.3)
+		elseif bestRank >= 4 and best.oneIn >= GachaConfig.Cinematic.MinOneIn and settings.getFlag("Cinematic") then
+			-- кинематографичная находка: прячем интерфейс, камера наезжает на персонажа, затем карточки со вспышкой
+			overlay.Visible = false
+			local hud = if parent:IsA("ScreenGui") then parent else nil
+			if hud then
+				hud.Enabled = false
+			end
+			pcall(RareCutscene.play, {
+				color = bestColor,
+				rank = bestRank,
+				shake = settings.getFlag("Shake"),
+			})
+			if hud then
+				hud.Enabled = true
+			end
+			overlay.Visible = true
+			flash(bestColor, 0.9)
+			shockwave(bestColor)
+			burst(bestColor, 40)
+		else
+			-- заряд орба: цвет подсказывает редкость (Epic и выше), чем лучше находка — тем он крупнее
+			local orbColor = if bestRank >= 4 then bestColor else PURPLE
+			local charge = Theme.new("Frame", {
+				AnchorPoint = Vector2.new(0.5, 0.5),
+				Position = UDim2.fromScale(0.5, 0.5),
+				Size = UDim2.fromOffset(40, 40),
+				BackgroundColor3 = Color3.new(1, 1, 1),
+				BorderSizePixel = 0,
+				ZIndex = 170,
+			}, overlay)
+			Theme.corner(charge, 999)
+			Theme.gradient(charge, 90, Color3.fromRGB(245, 230, 255), orbColor)
+			Theme.new("UIStroke", { Color = Theme.GoldLight, Thickness = 3 }, charge)
+			local chargeTime = 0.9 + math.max(0, bestRank - 3) * 0.1
+			Theme.tween(charge, chargeTime, { Size = UDim2.fromOffset(150 + bestRank * 14, 150 + bestRank * 14) })
+			Sfx.play2D(Sounds.id("ArcLightningCharge"), 0.6)
+			Haptics.pulse(0.1 + bestRank * 0.05, chargeTime)
+			task.wait(chargeTime)
+			flash(if #results == 1 then bestColor else Color3.new(1, 1, 1), 0.7)
+			if bestRank >= 5 then
+				shockwave(bestColor)
+			end
+			charge:Destroy()
+		end
 
-		-- особые находки: крупная подпись
-		if rank(best.quality) >= 6 then
+		-- особые находки: крупная подпись, под ней «1 in N» с набегающим числом
+		if bestRank >= 6 then
 			local label = Chrome.label(overlay, {
 				AnchorPoint = Vector2.new(0.5, 0.5),
-				Position = UDim2.fromScale(0.5, 0.14),
+				Position = UDim2.fromScale(0.5, 0.12),
 				Size = UDim2.fromOffset(600, 70),
 				Text = string.upper(best.quality) .. "!",
 				FontFace = Theme.Fonts.Banner,
-				TextSize = 56,
+				TextSize = Theme.TextSize.Banner + 16,
 				TextColor3 = bestColor,
 				TextStrokeTransparency = 0,
 				ZIndex = 180,
@@ -638,13 +763,32 @@ function Summon.build(parent: Instance, deps: any)
 			label.TextTransparency = 1
 			Theme.tween(label, 0.4, { TextTransparency = 0 })
 		end
+		if #results > 1 and bestRank >= 4 then
+			local bestLabel = Chrome.label(overlay, {
+				AnchorPoint = Vector2.new(0.5, 0.5),
+				Position = UDim2.fromScale(0.5, if bestRank >= 6 then 0.2 else 0.14),
+				Size = UDim2.fromOffset(700, 36),
+				Text = "",
+				FontFace = Theme.Fonts.Title,
+				TextSize = Theme.TextSize.Title,
+				TextColor3 = bestColor,
+				TextStrokeTransparency = 0,
+				ZIndex = 180,
+			})
+			countUp(
+				bestLabel,
+				string.format("Best find: %s — ", RingsConfig.Rings[best.ringId].Name),
+				best.oneIn,
+				if quick then 0.2 else 1.4
+			)
+		end
 
 		local buttons: { any } = {}
 		local function showButtons()
 			local continue = makeButton(
 				overlay,
-				UDim2.fromOffset(150, 40),
-				UDim2.new(0.5, if onAgain then -160 else -75, 0.88, 0),
+				UDim2.fromOffset(170, 46),
+				UDim2.new(0.5, if onAgain then -180 else -85, 0.88, 0),
 				"Continue",
 				nil
 			)
@@ -653,7 +797,7 @@ function Summon.build(parent: Instance, deps: any)
 			table.insert(buttons, continue)
 			if onAgain then
 				local again =
-					makeButton(overlay, UDim2.fromOffset(150, 40), UDim2.new(0.5, 10, 0.88, 0), "Summon again", nil)
+					makeButton(overlay, UDim2.fromOffset(170, 46), UDim2.new(0.5, 10, 0.88, 0), "Summon again", nil)
 				again.frame.ZIndex = 185
 				again.click.Event:Connect(function()
 					overlay.Visible = false
@@ -667,18 +811,18 @@ function Summon.build(parent: Instance, deps: any)
 
 		if #results == 1 then
 			local flip = makeCard(overlay, results[1], 240, 340, UDim2.fromScale(0.5, 0.5), false)
-			flip()
+			flip(1)
 			showButtons()
 			return
 		end
 
-		-- мульти: сетка 5x2, карточки переворачиваются по очереди; Skip показывает всё сразу
+		-- мульти: сетка 5x2, карточки переворачиваются по очереди (тон щелчков растёт); Skip показывает всё сразу
 		local cardW, cardH, gap = 104, 150, 10
 		local columns = 5
 		local rows = math.ceil(#results / columns)
 		local totalW = columns * cardW + (columns - 1) * gap
 		local totalH = rows * cardH + (rows - 1) * gap
-		local flips: { () -> () } = {}
+		local flips: { (number?) -> () } = {}
 		for index, result in results do
 			local column = (index - 1) % columns
 			local row = (index - 1) // columns
@@ -686,15 +830,15 @@ function Summon.build(parent: Instance, deps: any)
 			local y = -totalH / 2 + row * (cardH + gap) + cardH / 2
 			table.insert(flips, makeCard(overlay, result, cardW, cardH, UDim2.new(0.5, x, 0.5, y), true))
 		end
-		local skip = makeButton(overlay, UDim2.fromOffset(110, 34), UDim2.new(1, -130, 0.92, 0), "Skip", nil)
+		local skip = makeButton(overlay, UDim2.fromOffset(120, 40), UDim2.new(1, -140, 0.92, 0), "Skip", nil)
 		skip.frame.ZIndex = 185
 		skip.click.Event:Connect(function()
 			skipped = true
 		end)
-		for _, flip in flips do
-			task.spawn(flip)
+		for index, flip in flips do
+			task.spawn(flip, index)
 			if not skipped then
-				task.wait(0.18)
+				task.wait(0.2)
 			end
 		end
 		skip.frame:Destroy()

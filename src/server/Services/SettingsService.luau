@@ -14,8 +14,19 @@ local function get(player: Player)
 	if not profile then
 		return { SfxVolume = 1 }
 	end
-	return { SfxVolume = profile.Settings.SfxVolume, LowQuality = profile.Settings.LowQuality }
+	local stored = profile.Settings
+	return {
+		SfxVolume = stored.SfxVolume,
+		LowQuality = stored.LowQuality,
+		Cinematic = stored.Cinematic,
+		Shake = stored.Shake,
+		SkipAnim = stored.SkipAnim,
+		Haptics = stored.Haptics,
+	}
 end
+
+-- булевы настройки, которые клиент может менять (имя -> поле профиля совпадает)
+local BOOLEAN_KEYS = { LowQuality = true, Cinematic = true, Shake = true, SkipAnim = true, Haptics = true }
 
 local function set(player: Player, key: any, value: any): boolean
 	local profile = DataService.get(player)
@@ -25,8 +36,8 @@ local function set(player: Player, key: any, value: any): boolean
 	if key == "SfxVolume" and type(value) == "number" and value == value then
 		profile.Settings.SfxVolume = math.clamp(value, 0, 1)
 		return true
-	elseif key == "LowQuality" and type(value) == "boolean" then
-		profile.Settings.LowQuality = value
+	elseif type(key) == "string" and BOOLEAN_KEYS[key] and type(value) == "boolean" then
+		(profile.Settings :: any)[key] = value
 		return true
 	end
 	return false

@@ -36,6 +36,9 @@ local Theme = {
 	Good = Color3.fromRGB(30, 255, 0),
 	Warn = Color3.fromRGB(255, 209, 0),
 
+	-- Размеры текста (до масштабирования UIScale). Не опускаемся ниже Small: на телефоне это ~9 px
+	TextSize = { Small = 14, Body = 16, Header = 18, Title = 24, Banner = 40 },
+
 	-- Шрифты (FontFace) — см. shared/Fonts.luau: Title, Banner, Serif, Body, Numbers, Impact
 	Fonts = Fonts,
 

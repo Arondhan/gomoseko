@@ -74,12 +74,12 @@ local gui = Theme.new("ScreenGui", {
 	DisplayOrder = 10,
 }, playerGui)
 
--- масштаб интерфейса: на маленьких экранах (телефон) уменьшаем, на обычных остаётся 1
+-- масштаб интерфейса: на маленьких экранах (телефон) уменьшаем, на больших (1080p и выше) увеличиваем — шрифты читаемы
 local uiScale = Theme.new("UIScale", { Scale = 1 }, gui)
 local function updateScale()
 	local camera = workspace.CurrentCamera
 	local height = if camera then camera.ViewportSize.Y else 1080
-	uiScale.Scale = math.clamp(height / 800, 0.5, 1)
+	uiScale.Scale = math.clamp(height / 800, 0.6, 1.4)
 end
 updateScale()
 if workspace.CurrentCamera then
@@ -152,7 +152,12 @@ local character = Character.build(gui, {
 Drag.registerTarget({ getSlotAtPosition = ringBar.getSlotAtPosition, highlight = ringBar.highlightSlot })
 Drag.registerTarget({ getSlotAtPosition = character.getSlotAtPosition, highlight = character.highlightSlot })
 
-local summon = Summon.build(gui, { gacha = GachaController, tooltip = tooltip, notify = notice.show })
+local summon = Summon.build(gui, {
+	gacha = GachaController,
+	tooltip = tooltip,
+	notify = notice.show,
+	settings = SettingsController,
+})
 
 -- окна и привязка к кнопкам меню
 local windows = {

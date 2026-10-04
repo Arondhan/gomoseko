@@ -27,7 +27,14 @@ local function getGroup(): SoundGroup
 	return g
 end
 
-local function play(soundId: string, parent: Instance, volume: number, pitchJitter: number, rollOff: number?)
+local function play(
+	soundId: string,
+	parent: Instance,
+	volume: number,
+	pitchJitter: number,
+	rollOff: number?,
+	octave: number?
+)
 	if soundId == "" or active >= MAX_ACTIVE then
 		return
 	end
@@ -35,9 +42,9 @@ local function play(soundId: string, parent: Instance, volume: number, pitchJitt
 	sound.SoundId = soundId
 	sound.Volume = volume
 	sound.SoundGroup = getGroup()
-	if pitchJitter > 0 then
+	if pitchJitter > 0 or octave then
 		local pitch = Instance.new("PitchShiftSoundEffect")
-		pitch.Octave = 1 + (math.random() * 2 - 1) * pitchJitter
+		pitch.Octave = (octave or 1) + (math.random() * 2 - 1) * pitchJitter
 		pitch.Parent = sound
 	end
 	if rollOff then
@@ -69,8 +76,9 @@ function Sfx.setVolume(volume: number)
 end
 
 -- Глобальный (2D) звук, например каст у самого игрока
-function Sfx.play2D(soundId: string, volume: number?, pitchJitter: number?)
-	play(soundId, SoundService, volume or 1, pitchJitter or 0.06, nil)
+-- octave: множитель высоты (1 = исходная; 1.5 ≈ квинта вверх) — для нарастающих последовательностей
+function Sfx.play2D(soundId: string, volume: number?, pitchJitter: number?, octave: number?)
+	play(soundId, SoundService, volume or 1, pitchJitter or 0.06, nil, octave)
 end
 
 -- Позиционный (3D) звук: parent — деталь или Attachment в мире (например, точка попадания молнии)

@@ -2,7 +2,7 @@
 """Синтез звуков Arc Lightning (без сторонних библиотек: wave + math + random, кодирование в .ogg — через ffmpeg).
 
 Запуск из корня репозитория:  python3 tools/make_audio.py
-Результат: assets/audio/arc_lightning_charge.ogg и assets/audio/arc_lightning_zap.ogg
+Результат: assets/audio/*.ogg (arc_lightning_charge/zap, thunder_boom, reveal_tick)
 """
 import math
 import random
@@ -119,6 +119,42 @@ def charge():
     return fade_in(fade_out(normalize(out, 0.8), 0.03), 0.01)
 
 
+def lowpass(samples, cutoff):
+    """Простейший однополюсный ФНЧ (убирает «песок» из шума, оставляет гул)."""
+    a = 1 - math.exp(-2 * math.pi * cutoff / RATE)
+    out, y = [], 0.0
+    for v in samples:
+        y += a * (v - y)
+        out.append(y)
+    return out
+
+
+def thunder():
+    """Раскат грома для катсцены редкого ролла: резкий удар -> низкий взрыв -> гул, затихающий ~3 с."""
+    random.seed(23)
+    length = 3.2
+    out = silence(length)
+    add(out, noise_burst(0.35, 0.05, 1.0))  # щелчок разряда
+    add(out, sweep(1.2, 95, 28, 1.0, 0.45, harmonics=(1.0, 0.5, 0.2)))  # падающий низкий удар
+    add(out, [v * 1.4 for v in lowpass(noise_burst(length, 0.9, 1.0, highpass=False), 260)])  # раскат
+    add(out, [v * 0.8 for v in lowpass(noise_burst(1.0, 0.25, 1.0, highpass=False), 1800)], int(RATE * 0.05))
+    # дальние «перекаты»
+    for delay, amp in ((0.55, 0.5), (1.05, 0.35), (1.7, 0.25)):
+        add(out, [v * amp for v in lowpass(noise_burst(1.0, 0.3, 1.0, highpass=False), 220)], int(delay * RATE))
+    return fade_in(fade_out(normalize(out, 0.95), 0.4), 0.005)
+
+
+def tick():
+    """Короткий светлый «блип» для нарастающей последовательности раскрытия карточек (высота меняется в коде)."""
+    length = 0.18
+    out, phase = [], 0.0
+    for i in range(int(RATE * length)):
+        t = i / RATE
+        phase += 2 * math.pi * 880 / RATE
+        out.append((math.sin(phase) + 0.3 * math.sin(2 * phase)) * math.exp(-t / 0.05))
+    return fade_in(fade_out(normalize(out, 0.7), 0.02), 0.002)
+
+
 def write_wav(path, samples):
     with wave.open(str(path), "wb") as w:
         w.setnchannels(1)
@@ -129,7 +165,12 @@ def write_wav(path, samples):
 
 def main():
     OUT.mkdir(parents=True, exist_ok=True)
-    for name, samples in (("arc_lightning_zap", zap()), ("arc_lightning_charge", charge())):
+    for name, samples in (
+        ("arc_lightning_zap", zap()),
+        ("arc_lightning_charge", charge()),
+        ("thunder_boom", thunder()),
+        ("reveal_tick", tick()),
+    ):
         wav = OUT / (name + ".wav")
         ogg = OUT / (name + ".ogg")
         write_wav(wav, samples)

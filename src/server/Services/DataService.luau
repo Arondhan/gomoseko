@@ -44,7 +44,14 @@ export type Profile = {
 		LastRewardDay: number, -- день, за который уже выдан бонус первого замера
 		LastWeekClaimed: number, -- последняя неделя, за которую выдана награда по месту
 	},
-	Settings: { SfxVolume: number, LowQuality: boolean? },
+	Settings: {
+		SfxVolume: number,
+		LowQuality: boolean?,
+		Cinematic: boolean?, -- катсцены редких находок (nil = включено)
+		Shake: boolean?, -- тряска экрана (nil = включено)
+		SkipAnim: boolean?, -- быстрый ролл без анимации (nil = выключено)
+		Haptics: boolean?, -- вибрация на телефоне (nil = включено)
+	},
 	Session: { JobId: string, Time: number }?,
 }
 

@@ -52,7 +52,7 @@ function CurrencyBar.build(parent: Instance, tooltip: any)
 			Position = UDim2.fromOffset(30, 0),
 			Size = UDim2.new(1, -32, 1, 0),
 			Text = "0",
-			TextSize = 14,
+			TextSize = 16,
 			TextColor3 = entry.color,
 			TextXAlignment = Enum.TextXAlignment.Left,
 			ZIndex = 4,

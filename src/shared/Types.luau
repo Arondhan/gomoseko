@@ -153,6 +153,10 @@ export type StoreState = {
 export type Settings = {
 	SfxVolume: number, -- 0..1
 	LowQuality: boolean?, -- nil = автоопределение (телефон -> true)
+	Cinematic: boolean?, -- катсцены редких находок (nil = включено)
+	Shake: boolean?, -- тряска экрана (nil = включено)
+	SkipAnim: boolean?, -- быстрый ролл без анимации (nil = выключено)
+	Haptics: boolean?, -- вибрация (nil = включено)
 }
 
 -- DPS-арена

@@ -65,7 +65,7 @@ function RadialCooldown.new(parent: Instance, zIndex: number): Radial
 	local label = Chrome.label(root, {
 		Name = "Seconds",
 		Size = UDim2.fromScale(1, 1),
-		TextSize = 18,
+		TextSize = 20,
 		ZIndex = zIndex + 1,
 	})
 

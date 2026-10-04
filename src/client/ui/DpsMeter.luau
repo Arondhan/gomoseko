@@ -26,10 +26,10 @@ function DpsMeter.build(parent: Instance, dps: any)
 
 	local title = Chrome.label(panel, {
 		Position = UDim2.fromOffset(12, 6),
-		Size = UDim2.new(1, -24, 0, 20),
+		Size = UDim2.new(1, -24, 0, 22),
 		Text = "DPS TEST",
 		FontFace = Theme.Fonts.Title,
-		TextSize = 15,
+		TextSize = 17,
 		TextColor3 = Theme.GoldLight,
 		TextXAlignment = Enum.TextXAlignment.Left,
 		ZIndex = 4,
@@ -37,9 +37,9 @@ function DpsMeter.build(parent: Instance, dps: any)
 	local timeLabel = Chrome.label(panel, {
 		AnchorPoint = Vector2.new(1, 0),
 		Position = UDim2.new(1, -12, 0, 6),
-		Size = UDim2.fromOffset(120, 20),
+		Size = UDim2.fromOffset(120, 22),
 		Text = "",
-		TextSize = 15,
+		TextSize = 17,
 		TextColor3 = Theme.Text,
 		TextXAlignment = Enum.TextXAlignment.Right,
 		ZIndex = 4,
@@ -59,7 +59,7 @@ function DpsMeter.build(parent: Instance, dps: any)
 		Size = UDim2.new(1, -24, 0, 24),
 		Text = "",
 		FontFace = Theme.Fonts.Body,
-		TextSize = 13,
+		TextSize = 15,
 		TextColor3 = Theme.Muted,
 		TextStrokeTransparency = 0.7,
 		TextXAlignment = Enum.TextXAlignment.Left,
