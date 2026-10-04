@@ -218,6 +218,17 @@ turned off and only the free roll remains. Review the current
   clock, so all servers agree). Config: `GachaConfig.LuckEvent`. Both bonuses are free luck sources: they apply to the
   free roll too and appear in the luck breakdown and the odds table, so the shown odds stay the real ones.
 
+## Admin menu (testing)
+
+`F2` or the **Admin** tile in the left menu opens a window with: give any ring / all rings / reset rings; add Crystals,
+Gold, Essence; set level; **Infinite mana**, **No cooldown**, refill mana, reset cooldowns; spawn mortal test enemies
+(`Dummy` stands still, `Mover` wanders — good for Fireball and Meteor) and clear them; start Lucky Hour or add AFK-luck
+time. Access is decided on the server for every action (`AdminService`, `shared/AdminAccess.luau`): in Studio always,
+on a live server for the place owner (if the place belongs to a user) and for UserIds listed in
+`Configs/AdminConfig.luau` (`UserIds = { 123456789 }`). Non-admins never get the window, and their attempts are logged with
+`warn`. Set `Enabled = false` there to switch the menu off entirely before a release. Limits: 10 enemies at once, 40 total,
+currency steps up to 1e9, level 1–100.
+
 ## Ring Index
 
 `N` opens the Index: every ring in `RingsConfig` in order of rarity; found rings show their icon, name and

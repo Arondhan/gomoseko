@@ -1,6 +1,6 @@
 --!strict
 -- Меню слева: крупные цветные плитки с эмодзи и подписью (как на референсе): Summon, Rings, Index, Shop, Boost,
--- Ranks, Settings. Плитки по две в ряд. Красная точка («ping») — когда там что-то ждёт игрока (бесплатный ролл,
+-- Ranks, Settings (и Admin — только для админов). Плитки по две в ряд. Красная точка («ping») — когда там что-то ждёт игрока (бесплатный ролл,
 -- награда Index). У каждой кнопки: click (BindableEvent), setActive(bool), setPing(bool).
 
 local Chrome = require(script.Parent.Chrome)
@@ -138,7 +138,7 @@ function SideMenu.build(parent: Instance, tooltip: any)
 	end
 
 	local T = Theme.Tiles
-	return {
+	local buttons = {
 		frame = menu,
 		summon = addButton("SummonButton", 1, "Summon", "🔮", T.Summon, "G"),
 		rings = addButton("RingsButton", 2, "Rings", "💍", T.Rings, "C / I"),
@@ -147,7 +147,10 @@ function SideMenu.build(parent: Instance, tooltip: any)
 		boost = addButton("BoostButton", 5, "Boost", "🍀", T.Boost, "V"),
 		ranks = addButton("RanksButton", 6, "Ranks", "🏆", T.Ranks, "L"),
 		settings = addButton("SettingsButton", 7, "Settings", "⚙️", T.Settings, "O"),
+		admin = addButton("AdminButton", 8, "Admin", "🛠️", T.Admin, "F2"),
 	}
+	buttons.admin.frame.Visible = false -- плитка Admin появляется только у админов (Main после AdminGet)
+	return buttons
 end
 
 return SideMenu

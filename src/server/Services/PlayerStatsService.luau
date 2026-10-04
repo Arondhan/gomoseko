@@ -91,6 +91,23 @@ function PlayerStatsService.addXp(player: Player, amount: number)
 	publishXp(player)
 end
 
+-- Админ/тест: сразу задать уровень (опыт сбрасывается) и заполнить ману
+function PlayerStatsService.setLevel(player: Player, level: number)
+	local profile = DataService.get(player)
+	if profile then
+		profile.Level = math.max(1, math.floor(level))
+		profile.XP = 0
+		publishXp(player)
+	end
+end
+
+function PlayerStatsService.refillMana(player: Player)
+	if mana[player] ~= nil then
+		mana[player] = maxMana[player] or CombatConfig.Mana.Max
+		publishMana(player)
+	end
+end
+
 function PlayerStatsService.start()
 	DataService.onLoaded(function(player)
 		mana[player] = CombatConfig.Mana.Max + StatsService.get(player).MaxMana

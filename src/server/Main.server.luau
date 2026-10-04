@@ -22,3 +22,4 @@ require(Services:WaitForChild("IndexService")).start() -- книга колец
 require(Services:WaitForChild("OverheadTitleService")).start() -- титул над головой
 require(Services:WaitForChild("DpsService")).start() -- DPS-арена и лидерборды
 require(Services:WaitForChild("CombatService")).start()
+require(Services:WaitForChild("AdminService")).start() -- админ-меню (только для админов, проверка на сервере)

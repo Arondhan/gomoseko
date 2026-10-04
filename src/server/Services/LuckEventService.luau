@@ -17,9 +17,24 @@ local PlaytimeLuckService = require(script.Parent:WaitForChild("PlaytimeLuckServ
 local LuckEventService = {}
 
 local config = GachaConfig.LuckEvent
+local overrideEndsAt = 0 -- админ: принудительный Lucky Hour до этого unix-времени (0 — нет)
+
+local function currentStatus(): LuckEventMath.Status
+	local now = os.time()
+	local status = LuckEventMath.status(now, config)
+	if not status.active and now < overrideEndsAt then
+		return { active = true, endsIn = overrideEndsAt - now, startsIn = 0, endsAt = overrideEndsAt }
+	end
+	return status
+end
+
+-- Админ/тест: включить Lucky Hour на seconds секунд на этом сервере (0 — выключить принудительное окно)
+function LuckEventService.setOverride(seconds: number)
+	overrideEndsAt = if seconds > 0 then os.time() + seconds else 0
+end
 
 function LuckEventService.status(): Types.LuckEventStatus
-	local status = LuckEventMath.status(os.time(), config)
+	local status = currentStatus()
 	return {
 		name = config.Name,
 		active = status.active,
@@ -31,7 +46,7 @@ end
 
 -- Бонус к удаче в процентах прямо сейчас (0 вне окна)
 function LuckEventService.percent(): number
-	return if LuckEventMath.status(os.time(), config).active then config.Percent else 0
+	return if currentStatus().active then config.Percent else 0
 end
 
 function LuckEventService.start()

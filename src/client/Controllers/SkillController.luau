@@ -150,6 +150,13 @@ function SkillController.start(errorCallback: (string) -> (), keyCastCallback: (
 		onError(reason)
 	end)
 
+	-- админ-меню сбросило перезарядки на сервере: сбрасываем и локальные таймеры
+	localPlayer:GetAttributeChangedSignal("CooldownReset"):Connect(function()
+		table.clear(cooldownEnds)
+		table.clear(cooldownTotals)
+		castEndsAt = 0
+	end)
+
 	UserInputService.InputBegan:Connect(function(input, processed)
 		if processed or input.UserInputType ~= Enum.UserInputType.Keyboard then
 			return

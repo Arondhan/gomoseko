@@ -14,6 +14,7 @@ local RingsConfig = require(
 		:WaitForChild("Rings")
 		:WaitForChild("RingsConfig")
 )
+local Remotes = require(game:GetService("ReplicatedStorage"):WaitForChild("Shared"):WaitForChild("Remotes"))
 local Fonts = require(game:GetService("ReplicatedStorage"):WaitForChild("Shared"):WaitForChild("Fonts"))
 task.spawn(Fonts.preload) -- прогрев шрифтов, чтобы текст не «мигал» при первом показе
 
@@ -41,6 +42,7 @@ local ui = script.Parent:WaitForChild("ui")
 local Theme = require(ui:WaitForChild("Theme"))
 local RingsWindow = require(ui:WaitForChild("RingsWindow"))
 local SkillPad = require(ui:WaitForChild("SkillPad"))
+local AdminWindow = require(ui:WaitForChild("AdminWindow"))
 local SideMenu = require(ui:WaitForChild("SideMenu"))
 local BoostWindow = require(ui:WaitForChild("BoostWindow"))
 local Drag = require(ui:WaitForChild("Drag"))
@@ -214,6 +216,21 @@ for _, entry in windows do
 		entry.window.changed.Event:Connect(entry.button.setActive)
 	end
 end
+
+-- админ-меню: сервер говорит, админ ли игрок; окно строится только для админов (все действия проверяются на сервере)
+task.spawn(function()
+	local ok, result = pcall(function()
+		return (Remotes.get("AdminGet") :: RemoteFunction):InvokeServer()
+	end)
+	if not (ok and type(result) == "table" and result.admin == true) then
+		return
+	end
+	local adminWindow = AdminWindow.build(gui, { notify = notice.show })
+	menu.admin.frame.Visible = true
+	menu.admin.click.Event:Connect(adminWindow.toggle)
+	adminWindow.changed.Event:Connect(menu.admin.setActive)
+	table.insert(windows, { window = adminWindow, button = menu.admin, key = Enum.KeyCode.F2 })
+end)
 
 -- красные точки: есть бесплатный ролл / можно забрать награду Index
 local function refreshPings()
