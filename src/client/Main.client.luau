@@ -31,6 +31,7 @@ local CastBar = require(ui:WaitForChild("CastBar"))
 pcall(function()
 	StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.Backpack, false)
 	StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.Health, false)
+	StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.PlayerList, false) -- Tab теперь выбирает цель
 end)
 
 local localPlayer = Players.LocalPlayer
@@ -127,7 +128,7 @@ end)
 
 -- запуск контроллеров (они ждут ремоуты, которые создаёт server/Main)
 InventoryController.start()
-TargetController.start()
+TargetController.start(notice.show)
 SkillController.start(notice.show, ringBar.press)
 LightningRenderer.start()
 DamageNumbers.start()

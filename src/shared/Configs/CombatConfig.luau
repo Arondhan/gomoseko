@@ -5,7 +5,7 @@ local CombatConfig = {
 	EnemyTag = "Enemy", -- тег CollectionService: только такие модели можно бить
 	RingSlotCount = 4, -- слотов колец (RingBar)
 	RangeTolerance = 4, -- запас (studs) при серверной проверке дистанции — компенсирует лаг
-	TabTargetRange = 40, -- радиус выбора ближайшей цели по Tab
+	TabTargetRange = 100, -- радиус выбора цели по Tab (дальность каста проверяется отдельно при касте)
 
 	Mana = {
 		Max = 100,

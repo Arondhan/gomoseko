@@ -22,7 +22,7 @@ function Tooltip.build(parent: Instance, getSkill: (skillId: string) -> Types.Sk
 		AutomaticSize = Enum.AutomaticSize.Y,
 		Visible = false,
 		ZIndex = 100,
-	}, 6)
+	}, 6, true) -- simple: внутри панели UIListLayout, вложенный BevelInner сломал бы раскладку
 	Theme.new("UIPadding", {
 		PaddingTop = UDim.new(0, 10),
 		PaddingBottom = UDim.new(0, 10),

@@ -33,7 +33,7 @@ function PlayerFrame.build(parent: Instance)
 
 	local root = Theme.new("Frame", {
 		Name = "PlayerFrame",
-		Position = UDim2.fromOffset(20, 20),
+		Position = UDim2.fromOffset(20, 64), -- ниже верхней панели Roblox (иконки меню/чата)
 		Size = UDim2.fromOffset(300, 92),
 		BackgroundTransparency = 1,
 	}, parent)

@@ -14,7 +14,7 @@ local PORTRAIT_SIZE = 78
 function TargetFrame.build(parent: Instance)
 	local root = Theme.new("Frame", {
 		Name = "TargetFrame",
-		Position = UDim2.fromOffset(340, 20),
+		Position = UDim2.fromOffset(340, 64),
 		Size = UDim2.fromOffset(300, 92),
 		BackgroundTransparency = 1,
 		Visible = false,
