@@ -13,13 +13,15 @@ local MAX_ACTIVE = 16
 local active = 0
 local group: SoundGroup? = nil
 
+local userVolume = 1 -- громкость из настроек игрока (0..1)
+
 local function getGroup(): SoundGroup
 	if group and group.Parent then
 		return group
 	end
 	local g = Instance.new("SoundGroup")
 	g.Name = "SFX"
-	g.Volume = Config.Audio.SfxVolume
+	g.Volume = Config.Audio.SfxVolume * userVolume
 	g.Parent = SoundService
 	group = g
 	return g
@@ -56,6 +58,14 @@ local function play(soundId: string, parent: Instance, volume: number, pitchJitt
 			sound:Destroy()
 		end
 	end)
+end
+
+-- Громкость эффектов из настроек игрока (0..1); применяется сразу
+function Sfx.setVolume(volume: number)
+	userVolume = math.clamp(volume, 0, 1)
+	if group and group.Parent then
+		group.Volume = Config.Audio.SfxVolume * userVolume
+	end
 end
 
 -- Глобальный (2D) звук, например каст у самого игрока

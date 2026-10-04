@@ -149,4 +149,10 @@ export type StoreState = {
 	studio: boolean, -- Studio: доступны тестовые гранты без Robux
 }
 
+-- Настройки игрока (хранятся в профиле)
+export type Settings = {
+	SfxVolume: number, -- 0..1
+	LowQuality: boolean?, -- nil = автоопределение (телефон -> true)
+}
+
 return {}

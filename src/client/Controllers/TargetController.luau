@@ -5,6 +5,7 @@
 
 local CollectionService = game:GetService("CollectionService")
 local ContextActionService = game:GetService("ContextActionService")
+local GuiService = game:GetService("GuiService")
 local Players = game:GetService("Players")
 local UserInputService = game:GetService("UserInputService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -153,14 +154,13 @@ local function cycleTarget(backwards: boolean)
 	TargetController.select(list[nextIndex].model)
 end
 
--- ЛКМ: луч от курсора. Враг — выбираем, всё остальное — снимаем цель.
-local function pickUnderCursor()
+-- Выбор по точке экрана (screenPoint — как GetMouseLocation, с учётом верхней панели): враг — выбираем, иначе снимаем
+local function pickAt(screenPoint: Vector2)
 	local camera = Workspace.CurrentCamera
 	if not camera then
 		return
 	end
-	local mouse = UserInputService:GetMouseLocation()
-	local ray = camera:ViewportPointToRay(mouse.X, mouse.Y)
+	local ray = camera:ViewportPointToRay(screenPoint.X, screenPoint.Y)
 
 	local params = RaycastParams.new()
 	params.FilterType = Enum.RaycastFilterType.Exclude
@@ -177,17 +177,36 @@ local function pickUnderCursor()
 	end
 end
 
--- notifyCallback получает текст сообщения («Нет целей поблизости»)
+-- Для кнопки «Target» на телефоне и клавиши Tab: ближайшая цель / следующая / предыдущая
+function TargetController.cycle(backwards: boolean?)
+	cycleTarget(backwards == true)
+end
+
 function TargetController.start(notifyCallback: ((string) -> ())?)
 	if notifyCallback then
 		notify = notifyCallback
 	end
-	UserInputService.InputBegan:Connect(function(input, processed)
+	local touches: { [InputObject]: { position: Vector2, time: number } } = {}
+	UserInputService.InputBegan:Connect(function(input: InputObject, processed: boolean)
 		if processed then
 			return -- клик по UI не должен менять цель
 		end
 		if input.UserInputType == Enum.UserInputType.MouseButton1 then
-			pickUnderCursor()
+			pickAt(UserInputService:GetMouseLocation())
+		elseif input.UserInputType == Enum.UserInputType.Touch then
+			touches[input] = { position = Vector2.new(input.Position.X, input.Position.Y), time = os.clock() }
+		end
+	end)
+	-- тап на телефоне: короткое касание без сдвига (иначе это поворот камеры)
+	UserInputService.InputEnded:Connect(function(input: InputObject)
+		local start = touches[input]
+		if not start then
+			return
+		end
+		touches[input] = nil
+		local position = Vector2.new(input.Position.X, input.Position.Y)
+		if os.clock() - start.time < 0.3 and (position - start.position).Magnitude < 12 then
+			pickAt(position + GuiService:GetGuiInset())
 		end
 	end)
 

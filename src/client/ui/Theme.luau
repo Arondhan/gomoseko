@@ -101,6 +101,13 @@ function Theme.gradient(parent: Instance, rotation: number, from: Color3, to: Co
 	return Theme.new("UIGradient", { Rotation = rotation, Color = ColorSequence.new(from, to) }, parent)
 end
 
+-- Масштаб интерфейса (UIScale на ScreenGui): координаты курсора/пальца в offset-позициях надо делить на него
+function Theme.scaleOf(instance: Instance): number
+	local gui = instance:FindFirstAncestorOfClass("ScreenGui")
+	local scale = gui and gui:FindFirstChildOfClass("UIScale")
+	return if scale then scale.Scale else 1
+end
+
 function Theme.tween(obj: Instance, time: number, props: { [string]: any })
 	TweenService:Create(obj, TweenInfo.new(time, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), props):Play()
 end

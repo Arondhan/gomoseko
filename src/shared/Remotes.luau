@@ -24,6 +24,8 @@ local DEFINITIONS: { [string]: string } = {
 	StoreGetState = "RemoteFunction", -- клиент -> сервер: () -> StoreState
 	StoreBuy = "RemoteFunction", -- клиент -> сервер: (key: string) -> (ok: boolean, reason: string?)
 	StudioGrant = "RemoteFunction", -- клиент -> сервер: (key: string) -> boolean; работает только в Studio (тест без Robux)
+	SettingsGet = "RemoteFunction", -- клиент -> сервер: () -> Settings
+	SettingsSet = "RemoteFunction", -- клиент -> сервер: (key: string, value: any) -> boolean
 	CastCancelled = "RemoteEvent", -- сервер -> клиент кастера: (skillId: string, reason: string) — каст сорван
 }
 

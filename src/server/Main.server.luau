@@ -9,6 +9,8 @@ Remotes.init() -- ремоуты должны существовать до ст
 
 require(Services:WaitForChild("DataService")).start() -- профили игроков (DataStore)
 require(Services:WaitForChild("CurrencyService")).start()
+require(Services:WaitForChild("OnboardingService")).start() -- обучение новых игроков
+require(Services:WaitForChild("SettingsService")).start() -- громкость и качество графики
 require(Services:WaitForChild("StatsService")).start() -- бонусы колец
 require(Services:WaitForChild("PlayerStatsService")).start() -- мана, уровень, опыт
 require(Services:WaitForChild("InventoryService")).start()

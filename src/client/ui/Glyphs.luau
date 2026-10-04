@@ -269,4 +269,73 @@ function Glyphs.potion(parent: Instance)
 	Theme.new("UIStroke", { Color = Color3.fromRGB(20, 70, 40), Thickness = 1.5 }, body)
 end
 
+-- Прицел: кольцо с крестом (кнопка «следующая цель» на телефоне)
+function Glyphs.target(parent: Instance)
+	local z = parent:IsA("GuiObject") and parent.ZIndex + 1 or 2
+	local ring = Theme.new("Frame", {
+		Name = "Glyph",
+		AnchorPoint = Vector2.new(0.5, 0.5),
+		Position = UDim2.fromScale(0.5, 0.5),
+		Size = UDim2.fromOffset(24, 24),
+		BackgroundTransparency = 1,
+		ZIndex = z,
+	}, parent)
+	Theme.corner(ring, 12)
+	Theme.new("UIStroke", { Color = Theme.GoldLight, Thickness = 2.5 }, ring)
+	for _, size in { Vector2.new(2, 34), Vector2.new(34, 2) } do
+		local bar = Theme.new("Frame", {
+			AnchorPoint = Vector2.new(0.5, 0.5),
+			Position = UDim2.fromScale(0.5, 0.5),
+			Size = UDim2.fromOffset(size.X, size.Y),
+			BackgroundColor3 = Theme.Danger,
+			BorderSizePixel = 0,
+			ZIndex = z + 1,
+		}, ring)
+		bar.BackgroundTransparency = 0.1
+	end
+end
+
+-- Шестерёнка: диск с зубцами (повёрнутые прямоугольники) и отверстием
+function Glyphs.gear(parent: Instance)
+	local z = parent:IsA("GuiObject") and parent.ZIndex + 1 or 2
+	local holder = Theme.new("Frame", {
+		Name = "Glyph",
+		AnchorPoint = Vector2.new(0.5, 0.5),
+		Position = UDim2.fromScale(0.5, 0.5),
+		Size = UDim2.fromOffset(26, 26),
+		BackgroundTransparency = 1,
+		ZIndex = z,
+	}, parent)
+	for index = 0, 3 do
+		local tooth = Theme.new("Frame", {
+			AnchorPoint = Vector2.new(0.5, 0.5),
+			Position = UDim2.fromScale(0.5, 0.5),
+			Size = UDim2.fromOffset(6, 26),
+			Rotation = index * 45,
+			BorderSizePixel = 0,
+			ZIndex = z,
+		}, holder)
+		shaded(tooth, Color3.fromRGB(190, 190, 200), Color3.fromRGB(110, 110, 124))
+	end
+	local disc = Theme.new("Frame", {
+		AnchorPoint = Vector2.new(0.5, 0.5),
+		Position = UDim2.fromScale(0.5, 0.5),
+		Size = UDim2.fromOffset(18, 18),
+		BorderSizePixel = 0,
+		ZIndex = z + 1,
+	}, holder)
+	Theme.corner(disc, 9)
+	shaded(disc, Color3.fromRGB(210, 210, 222), Color3.fromRGB(120, 120, 134))
+	Theme.new("UIStroke", { Color = Color3.fromRGB(50, 50, 60), Thickness = 1.5 }, disc)
+	local hole = Theme.new("Frame", {
+		AnchorPoint = Vector2.new(0.5, 0.5),
+		Position = UDim2.fromScale(0.5, 0.5),
+		Size = UDim2.fromOffset(7, 7),
+		BackgroundColor3 = Color3.fromRGB(30, 30, 40),
+		BorderSizePixel = 0,
+		ZIndex = z + 2,
+	}, disc)
+	Theme.corner(hole, 4)
+end
+
 return Glyphs

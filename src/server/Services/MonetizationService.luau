@@ -92,7 +92,7 @@ end
 ---------------------------------------------------------------------------
 local function grantProduct(player: Player, profile: DataService.Profile, product: MonetizationConfig.Product)
 	if product.Kind == "Crystals" then
-		CurrencyService.add(player, "Crystals", product.Crystals or 0)
+		CurrencyService.add(player, "Crystals", product.Crystals or 0, "IAP", product.Key)
 	elseif product.Kind == "LuckPotion" then
 		local now = os.time()
 		local boosts = profile.Boosts

@@ -34,6 +34,8 @@ export type Profile = {
 	Gacha: { Rolls: number, LastFreeRoll: number, Recent: { { ringId: string, t: number } } },
 	Boosts: { LuckPercent: number, LuckUntil: number },
 	Receipts: { [string]: boolean },
+	Onboarding: { Step: number, Done: boolean },
+	Settings: { SfxVolume: number, LowQuality: boolean? },
 	Session: { JobId: string, Time: number }?,
 }
 
@@ -71,6 +73,8 @@ local function defaults(): Profile
 		Gacha = { Rolls = 0, LastFreeRoll = 0, Recent = {} },
 		Boosts = { LuckPercent = 0, LuckUntil = 0 },
 		Receipts = {},
+		Onboarding = { Step = 1, Done = false },
+		Settings = { SfxVolume = 1, LowQuality = nil },
 		Session = nil,
 	}
 end

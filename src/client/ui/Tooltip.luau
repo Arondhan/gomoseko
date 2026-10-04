@@ -112,9 +112,10 @@ function Tooltip.build(parent: Instance, getSkill: (skillId: string) -> Types.Sk
 		local mouse = UserInputService:GetMouseLocation() + CURSOR_OFFSET
 		local viewport = (frame.Parent :: GuiBase2d).AbsoluteSize
 		local size = frame.AbsoluteSize
+		local scale = Theme.scaleOf(frame)
 		frame.Position = UDim2.fromOffset(
-			math.max(4, math.min(mouse.X, viewport.X - size.X - 4)),
-			math.max(4, math.min(mouse.Y, viewport.Y - size.Y - 4))
+			math.max(4, math.min(mouse.X, viewport.X - size.X - 4)) / scale,
+			math.max(4, math.min(mouse.Y, viewport.Y - size.Y - 4)) / scale
 		)
 	end
 
