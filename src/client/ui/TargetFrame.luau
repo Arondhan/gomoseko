@@ -1,39 +1,56 @@
 --!strict
--- Фрейм цели (как в WoW): имя врага и его здоровье рядом с PlayerFrame. Скрыт, пока цели нет.
--- Управляется снаружи: setTarget(model) при смене цели (см. TargetController.changed).
+-- Фрейм цели (как в WoW): панель с именем и здоровьем врага, круглый портрет справа в красноватом свечении.
+-- Скрыт, пока цели нет. Управляется снаружи: setTarget(model) при смене цели (см. TargetController.changed).
 
-local Theme = require(script.Parent.Theme)
+local Chrome = require(script.Parent.Chrome)
+local Portrait = require(script.Parent.Portrait)
 local StatusBar = require(script.Parent.StatusBar)
+local Theme = require(script.Parent.Theme)
 
 local TargetFrame = {}
 
-local ENEMY_NAME_COLOR = Color3.fromRGB(255, 100, 85)
-local ENEMY_HEALTH_COLOR = Color3.fromRGB(200, 55, 45)
+local PORTRAIT_SIZE = 78
 
 function TargetFrame.build(parent: Instance)
-	local frame = Theme.new("Frame", {
+	local root = Theme.new("Frame", {
 		Name = "TargetFrame",
-		Position = UDim2.fromOffset(282, 20),
-		Size = UDim2.fromOffset(250, 56),
-		BackgroundColor3 = Theme.Bg,
-		BackgroundTransparency = 0.15,
-		BorderSizePixel = 0,
+		Position = UDim2.fromOffset(340, 20),
+		Size = UDim2.fromOffset(300, 92),
+		BackgroundTransparency = 1,
 		Visible = false,
 	}, parent)
-	Theme.corner(frame, 8)
-	Theme.stroke(frame, Color3.fromRGB(150, 50, 40), 1.5)
+	local scale = Theme.new("UIScale", { Scale = 1 }, root)
 
-	local nameLabel = Theme.new("TextLabel", {
+	local body = Chrome.panel(root, {
+		Name = "Body",
+		Position = UDim2.fromOffset(0, 12),
+		Size = UDim2.fromOffset(254, 66),
+	}, 8)
+	Chrome.glow(body, Theme.Enemy, 2).Transparency = 0.55
+
+	local nameLabel = Chrome.label(body, {
 		Name = "Name",
-		Position = UDim2.fromOffset(10, 5),
-		Size = UDim2.new(1, -20, 0, 18),
-		BackgroundTransparency = 1,
-		Font = Enum.Font.GothamBold,
-		TextSize = 15,
-		TextColor3 = ENEMY_NAME_COLOR,
+		Position = UDim2.fromOffset(10, 4),
+		Size = UDim2.new(1, -66, 0, 20),
+		Font = Theme.TitleFont,
+		TextSize = 17,
+		TextColor3 = Theme.EnemyName,
 		TextXAlignment = Enum.TextXAlignment.Left,
-	}, frame)
-	local health = StatusBar.new(frame, UDim2.fromOffset(10, 28), UDim2.new(1, -20, 0, 18), ENEMY_HEALTH_COLOR)
+	})
+	local health = StatusBar.new(body, UDim2.fromOffset(10, 28), UDim2.new(1, -66, 0, 26), Theme.Enemy)
+
+	-- портрет справа
+	local portrait = Portrait.new(root, PORTRAIT_SIZE, UDim2.fromOffset(218, 7))
+	portrait.frame.ZIndex = 4
+	local ring = Theme.new("Frame", {
+		Name = "PortraitRing",
+		Position = UDim2.fromOffset(214, 3),
+		Size = UDim2.fromOffset(PORTRAIT_SIZE + 6, PORTRAIT_SIZE + 6),
+		BackgroundTransparency = 1,
+		ZIndex = 6,
+	}, root)
+	Theme.corner(ring, PORTRAIT_SIZE + 6)
+	Chrome.bevel(ring, 3, PORTRAIT_SIZE + 6)
 
 	local connections: { RBXScriptConnection } = {}
 	local function disconnectAll()
@@ -47,7 +64,8 @@ function TargetFrame.build(parent: Instance)
 		disconnectAll()
 		local found = model and model:FindFirstChildOfClass("Humanoid")
 		if not (model and found) then
-			frame.Visible = false
+			root.Visible = false
+			portrait.setModel(nil)
 			return
 		end
 		local humanoid: Humanoid = found
@@ -57,10 +75,15 @@ function TargetFrame.build(parent: Instance)
 		end
 		table.insert(connections, humanoid.HealthChanged:Connect(refresh))
 		refresh()
-		frame.Visible = true
+		portrait.setModel(model)
+
+		-- небольшой «выскок» при появлении
+		scale.Scale = 0.92
+		root.Visible = true
+		Theme.tween(scale, 0.15, { Scale = 1 })
 	end
 
-	return { frame = frame, setTarget = setTarget }
+	return { frame = root, setTarget = setTarget }
 end
 
 return TargetFrame

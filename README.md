@@ -22,20 +22,26 @@ src/
       Skills/ArcLightningConfig.luau  # урон, радиусы, задержка, кулдаун, мана, цвета/звук молнии
       Rings/RingsConfig.luau # определения колец и стартовые предметы
     Combat/ChainSearch.luau  # чистый поиск следующей цели цепи (без Roblox API)
+    Combat/Progression.luau  # уровни и опыт (чистая математика)
+    Combat/CooldownMath.luau # геометрия «часиков» кулдауна (чистая математика)
   server/
     BuildHub.server.luau     # генератор карты, свет, SpawnLocation, манекены (тег Enemy)
     Dummies.server.luau      # урон по манекенам (касание Tool), HP-бар, респавн через 4 с
     Main.server.luau         # бутстрап: создаёт ремоуты и запускает сервисы
     Services/
-      PlayerStatsService.luau  # мана игрока (атрибуты Mana/MaxMana), регенерация
+      PlayerStatsService.luau  # мана и опыт игрока (атрибуты Mana/MaxMana, Level/XP/XPToNext)
       InventoryService.luau    # инвентарь колец и надетые слоты (сервер — источник правды)
-      CombatService.luau       # каст: валидация, цепочка прыжков, урон, рассылка визуала
+      CombatService.luau       # каст (с CastTime), валидация, цепочка прыжков, урон, опыт, визуал
   client/
     Main.client.luau         # точка входа: UI, контроллеры, горячие клавиши (1-4, Q, Tab, I, B, Esc)
     Controllers/             # InventoryController, TargetController, SkillController
     VFX/LightningRenderer.luau  # отрисовка молнии (Beam + зигзаг, затухание, очистка)
-    ui/                      # Theme, RingBar, MicroMenu, Window, Inventory, Shop,
-                             # PlayerFrame, TargetFrame, StatusBar, Tooltip, Notice, RingIcon
+    VFX/DamageNumbers.luau   # плавающие цифры урона над целями
+    ui/                      # WoW-стиль без внешних картинок, всё рисуется кодом:
+                             #   Theme (палитра, качество предметов, шрифты), Chrome (золотые рамки, слоты, свечение),
+                             #   RingBar, RadialCooldown, RingIcon, Glyphs, Window, Inventory, Shop, MicroMenu,
+                             #   PlayerFrame, TargetFrame, Portrait (ViewportFrame), StatusBar, XpBar, CastBar,
+                             #   Tooltip, Notice
 ```
 
 В Studio проект попадает так:
@@ -78,7 +84,12 @@ rojo build default.project.json -o build/gomoseko.rbxl
 (`CombatService`), клиент только рисует молнию. Баланс — в `Configs/Skills/ArcLightningConfig.luau`;
 чтобы услышать звук, впишите `SoundId` (`rbxassetid://...`) там же.
 
-Состояние инвентаря и маны пока хранится в памяти сервера (без DataStore): `InventoryService.serialize/load` —
+**Интерфейс.** Фреймы игрока и цели с круглыми портретами (ViewportFrame), полосы HP/маны/опыта, панель колец
+с радиальным кулдауном и рамкой цвета качества, cast bar (время каста — `CastTime` в конфиге скилла, `0` = мгновенно),
+плавающие цифры урона, повышение уровня за убийство врагов. Цвета и размеры — в `ui/Theme.luau` и `ui/Chrome.luau`.
+Иконки рисуются кодом; чтобы подставить свою картинку кольца, задайте `Image = "rbxassetid://..."` в `RingsConfig`.
+
+Состояние инвентаря, маны и опыта пока хранится в памяти сервера (без DataStore): `InventoryService.serialize/load` —
 точка подключения сохранения. Манекены получают урон от касания `Tool`, респавн через 4 секунды.
 
 ## Важно при переходе с локального места

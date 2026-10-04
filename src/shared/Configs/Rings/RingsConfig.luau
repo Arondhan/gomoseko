@@ -12,7 +12,7 @@ RingsConfig.Rings = {
 		Description = "Молния бьёт цель и перескакивает на ближайших врагов.",
 		SkillId = "ArcLightning",
 		Color = Color3.fromRGB(80, 160, 255),
-		Rarity = "Эпическое",
+		Quality = "Epic",
 	},
 } :: { [string]: Types.RingDef }
 

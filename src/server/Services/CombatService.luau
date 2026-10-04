@@ -27,10 +27,14 @@ local SKILLS: { [string]: Types.SkillConfig } = {
 }
 
 local CASTER_HAND_OFFSET = Vector3.new(0, 1, 0) -- откуда стартует первое звено относительно HumanoidRootPart
+local DAMAGE_NUMBER_OFFSET = Vector3.new(0, 3, 0) -- где над целью появляется цифра урона
 
 -- cooldowns[player][skillId] = os.clock(), когда скилл снова доступен
 local cooldowns: { [Player]: { [string]: number } } = {}
+local casting: { [Player]: boolean } = {} -- игрок сейчас читает каст (CastTime > 0)
 local vfxRemote: RemoteEvent
+local damageRemote: RemoteEvent
+local cancelRemote: RemoteEvent
 
 local function fail(reason: string): Types.CastResult
 	return { ok = false, reason = reason }
@@ -102,6 +106,17 @@ local function runChain(player: Player, config: Types.SkillConfig, primary: Mode
 		hit[current] = true
 		humanoid:TakeDamage(config.Damage)
 
+		-- цифра урона — только тому, кто бьёт; убийство даёт опыт
+		local damageEvent: Types.DamageEvent = {
+			skillId = config.Id,
+			position = root.Position + DAMAGE_NUMBER_OFFSET,
+			amount = config.Damage,
+		}
+		damageRemote:FireClient(player, damageEvent)
+		if humanoid.Health <= 0 then
+			PlayerStatsService.addXp(player, CombatConfig.Progression.XpPerKill)
+		end
+
 		local hop: Types.LightningHop = {
 			skillId = config.Id,
 			casterUserId = player.UserId,
@@ -136,6 +151,10 @@ local function cast(player: Player, skillId: any, target: any): Types.CastResult
 	end
 	if not InventoryService.isSkillEquipped(player, skillId) then
 		return fail("Кольцо не надето")
+	end
+
+	if casting[player] then
+		return fail("Вы уже колдуете")
 	end
 
 	-- кастер жив
@@ -184,17 +203,50 @@ local function cast(player: Player, skillId: any, target: any): Types.CastResult
 	end
 	playerCooldowns[skillId] = now + config.Cooldown
 
-	task.spawn(runChain, player, config, primary, casterRoot.Position + CASTER_HAND_OFFSET)
-	return { ok = true }
+	-- мгновенный каст — сразу цепочка
+	if config.CastTime <= 0 then
+		task.spawn(runChain, player, config, primary, casterRoot.Position + CASTER_HAND_OFFSET)
+		return { ok = true, castTime = 0 }
+	end
+
+	-- каст с задержкой: после CastTime цель и кастер проверяются заново, при срыве возвращаем ману и кулдаун
+	casting[player] = true
+	task.delay(config.CastTime, function()
+		casting[player] = nil
+		local currentCharacter = player.Character
+		local root = currentCharacter and getRoot(currentCharacter)
+		local primaryRoot = getRoot(primary)
+		local reason: string? = nil
+		if not (currentCharacter and root and getAliveHumanoid(currentCharacter)) then
+			reason = "Каст прерван"
+		elseif not (isValidTarget(primary, player) and primaryRoot) then
+			reason = "Цель потеряна"
+		elseif (primaryRoot.Position - root.Position).Magnitude > config.CastRange + CombatConfig.RangeTolerance then
+			reason = "Цель слишком далеко"
+		end
+		if reason then
+			PlayerStatsService.refund(player, config.ManaCost)
+			if cooldowns[player] then
+				cooldowns[player][skillId] = nil
+			end
+			cancelRemote:FireClient(player, skillId, reason)
+			return
+		end
+		runChain(player, config, primary, (root :: BasePart).Position + CASTER_HAND_OFFSET)
+	end)
+	return { ok = true, castTime = config.CastTime }
 end
 
 function CombatService.start()
 	vfxRemote = Remotes.get("SkillVFX") :: RemoteEvent
+	damageRemote = Remotes.get("DamageDealt") :: RemoteEvent
+	cancelRemote = Remotes.get("CastCancelled") :: RemoteEvent
 	local castRemote = Remotes.get("CastSkill") :: RemoteFunction
 	castRemote.OnServerInvoke = cast
 
 	Players.PlayerRemoving:Connect(function(player)
 		cooldowns[player] = nil
+		casting[player] = nil
 	end)
 end
 

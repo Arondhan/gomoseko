@@ -1,35 +1,41 @@
 --!strict
--- Короткие сообщения об ошибках по центру экрана (красный текст, как «Нет цели» / «Недостаточно маны» в WoW).
+-- Короткие сообщения по центру экрана в стиле WoW: красные ошибки («Нет цели», «Не хватает маны»)
+-- и золотые события («Новый уровень!»). Лёгкий «выезд» вверх и затухание.
 
 local Theme = require(script.Parent.Theme)
 
 local Notice = {}
 
-local VISIBLE_TIME = 1.2
+local VISIBLE_TIME = 1.4
+local BASE_POSITION = UDim2.fromScale(0.5, 0.62)
 
 function Notice.build(parent: Instance)
 	local label = Theme.new("TextLabel", {
 		Name = "Notice",
 		AnchorPoint = Vector2.new(0.5, 0.5),
-		Position = UDim2.fromScale(0.5, 0.62),
-		Size = UDim2.fromOffset(400, 28),
+		Position = BASE_POSITION,
+		Size = UDim2.fromOffset(500, 32),
 		BackgroundTransparency = 1,
 		Text = "",
-		Font = Enum.Font.GothamBold,
-		TextSize = 20,
-		TextColor3 = Color3.fromRGB(255, 80, 60),
-		TextStrokeTransparency = 0.3,
-		TextTransparency = 1,
+		Font = Theme.TitleFont,
+		TextSize = 24,
+		TextColor3 = Theme.Danger,
+		TextStrokeTransparency = 0.2,
 		TextStrokeColor3 = Color3.new(0, 0, 0),
+		TextTransparency = 1,
 	}, parent)
 
 	local token = 0 -- номер последнего сообщения: старый таймер не гасит новое
-	local function show(text: string)
+	-- color — цвет текста (по умолчанию красный, для ошибок)
+	local function show(text: string, color: Color3?)
 		token += 1
 		local mine = token
 		label.Text = text
+		label.TextColor3 = color or Theme.Danger
 		label.TextTransparency = 0
-		label.TextStrokeTransparency = 0.3
+		label.TextStrokeTransparency = 0.2
+		label.Position = BASE_POSITION + UDim2.fromOffset(0, 14)
+		Theme.tween(label, 0.15, { Position = BASE_POSITION })
 		task.delay(VISIBLE_TIME, function()
 			if token == mine then
 				Theme.tween(label, 0.4, { TextTransparency = 1, TextStrokeTransparency = 1 })

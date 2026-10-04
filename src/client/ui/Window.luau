@@ -1,7 +1,9 @@
--- Фабрика окон в стиле WoW: заголовок, кнопка X, перетаскивание, анимация открытия/закрытия.
+-- Фабрика окон в стиле WoW: объёмная золотая рамка с ромбами по углам, баннер заголовка,
+-- кнопка закрытия, перетаскивание за заголовок, анимация открытия/закрытия.
 
 local UserInputService = game:GetService("UserInputService")
 
+local Chrome = require(script.Parent.Chrome)
 local Theme = require(script.Parent.Theme)
 
 local Window = {}
@@ -14,64 +16,90 @@ function Window.new(parent: Instance, config: { name: string, title: string, siz
 		AnchorPoint = Vector2.new(0.5, 0.5),
 		Position = config.position,
 		Size = config.size,
-		BackgroundColor3 = Theme.Panel,
+		BackgroundColor3 = Color3.new(1, 1, 1),
 		BorderSizePixel = 0,
 		Visible = false,
 		GroupTransparency = 1,
 	}, parent)
-	Theme.corner(frame, 8)
-	Theme.stroke(frame, Theme.Gold, 2)
+	Theme.corner(frame, 10)
+	Theme.gradient(frame, 90, Theme.PanelTop, Theme.PanelBottom)
+	Chrome.bevel(frame, 3, 10)
 	local scale = Theme.new("UIScale", { Name = "Scale", Scale = 0.94 }, frame)
 
+	-- баннер заголовка
 	local bar = Theme.new("Frame", {
 		Name = "TitleBar",
-		Size = UDim2.new(1, 0, 0, 36),
-		BackgroundColor3 = Theme.Header,
+		Size = UDim2.new(1, 0, 0, 40),
+		BackgroundColor3 = Color3.new(1, 1, 1),
 		BorderSizePixel = 0,
+		ZIndex = 2,
 	}, frame)
-	Theme.new("Frame", {
+	Theme.gradient(bar, 90, Color3.fromRGB(54, 48, 36), Color3.fromRGB(24, 22, 20))
+	local line = Theme.new("Frame", {
 		Name = "Line",
 		AnchorPoint = Vector2.new(0, 1),
 		Position = UDim2.fromScale(0, 1),
-		Size = UDim2.new(1, 0, 0, 1),
-		BackgroundColor3 = Theme.Gold,
+		Size = UDim2.new(1, 0, 0, 2),
+		BackgroundColor3 = Color3.new(1, 1, 1),
 		BorderSizePixel = 0,
+		ZIndex = 3,
 	}, bar)
-	Theme.new("TextLabel", {
+	Theme.new("UIGradient", {
+		Color = ColorSequence.new({
+			ColorSequenceKeypoint.new(0, Theme.GoldDark),
+			ColorSequenceKeypoint.new(0.5, Theme.GoldLight),
+			ColorSequenceKeypoint.new(1, Theme.GoldDark),
+		}),
+	}, line)
+	Chrome.label(bar, {
 		Name = "Title",
 		Size = UDim2.fromScale(1, 1),
-		BackgroundTransparency = 1,
 		Text = config.title,
-		Font = Enum.Font.GothamBold,
-		TextSize = 17,
-		TextColor3 = Theme.Text,
-	}, bar)
+		Font = Theme.TitleFont,
+		TextSize = 20,
+		TextColor3 = Theme.GoldLight,
+		TextStrokeTransparency = 0.2,
+		ZIndex = 3,
+	})
+	Chrome.diamond(bar, 8, UDim2.new(0, 16, 0.5, 0), 4)
+	Chrome.diamond(bar, 8, UDim2.new(1, -48, 0.5, 0), 4)
+
 	local close = Theme.new("TextButton", {
 		Name = "Close",
 		AnchorPoint = Vector2.new(1, 0.5),
 		Position = UDim2.new(1, -8, 0.5, 0),
-		Size = UDim2.fromOffset(24, 24),
-		BackgroundColor3 = Theme.Inset,
+		Size = UDim2.fromOffset(26, 26),
+		BackgroundColor3 = Color3.new(1, 1, 1),
 		BorderSizePixel = 0,
 		Text = "X",
-		Font = Enum.Font.GothamBold,
+		Font = Theme.BoldFont,
 		TextSize = 14,
-		TextColor3 = Theme.Text,
+		TextColor3 = Theme.GoldLight,
+		ZIndex = 4,
 	}, bar)
-	Theme.corner(close, 5)
-	Theme.stroke(close, Theme.GoldDim, 1)
+	Theme.corner(close, 6)
+	Theme.gradient(close, 90, Color3.fromRGB(70, 36, 30), Color3.fromRGB(30, 16, 14))
+	Chrome.bevel(close, 1.5, 6)
+	close.MouseEnter:Connect(function()
+		Theme.tween(close, 0.1, { TextColor3 = Theme.Danger })
+	end)
+	close.MouseLeave:Connect(function()
+		Theme.tween(close, 0.1, { TextColor3 = Theme.GoldLight })
+	end)
+
+	Chrome.corners(frame, 9, 7)
 
 	local body = Theme.new("Frame", {
 		Name = "Body",
-		Position = UDim2.fromOffset(0, 37),
-		Size = UDim2.new(1, 0, 1, -37),
+		Position = UDim2.fromOffset(0, 42),
+		Size = UDim2.new(1, 0, 1, -42),
 		BackgroundTransparency = 1,
 	}, frame)
 	Theme.new("UIPadding", {
 		PaddingTop = UDim.new(0, 12),
-		PaddingLeft = UDim.new(0, 12),
-		PaddingRight = UDim.new(0, 12),
-		PaddingBottom = UDim.new(0, 12),
+		PaddingLeft = UDim.new(0, 14),
+		PaddingRight = UDim.new(0, 14),
+		PaddingBottom = UDim.new(0, 14),
 	}, body)
 
 	local window = { frame = frame, body = body, isOpen = false, changed = Instance.new("BindableEvent") }
@@ -117,7 +145,10 @@ function Window.new(parent: Instance, config: { name: string, title: string, siz
 	local dragStart: Vector3
 	local startPos: UDim2
 	bar.InputBegan:Connect(function(input)
-		if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+		if
+			input.UserInputType == Enum.UserInputType.MouseButton1
+			or input.UserInputType == Enum.UserInputType.Touch
+		then
 			dragging = true
 			dragStart = input.Position
 			startPos = frame.Position
@@ -138,7 +169,10 @@ function Window.new(parent: Instance, config: { name: string, title: string, siz
 		end
 	end)
 	UserInputService.InputEnded:Connect(function(input)
-		if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+		if
+			input.UserInputType == Enum.UserInputType.MouseButton1
+			or input.UserInputType == Enum.UserInputType.Touch
+		then
 			dragging = false
 		end
 	end)

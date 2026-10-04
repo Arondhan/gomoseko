@@ -11,6 +11,13 @@ local CombatConfig = {
 		Max = 100,
 		RegenPerSecond = 5,
 	},
+
+	-- Прогрессия: опыт до следующего уровня = BaseXp * Growth^(level-1)
+	Progression = {
+		BaseXp = 100,
+		Growth = 1.35,
+		XpPerKill = 25,
+	},
 }
 
 return CombatConfig

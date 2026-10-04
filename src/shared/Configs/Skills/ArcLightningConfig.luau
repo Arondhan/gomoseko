@@ -16,6 +16,7 @@ local ArcLightningConfig: Types.SkillConfig = {
 	BounceDelay = 0.17, -- пауза между прыжками, сек (рекомендуется 0.15–0.2)
 	Cooldown = 3, -- перезарядка, сек
 	ManaCost = 20,
+	CastTime = 0.4, -- сек; 0 = мгновенный каст без cast bar
 	DefaultKey = Enum.KeyCode.Q, -- быстрая клавиша (работает, пока кольцо надето)
 
 	-- Визуал (клиент)
