@@ -1,7 +1,6 @@
--- Окно «Inventory»: сетка 6x5 как сумка WoW — слоты-«гнёзда» с рамкой цвета качества у предметов, метка слота
--- у надетых колец, счётчик ячеек и строка золота. Кольцо надевается ПКМ (в первый свободный слот; повторный ПКМ —
--- снять) или перетаскиванием на слот панели колец / окна персонажа (ui/Drag).
--- Данные берутся из InventoryController (сервер — источник правды).
+-- Сетка колец игрока (встраивается в окно Rings): слоты-«гнёзда» с рамкой цвета качества, метка слота у надетых
+-- колец, счётчик ячеек и строка золота. Тап/клик по кольцу надевает его (повторный — снимает), кольцо можно и
+-- перетащить на слот (ui/Drag). Данные берутся из InventoryController (сервер — источник правды).
 
 local Players = game:GetService("Players")
 
@@ -10,35 +9,29 @@ local Drag = require(script.Parent.Drag)
 local Glyphs = require(script.Parent.Glyphs)
 local RingIcon = require(script.Parent.RingIcon)
 local Theme = require(script.Parent.Theme)
-local Window = require(script.Parent.Window)
 
 local Inventory = {}
 
-local CELLS = 30
-local CELL_SIZE = 48
+local CELLS = 28
+local CELL_SIZE = 52
 local CELL_GAP = 6
 
+-- parent — ScreenGui (для «призрака» при переносе), container — Frame внутри окна Rings,
 -- deps: { controller = InventoryController, tooltip = Tooltip.build(...) }
-function Inventory.build(parent: Instance, deps: any)
+function Inventory.build(parent: Instance, container: GuiObject, deps: any)
 	local controller = deps.controller
 	local tooltip = deps.tooltip
 	local player = Players.LocalPlayer
 
-	-- ширина: 6 ячеек + отступы окна; высота: заголовок + 5 рядов + строка золота
-	local gridWidth = 6 * CELL_SIZE + 5 * CELL_GAP
-	local gridHeight = 5 * CELL_SIZE + 4 * CELL_GAP
-	local window = Window.new(parent, {
-		name = "InventoryWindow",
-		title = "Inventory",
-		size = UDim2.fromOffset(gridWidth + 28, 42 + 12 + gridHeight + 8 + 28 + 14),
-		position = UDim2.new(0.5, 0, 0.47, 0),
-	})
+	-- ряды сетки; нижняя строка (ячейки + золото) — 28 px
+	local gridHeight = 4 * CELL_SIZE + 3 * CELL_GAP
+	local lastDragAt = 0 -- момент последнего переноса: клик сразу после переноса не должен надевать кольцо
 
 	local grid = Theme.new("Frame", {
 		Name = "Grid",
 		Size = UDim2.new(1, 0, 0, gridHeight),
 		BackgroundTransparency = 1,
-	}, window.body)
+	}, container)
 	Theme.new("UIGridLayout", {
 		CellSize = UDim2.fromOffset(CELL_SIZE, CELL_SIZE),
 		CellPadding = UDim2.fromOffset(CELL_GAP, CELL_GAP),
@@ -69,7 +62,7 @@ function Inventory.build(parent: Instance, deps: any)
 		Position = UDim2.fromScale(0, 1),
 		Size = UDim2.new(1, 0, 0, 28),
 		BackgroundTransparency = 1,
-	}, window.body)
+	}, container)
 	local countLabel = Chrome.label(footer, {
 		Size = UDim2.fromScale(0.5, 1),
 		Text = "0 / " .. CELLS,
@@ -106,6 +99,7 @@ function Inventory.build(parent: Instance, deps: any)
 	-- перетаскивание кольца на слот (панель колец или окно персонажа)
 	local function startDrag(ring: any)
 		Drag.start(parent, ring, function(slot)
+			lastDragAt = os.clock()
 			if slot then
 				controller.equip(ring.Id, slot)
 			end
@@ -172,6 +166,11 @@ function Inventory.build(parent: Instance, deps: any)
 			item.MouseLeave:Connect(function()
 				tooltip.hide()
 			end)
+			item.MouseButton1Click:Connect(function()
+				if os.clock() - lastDragAt > 0.3 then
+					equipOrUnequip(ring)
+				end
+			end)
 			item.MouseButton2Click:Connect(function()
 				equipOrUnequip(ring)
 			end)
@@ -186,8 +185,6 @@ function Inventory.build(parent: Instance, deps: any)
 
 	controller.changed.Event:Connect(refresh)
 	refresh()
-
-	return window
 end
 
 return Inventory

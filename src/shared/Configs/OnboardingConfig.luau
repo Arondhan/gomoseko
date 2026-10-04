@@ -9,14 +9,14 @@ export type Step = { Key: string, Text: string }
 OnboardingConfig.Steps = {
 	{
 		Key = "EquipRing",
-		Text = "Open Inventory (I) and equip the Arc Lightning Ring: drag it onto a ring slot or right-click it.",
+		Text = "Open Rings and wear the Arc Lightning Ring: just tap it!",
 	},
 	{
 		Key = "CastSpell",
-		Text = "Select a training dummy and press 1 (or Q / tap its ring slot) to cast Arc Lightning.",
+		Text = "Go to a training dummy and press ATTACK (or Q)!",
 	},
-	{ Key = "DpsTest", Text = "Hit a training dummy for 30 seconds to set your DPS score and join the leaderboard." },
-	{ Key = "Summon", Text = "Open Ring Summon (G) and summon your first new ring." },
+	{ Key = "DpsTest", Text = "Hit a training dummy for 30 seconds to join the leaderboard!" },
+	{ Key = "Summon", Text = "Open Summon and get your first new ring!" },
 } :: { Step }
 
 -- Награда за прохождение всех шагов

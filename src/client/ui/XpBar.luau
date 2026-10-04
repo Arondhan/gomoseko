@@ -1,5 +1,5 @@
 --!strict
--- Тонкая полоса опыта над панелью колец (как в WoW): фиолетовая заливка, текст «Ур. N · cur / max».
+-- Тонкая полоса опыта внизу по центру: фиолетовая заливка, текст «Lv. N · cur / max».
 -- Данные — из атрибутов Player "Level", "XP", "XPToNext" (ведёт PlayerStatsService).
 
 local Players = game:GetService("Players")
@@ -15,8 +15,8 @@ function XpBar.build(parent: Instance)
 	local holder = Theme.new("Frame", {
 		Name = "XpBar",
 		AnchorPoint = Vector2.new(0.5, 1),
-		Position = UDim2.new(0.5, 0, 1, -114),
-		Size = UDim2.fromOffset(300, 14),
+		Position = UDim2.new(0.5, 0, 1, -14),
+		Size = UDim2.fromOffset(380, 18),
 		BackgroundTransparency = 1,
 	}, parent)
 	local bar = StatusBar.new(holder, UDim2.fromScale(0, 0), UDim2.fromScale(1, 1), Theme.Xp)

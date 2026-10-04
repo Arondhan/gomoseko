@@ -1,10 +1,9 @@
 --!strict
--- Таргет-система в стиле WoW: ЛКМ по врагу выбирает цель, Tab — ближайшая цель (повтор — следующая),
--- клик по пустому месту / смерть / исчезновение цели снимают выбор. Выбранная цель подсвечивается контуром.
+-- Таргет: клик/тап по врагу выбирает цель (она подсвечивается контуром и становится целью атаки); без выбранной цели
+-- сервер сам бьёт ближайшего врага. Клик по пустому месту / смерть / исчезновение цели снимают выбор.
 -- Цель — только модель с тегом "Enemy" и живым Humanoid. Урон и проверки всё равно делает сервер.
 
 local CollectionService = game:GetService("CollectionService")
-local ContextActionService = game:GetService("ContextActionService")
 local GuiService = game:GetService("GuiService")
 local Players = game:GetService("Players")
 local UserInputService = game:GetService("UserInputService")
@@ -24,7 +23,6 @@ local OUTLINE_COLOR = Color3.fromRGB(255, 70, 50)
 
 local localPlayer = Players.LocalPlayer
 local target: Model? = nil
-local notify: (string) -> () = function() end -- сообщение игроку (ui/Notice), задаётся в start()
 local highlight: Highlight? = nil
 local connections: { RBXScriptConnection } = {}
 
@@ -46,12 +44,6 @@ local function findEnemyModel(instance: Instance): Model?
 		current = current.Parent
 	end
 	return nil
-end
-
-local function myRoot(): BasePart?
-	local character = localPlayer.Character
-	local root = character and character:FindFirstChild("HumanoidRootPart")
-	return if root and root:IsA("BasePart") then root else nil
 end
 
 function TargetController.getTarget(): Model?
@@ -107,53 +99,6 @@ function TargetController.select(model: Model)
 	TargetController.changed:Fire(model)
 end
 
--- Tab (как в WoW): враги, видимые на экране в радиусе TabTargetRange, по возрастанию расстояния.
--- Tab — ближайший / следующий по кругу, Shift+Tab — предыдущий. Если подходящих нет — сообщение игроку.
-local function cycleTarget(backwards: boolean)
-	local root = myRoot()
-	local camera = Workspace.CurrentCamera
-	if not (root and camera) then
-		return
-	end
-	local list: { { model: Model, dist: number } } = {}
-	for _, instance in CollectionService:GetTagged(CombatConfig.EnemyTag) do
-		if isAliveEnemy(instance) then
-			local model = instance :: Model
-			local enemyRoot = model:FindFirstChild("HumanoidRootPart") :: BasePart
-			local dist = (enemyRoot.Position - root.Position).Magnitude
-			if dist <= CombatConfig.TabTargetRange then
-				local _, onScreen = camera:WorldToViewportPoint(enemyRoot.Position)
-				if onScreen then
-					table.insert(list, { model = model, dist = dist })
-				end
-			end
-		end
-	end
-	if #list == 0 then
-		notify("No targets nearby")
-		return
-	end
-	table.sort(list, function(a, b)
-		return a.dist < b.dist
-	end)
-
-	-- позиция текущей цели в списке (0 — цели нет или она не попала в список)
-	local currentIndex = 0
-	for i, entry in list do
-		if entry.model == target then
-			currentIndex = i
-			break
-		end
-	end
-	local nextIndex
-	if backwards then
-		nextIndex = if currentIndex <= 1 then #list else currentIndex - 1
-	else
-		nextIndex = currentIndex % #list + 1
-	end
-	TargetController.select(list[nextIndex].model)
-end
-
 -- Выбор по точке экрана (screenPoint — как GetMouseLocation, с учётом верхней панели): враг — выбираем, иначе снимаем
 local function pickAt(screenPoint: Vector2)
 	local camera = Workspace.CurrentCamera
@@ -177,15 +122,7 @@ local function pickAt(screenPoint: Vector2)
 	end
 end
 
--- Для кнопки «Target» на телефоне и клавиши Tab: ближайшая цель / следующая / предыдущая
-function TargetController.cycle(backwards: boolean?)
-	cycleTarget(backwards == true)
-end
-
-function TargetController.start(notifyCallback: ((string) -> ())?)
-	if notifyCallback then
-		notify = notifyCallback
-	end
+function TargetController.start()
 	local touches: { [InputObject]: { position: Vector2, time: number } } = {}
 	UserInputService.InputBegan:Connect(function(input: InputObject, processed: boolean)
 		if processed then
@@ -209,16 +146,6 @@ function TargetController.start(notifyCallback: ((string) -> ())?)
 			pickAt(position + GuiService:GetGuiInset())
 		end
 	end)
-
-	-- ContextActionService на высоком приоритете, чтобы Tab не открывал стандартный список игроков
-	ContextActionService:BindActionAtPriority("TargetCycle", function(_, state)
-		if state == Enum.UserInputState.Begin then
-			local shift = UserInputService:IsKeyDown(Enum.KeyCode.LeftShift)
-				or UserInputService:IsKeyDown(Enum.KeyCode.RightShift)
-			cycleTarget(shift)
-		end
-		return Enum.ContextActionResult.Sink
-	end, false, Enum.ContextActionPriority.High.Value, Enum.KeyCode.Tab)
 end
 
 return TargetController

@@ -38,11 +38,10 @@ local Sounds = require(game:GetService("ReplicatedStorage"):WaitForChild("Shared
 
 local ui = script.Parent:WaitForChild("ui")
 local Theme = require(ui:WaitForChild("Theme"))
-local RingBar = require(ui:WaitForChild("RingBar"))
+local RingsWindow = require(ui:WaitForChild("RingsWindow"))
+local AttackButton = require(ui:WaitForChild("AttackButton"))
 local SideMenu = require(ui:WaitForChild("SideMenu"))
 local BoostWindow = require(ui:WaitForChild("BoostWindow"))
-local Inventory = require(ui:WaitForChild("Inventory"))
-local Character = require(ui:WaitForChild("Character"))
 local Drag = require(ui:WaitForChild("Drag"))
 local Shop = require(ui:WaitForChild("Shop"))
 local Summon = require(ui:WaitForChild("Summon"))
@@ -53,19 +52,15 @@ local SettingsWindow = require(ui:WaitForChild("SettingsWindow"))
 local DpsMeter = require(ui:WaitForChild("DpsMeter"))
 local Leaderboard = require(ui:WaitForChild("Leaderboard"))
 local OnboardingTracker = require(ui:WaitForChild("OnboardingTracker"))
-local TouchButtons = require(ui:WaitForChild("TouchButtons"))
 local PlayerFrame = require(ui:WaitForChild("PlayerFrame"))
-local TargetFrame = require(ui:WaitForChild("TargetFrame"))
 local Tooltip = require(ui:WaitForChild("Tooltip"))
 local Notice = require(ui:WaitForChild("Notice"))
 local XpBar = require(ui:WaitForChild("XpBar"))
-local CastBar = require(ui:WaitForChild("CastBar"))
 
 -- стандартный рюкзак мешает клавишам 1-4, а стандартная полоска здоровья дублирует PlayerFrame
 pcall(function()
 	StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.Backpack, false)
 	StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.Health, false)
-	StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.PlayerList, false) -- Tab теперь выбирает цель
 end)
 
 local localPlayer = Players.LocalPlayer
@@ -97,13 +92,11 @@ end
 local isPhone = UserInputService.TouchEnabled and not UserInputService.KeyboardEnabled
 
 PlayerFrame.build(gui)
-local targetFrame = TargetFrame.build(gui)
 local notice = Notice.build(gui)
 XpBar.build(gui)
-local castBar = CastBar.build(gui)
 local tooltip = Tooltip.build(gui, SkillController.getSkill)
 
--- перенос кольца ИЗ слота (панель колец или окно персонажа): на другой слот — обмен, в пустоту — снять
+-- перенос кольца ИЗ слота окна Rings: на другой слот — обмен, в пустоту — снять
 local function startSlotDrag(ring: any, fromSlot: number)
 	Drag.start(gui, ring, function(slot)
 		if slot == nil then
@@ -114,21 +107,25 @@ local function startSlotDrag(ring: any, fromSlot: number)
 	end)
 end
 
-local ringBar = RingBar.build(gui, {
-	onDragStart = function(slot)
+-- первый слот с кольцом, дающим скилл (его и кастует кнопка Attack)
+local function skillSlot(): number?
+	for slot = 1, 4 do
 		local ring = InventoryController.getRingInSlot(slot)
-		if ring then
-			startSlotDrag(ring, slot)
+		if ring and ring.SkillId then
+			return slot
 		end
-	end,
-	onActivate = SkillController.castSlot, -- ЛКМ по слоту = нажатие его клавиши
-	onUnequip = InventoryController.unequip, -- ПКМ по слоту снимает кольцо
-	onHover = function(slot)
-		local ring = if slot then InventoryController.getRingInSlot(slot) else nil
-		if ring then
-			tooltip.showRing(ring)
+	end
+	return nil
+end
+
+local attack = AttackButton.build(gui, {
+	tooltip = tooltip,
+	onPress = function()
+		local slot = skillSlot()
+		if slot then
+			SkillController.castSlot(slot)
 		else
-			tooltip.hide()
+			notice.show("Wear a ring with a skill: open Rings", Theme.Warn)
 		end
 	end,
 })
@@ -145,25 +142,20 @@ if isPhone then
 	luckHud.afk.AnchorPoint = Vector2.new(1, 0)
 	luckHud.afk.Position = UDim2.new(1, -8, 0, 178)
 	luckHud.afk.TextXAlignment = Enum.TextXAlignment.Right
+	attack.frame.Position = UDim2.new(1, -190, 1, -40) -- левее кнопки прыжка Roblox
 end
-TouchButtons.build(gui, {
-	onTarget = function()
-		TargetController.cycle(false)
-	end,
-})
 OnboardingTracker.build(gui, function()
 	notice.show("Tutorial complete! Crystals added.", Theme.GoldLight)
 end)
 
-local character = Character.build(gui, {
+local rings = RingsWindow.build(gui, {
 	controller = InventoryController,
 	tooltip = tooltip,
 	startDrag = startSlotDrag,
 })
 
--- цели переноса колец: панель колец и окно персонажа
-Drag.registerTarget({ getSlotAtPosition = ringBar.getSlotAtPosition, highlight = ringBar.highlightSlot })
-Drag.registerTarget({ getSlotAtPosition = character.getSlotAtPosition, highlight = character.highlightSlot })
+-- цель переноса колец: слоты окна Rings
+Drag.registerTarget({ getSlotAtPosition = rings.getSlotAtPosition, highlight = rings.highlightSlot })
 
 local summon = Summon.build(gui, {
 	gacha = GachaController,
@@ -177,7 +169,6 @@ local indexMilestones: { number } = {}
 for _, milestone in GachaConfig.Index.Milestones do
 	table.insert(indexMilestones, milestone.Percent)
 end
-local inventoryWindow = Inventory.build(gui, { controller = InventoryController, tooltip = tooltip })
 local shopWindow = Shop.build(gui, { notify = notice.show, openOdds = summon.openOdds, gacha = GachaController })
 local boostWindow = BoostWindow.build(gui, {
 	gacha = GachaController,
@@ -187,8 +178,8 @@ local boostWindow = BoostWindow.build(gui, {
 	end,
 })
 local windows = {
-	{ window = character.window, key = Enum.KeyCode.C },
-	{ window = inventoryWindow, key = Enum.KeyCode.I },
+	{ window = rings.window, button = menu.rings, key = Enum.KeyCode.C },
+	{ window = rings.window, key = Enum.KeyCode.I },
 	{
 		window = IndexWindow.build(gui, {
 			index = IndexController,
@@ -216,18 +207,6 @@ for _, entry in windows do
 		entry.window.changed.Event:Connect(entry.button.setActive)
 	end
 end
-
--- «Rings» открывает персонажа (слоты) и инвентарь вместе
-menu.rings.click.Event:Connect(function()
-	local open = not (character.window.isOpen or inventoryWindow.isOpen)
-	character.window.setOpen(open)
-	inventoryWindow.setOpen(open)
-end)
-local function refreshRingsTile()
-	menu.rings.setActive(character.window.isOpen or inventoryWindow.isOpen)
-end
-character.window.changed.Event:Connect(refreshRingsTile)
-inventoryWindow.changed.Event:Connect(refreshRingsTile)
 
 -- красные точки: есть бесплатный ролл / можно забрать награду Index
 local function refreshPings()
@@ -275,43 +254,33 @@ GachaController.announced.Event:Connect(function(info)
 	end
 end)
 
--- кольца из состояния сервера -> иконки в слотах RingBar
+-- кольца из состояния сервера -> слоты окна Rings и кнопка Attack
 InventoryController.changed.Event:Connect(function()
 	task.spawn(IndexController.refresh) -- возможно, найдено новое кольцо
 	tooltip.hide()
-	for i = 1, ringBar.slotCount do
-		local ring = InventoryController.getRingInSlot(i)
-		ringBar.setSlot(i, ring)
-		character.setSlot(i, ring)
+	for i = 1, rings.slotCount do
+		rings.setSlot(i, InventoryController.getRingInSlot(i))
 	end
+	local slot = skillSlot()
+	attack.setRing(if slot then InventoryController.getRingInSlot(slot) else nil)
 end)
 
--- оверлей кулдауна на слотах (каждый кадр, только отображение)
+-- кулдаун на кнопке Attack (каждый кадр, только отображение)
 RunService.RenderStepped:Connect(function()
-	for i = 1, ringBar.slotCount do
-		local ring = InventoryController.getRingInSlot(i)
-		if ring then
-			local remaining, total = SkillController.getCooldown(ring.SkillId)
-			ringBar.setCooldown(i, remaining, total)
-		else
-			ringBar.setCooldown(i, 0, 0)
-		end
+	local slot = skillSlot()
+	local ring = if slot then InventoryController.getRingInSlot(slot) else nil
+	if ring and ring.SkillId then
+		local remaining, total = SkillController.getCooldown(ring.SkillId)
+		attack.setCooldown(remaining, total)
+	else
+		attack.setCooldown(0, 0)
 	end
 end)
 
--- таргет -> фрейм цели
-TargetController.changed.Event:Connect(function(model)
-	targetFrame.setTarget(model)
-end)
-
--- cast bar следует за событиями скилл-контроллера
-SkillController.castStarted.Event:Connect(castBar.start)
 -- звук начала каста (заряд молнии) — только у самого кастера
 SkillController.castStarted.Event:Connect(function()
 	Sfx.play2D(Sounds.id("ArcLightningCharge"), 0.8)
 end)
-SkillController.castFinished.Event:Connect(castBar.finish)
-SkillController.castCancelled.Event:Connect(castBar.cancel)
 
 -- «ding» при повышении уровня (атрибут Level растёт на сервере)
 local lastLevel = localPlayer:GetAttribute("Level")
@@ -330,8 +299,8 @@ InventoryController.start()
 GachaController.start()
 LuckController.start()
 IndexController.start()
-TargetController.start(notice.show)
-SkillController.start(notice.show, ringBar.press)
+TargetController.start()
+SkillController.start(notice.show, attack.press)
 LightningRenderer.start()
 DamageNumbers.start()
 TorchFlicker.start()
@@ -345,7 +314,7 @@ UserInputService.InputBegan:Connect(function(input, processed)
 		for _, entry in windows do
 			entry.window.setOpen(false)
 		end
-		TargetController.clear() -- как в WoW: Esc снимает цель
+		TargetController.clear() -- Esc снимает цель
 		return
 	end
 	if processed then
@@ -353,7 +322,7 @@ UserInputService.InputBegan:Connect(function(input, processed)
 	end
 	for i, key in slotKeys do
 		if input.KeyCode == key then
-			ringBar.press(i)
+			attack.press()
 			SkillController.castSlot(i)
 			return
 		end
