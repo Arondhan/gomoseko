@@ -21,7 +21,9 @@ local CurrencyService = require(Services:WaitForChild("CurrencyService"))
 local DataService = require(Services:WaitForChild("DataService"))
 local InventoryService = require(Services:WaitForChild("InventoryService"))
 local MonetizationService = require(Services:WaitForChild("MonetizationService"))
+local LuckEventService = require(Services:WaitForChild("LuckEventService"))
 local OnboardingService = require(Services:WaitForChild("OnboardingService"))
+local PlaytimeLuckService = require(Services:WaitForChild("PlaytimeLuckService"))
 local StatsService = require(Services:WaitForChild("StatsService"))
 
 local GachaService = {}
@@ -45,7 +47,7 @@ local function fail(reason: string): Types.GachaRollResponse
 	return { ok = false, reason = reason }
 end
 
--- Удача игрока: 1 + (бонусы колец [+ платные источники]) / 100. includePaid = false — для бесплатного ролла.
+-- Удача игрока: 1 + (бонусы колец + AFK-время + Lucky Hour [+ платные источники]) / 100. includePaid = false — для бесплатного ролла.
 local function computeLuck(player: Player, includePaid: boolean): (number, { Types.LuckSource })
 	local sources: { Types.LuckSource } = {}
 	local total = 0
@@ -53,6 +55,17 @@ local function computeLuck(player: Player, includePaid: boolean): (number, { Typ
 	if ringLuck > 0 then
 		table.insert(sources, { name = "Equipped rings", percent = ringLuck })
 		total += ringLuck
+	end
+	-- бесплатные источники (входят и в бесплатный ролл): время на сервере и Lucky Hour
+	local playtime = PlaytimeLuckService.percent(player)
+	if playtime > 0 then
+		table.insert(sources, { name = "AFK Playtime", percent = playtime })
+		total += playtime
+	end
+	local event = LuckEventService.percent()
+	if event > 0 then
+		table.insert(sources, { name = GachaConfig.LuckEvent.Name, percent = event })
+		total += event
 	end
 	if includePaid and not MonetizationService.isPaidRandomRestricted(player) then
 		local profile = DataService.get(player)

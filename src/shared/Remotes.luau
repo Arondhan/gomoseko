@@ -28,6 +28,9 @@ local DEFINITIONS: { [string]: string } = {
 	DpsGetBoards = "RemoteFunction", -- клиент -> сервер: () -> DpsBoardsResponse
 	SettingsGet = "RemoteFunction", -- клиент -> сервер: () -> Settings
 	SettingsSet = "RemoteFunction", -- клиент -> сервер: (key: string, value: any) -> boolean
+	LuckBoostsGet = "RemoteFunction", -- клиент -> сервер: () -> LuckBoosts (AFK-удача + Lucky Hour)
+	PlaytimeLuck = "RemoteEvent", -- сервер -> клиент: PlaytimeLuck (шаг AFK-удачи изменился)
+	LuckEvent = "RemoteEvent", -- сервер -> все клиенты: LuckEventStatus (Lucky Hour начался/закончился)
 	CastCancelled = "RemoteEvent", -- сервер -> клиент кастера: (skillId: string, reason: string) — каст сорван
 }
 

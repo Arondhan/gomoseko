@@ -15,6 +15,9 @@ require(Services:WaitForChild("StatsService")).start() -- бонусы коле�
 require(Services:WaitForChild("PlayerStatsService")).start() -- мана, уровень, опыт
 require(Services:WaitForChild("InventoryService")).start()
 require(Services:WaitForChild("MonetizationService")).start() -- Robux-покупки и политика регионов
+require(Services:WaitForChild("PlaytimeLuckService")).start() -- AFK-удача за время на сервере
+require(Services:WaitForChild("LuckEventService")).start() -- Lucky Hour
 require(Services:WaitForChild("GachaService")).start()
+require(Services:WaitForChild("OverheadTitleService")).start() -- титул над головой
 require(Services:WaitForChild("DpsService")).start() -- DPS-арена и лидерборды
 require(Services:WaitForChild("CombatService")).start()

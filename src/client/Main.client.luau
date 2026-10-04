@@ -24,9 +24,11 @@ local SkillController = require(Controllers:WaitForChild("SkillController"))
 local GachaController = require(Controllers:WaitForChild("GachaController"))
 local SettingsController = require(Controllers:WaitForChild("SettingsController"))
 local DpsController = require(Controllers:WaitForChild("DpsController"))
+local LuckController = require(Controllers:WaitForChild("LuckController"))
 local LightningRenderer = require(script.Parent:WaitForChild("VFX"):WaitForChild("LightningRenderer"))
 local DamageNumbers = require(script.Parent:WaitForChild("VFX"):WaitForChild("DamageNumbers"))
 local TorchFlicker = require(script.Parent:WaitForChild("VFX"):WaitForChild("TorchFlicker"))
+local TitleGradient = require(script.Parent:WaitForChild("VFX"):WaitForChild("TitleGradient"))
 local Sfx = require(script.Parent:WaitForChild("VFX"):WaitForChild("Sfx"))
 local Sounds = require(game:GetService("ReplicatedStorage"):WaitForChild("Shared"):WaitForChild("Sounds"))
 
@@ -40,6 +42,7 @@ local Drag = require(ui:WaitForChild("Drag"))
 local Shop = require(ui:WaitForChild("Shop"))
 local Summon = require(ui:WaitForChild("Summon"))
 local CurrencyBar = require(ui:WaitForChild("CurrencyBar"))
+local LuckHud = require(ui:WaitForChild("LuckHud"))
 local SettingsWindow = require(ui:WaitForChild("SettingsWindow"))
 local DpsMeter = require(ui:WaitForChild("DpsMeter"))
 local Leaderboard = require(ui:WaitForChild("Leaderboard"))
@@ -125,6 +128,7 @@ local ringBar = RingBar.build(gui, {
 })
 local menu = MicroMenu.build(gui, tooltip)
 local currencyBar = CurrencyBar.build(gui, tooltip)
+local luckHud = LuckHud.build(gui, { luck = LuckController, tooltip = tooltip, notify = notice.show })
 
 -- на телефоне справа внизу кнопка прыжка Roblox: переносим меню и валюты вверх вправо
 if isPhone then
@@ -132,6 +136,8 @@ if isPhone then
 	menu.frame.Position = UDim2.new(1, -8, 0, 64)
 	currencyBar.frame.AnchorPoint = Vector2.new(1, 0)
 	currencyBar.frame.Position = UDim2.new(1, -8, 0, 136)
+	luckHud.afk.AnchorPoint = Vector2.new(1, 0)
+	luckHud.afk.Position = UDim2.new(1, -8, 0, 176)
 end
 TouchButtons.build(gui, {
 	onTarget = function()
@@ -260,11 +266,13 @@ DpsController.start()
 SettingsController.start()
 InventoryController.start()
 GachaController.start()
+LuckController.start()
 TargetController.start(notice.show)
 SkillController.start(notice.show, ringBar.press)
 LightningRenderer.start()
 DamageNumbers.start()
 TorchFlicker.start()
+TitleGradient.start()
 
 local slotKeys = { Enum.KeyCode.One, Enum.KeyCode.Two, Enum.KeyCode.Three, Enum.KeyCode.Four }
 

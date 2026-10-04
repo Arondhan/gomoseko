@@ -191,6 +191,19 @@ turned off and only the free roll remains. Review the current
 - **Text size**: sizes are bigger (`Theme.TextSize`) and the UI scale is `clamp(height / 800, 0.6, 1.4)` so text stays
   readable on 1080p+ monitors; on phones please test on a real device.
 
+## Overhead title, AFK luck and Lucky Hour
+
+- **Overhead title** (`server/Services/OverheadTitleService.luau`): a `BillboardGui` over the head shows the nickname,
+  your rarest equipped ring and `[1 in X]`; it is rebuilt on every equip/unequip. Rings at `Overhead.MinGradientOneIn`
+  (1 in 500) or rarer get a `UIGradient` wave of colour, `RainbowOneIn` (1 in 1,000,000)+ a rainbow;
+  `client/VFX/TitleGradient.luau` animates them (one shared loop, culled beyond 70 studs).
+- **AFK Playtime Luck** (`PlaytimeLuckService`): every 10 minutes on the same server adds +0.1x luck, up to +1.0x;
+  kept in server memory only, so leaving resets it. The server sends the value over `PlaytimeLuck` /
+  `LuckBoostsGet`; the HUD line "AFK Luck: +0.2x" shows it. Config: `GachaConfig.Playtime`.
+- **Lucky Hour** (`LuckEventService`): every 30 minutes for 5 minutes everyone gets +1.0x luck (schedule from the unix
+  clock, so all servers agree). Config: `GachaConfig.LuckEvent`. Both bonuses are free luck sources: they apply to the
+  free roll too and appear in the luck breakdown and the odds table, so the shown odds stay the real ones.
+
 ## Sounds
 
 The sounds (`arc_lightning_charge.ogg` — cast charge, `arc_lightning_zap.ogg` — impact crackle,

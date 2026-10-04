@@ -14,6 +14,29 @@ local GachaConfig = {
 		Max = 25,
 	},
 
+	-- AFK Playtime Luck: за каждые StepSeconds непрерывной игры на сервере +StepPercent % удачи (+0.1x), максимум
+	-- MaxPercent (+1.0x => общий множитель x2.0 при прочих равных). Хранится только в памяти сервера: выход сбрасывает.
+	Playtime = {
+		StepSeconds = 600,
+		StepPercent = 10,
+		MaxPercent = 100,
+	},
+
+	-- Lucky Hour: окно удачи по расписанию (по unix-времени, поэтому одинаково на всех серверах без MessagingService).
+	-- Каждые Period секунд на Duration секунд все получают +Percent % удачи; показывается в разбивке удачи и в шансах.
+	LuckEvent = {
+		Name = "Lucky Hour",
+		Period = 1800,
+		Duration = 300,
+		Percent = 100,
+	},
+
+	-- Титул над головой: градиент-волна для колец не реже 1 из MinGradientOneIn, радужная — от RainbowOneIn
+	Overhead = {
+		MinGradientOneIn = 500,
+		RainbowOneIn = 1000000,
+	},
+
 	-- Находки не реже 1 из MinOneIn объявляются всем игрокам
 	Announce = {
 		MinOneIn = 100000,
