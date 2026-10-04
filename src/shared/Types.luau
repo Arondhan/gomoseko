@@ -68,6 +68,7 @@ export type RingDef = {
 export type InventoryState = {
 	items: { string },
 	equipped: { string },
+	levels: { [string]: number }, -- уровни колец (нет записи = 1)
 }
 
 -- Одно звено цепной молнии (сервер -> все клиенты, только для визуала)

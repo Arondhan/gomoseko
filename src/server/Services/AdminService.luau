@@ -114,6 +114,14 @@ ACTIONS.SetLevel = function(player, level)
 	return true, string.format("Level set to %d", math.floor(level))
 end
 
+ACTIONS.RingLevels = function(player: Player, level: any)
+	if type(level) ~= "number" or level ~= level or level < 0 or level > 10 then
+		return false, "Invalid level"
+	end
+	InventoryService.setAllRingLevels(player, math.floor(level))
+	return true, if level > 1 then "All your rings are level " .. math.floor(level) else "Ring levels reset"
+end
+
 ACTIONS.ToggleFlag = function(player, name)
 	local attribute = if type(name) == "string" then FLAGS[name] else nil
 	if not attribute then

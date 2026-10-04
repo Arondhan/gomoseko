@@ -7,6 +7,7 @@ local Players = game:GetService("Players")
 local Chrome = require(script.Parent.Chrome)
 local Drag = require(script.Parent.Drag)
 local Glyphs = require(script.Parent.Glyphs)
+local RingBadges = require(script.Parent.RingBadges)
 local RingIcon = require(script.Parent.RingIcon)
 local Theme = require(script.Parent.Theme)
 
@@ -17,10 +18,11 @@ local CELL_SIZE = 52
 local CELL_GAP = 6
 
 -- parent — ScreenGui (для «призрака» при переносе), container — Frame внутри окна Rings,
--- deps: { controller = InventoryController, tooltip = Tooltip.build(...) }
+-- deps: { controller = InventoryController, tooltip = Tooltip.build(...), notify = (text, color?) -> () }
 function Inventory.build(parent: Instance, container: GuiObject, deps: any)
 	local controller = deps.controller
 	local tooltip = deps.tooltip
+	local notify: (string, Color3?) -> () = deps.notify or function() end
 	local player = Players.LocalPlayer
 
 	-- ряды сетки; нижняя строка (ячейки + золото) — 28 px
@@ -116,7 +118,9 @@ function Inventory.build(parent: Instance, container: GuiObject, deps: any)
 	end
 
 	-- перерисовка предметов по состоянию контроллера
+	local badgeUpdaters: { () -> () } = {}
 	local function refresh()
+		table.clear(badgeUpdaters)
 		for i, cell in cells do
 			local old = cell:FindFirstChild("Item")
 			if old then
@@ -143,6 +147,7 @@ function Inventory.build(parent: Instance, container: GuiObject, deps: any)
 				ZIndex = 2,
 			}, cell)
 			RingIcon.new(item, ring)
+			table.insert(badgeUpdaters, RingBadges.add(item, ring, controller, notify).update)
 
 			-- пометка «надето» (номер слота)
 			local equippedSlot = controller.getSlotOf(ring.Id)
@@ -161,7 +166,7 @@ function Inventory.build(parent: Instance, container: GuiObject, deps: any)
 			end
 
 			item.MouseEnter:Connect(function()
-				tooltip.showRing(ring)
+				tooltip.showRing(ring, controller.getLevel(ring.Id))
 			end)
 			item.MouseLeave:Connect(function()
 				tooltip.hide()
@@ -184,6 +189,14 @@ function Inventory.build(parent: Instance, container: GuiObject, deps: any)
 	end
 
 	controller.changed.Event:Connect(refresh)
+	-- цвет ▲ следует за балансом Essence/Gold, без перерисовки сетки
+	for _, name in { "Essence", "Gold" } do
+		player:GetAttributeChangedSignal(name):Connect(function()
+			for _, update in badgeUpdaters do
+				update()
+			end
+		end)
+	end
 	refresh()
 end
 

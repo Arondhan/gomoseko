@@ -15,7 +15,7 @@ local InventoryController = {}
 -- срабатывает при любом изменении состояния (как Window.changed в ui/Window)
 InventoryController.changed = Instance.new("BindableEvent")
 
-local state: Types.InventoryState = { items = {}, equipped = {} }
+local state: Types.InventoryState = { items = {}, equipped = {}, levels = {} }
 
 function InventoryController.getItems(): { Types.RingDef }
 	local list = {}
@@ -64,6 +64,24 @@ function InventoryController.firstFreeSlot(): number?
 	return nil
 end
 
+-- Уровень кольца (1, если не улучшалось)
+function InventoryController.getLevel(itemId: string): number
+	local level = state.levels[itemId]
+	return if type(level) == "number" then level else 1
+end
+
+-- Улучшить кольцо на уровень (yield): (успех, сообщение сервера). Новое состояние придёт через changed.
+function InventoryController.upgrade(itemId: string): (boolean, string)
+	local remote = Remotes.get("RingUpgrade") :: RemoteFunction
+	local ok, success, message = pcall(function()
+		return remote:InvokeServer(itemId)
+	end)
+	if not ok then
+		return false, "Connection problem, try again"
+	end
+	return success == true, tostring(message)
+end
+
 -- Запросить у сервера надеть кольцо в слот (результат придёт через changed)
 function InventoryController.equip(itemId: string, slot: number)
 	local remote = Remotes.get("InventoryEquip") :: RemoteFunction
@@ -84,6 +102,9 @@ function InventoryController.unequip(slot: number)
 end
 
 local function setState(newState: Types.InventoryState)
+	if type(newState.levels) ~= "table" then
+		newState.levels = {}
+	end
 	state = newState
 	InventoryController.changed:Fire()
 end
