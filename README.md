@@ -94,7 +94,8 @@ rojo build default.project.json -o build/gomoseko.rbxl
 
 | Key / action              | What it does                                                                  |
 | ------------------------- | ----------------------------------------------------------------------------- |
-| Attack button / `Q`       | cast the ring skill on the selected target, or on the nearest enemy           |
+| Attack button / `Q`       | cast the first ring skill on the selected target, or on the nearest enemy     |
+| Small skill buttons / `E` / `R` | other ring skills (Fireball `E`, Meteor `R`); `1`-`4` cast by slot       |
 | `1`-`4`                   | use the ring in that slot                                                     |
 | Click on an enemy         | select it (outline) so the attack goes there; click empty space / `Esc` clears |
 | `C` / `I`                 | Rings window: 4 slots on top, all rings below; tap a ring to wear / remove it |
@@ -106,6 +107,16 @@ rojo build default.project.json -o build/gomoseko.rbxl
 | `V`                       | Boost window: your luck, AFK luck, Lucky Hour timer, link to luck potions      |
 | `N`                       | Ring Index: collection book with rewards at 25 / 50 / 100 %                   |
 | `Esc`                     | close open windows and clear the target                                       |
+
+**Skills.** Every skill is a config in `Configs/Skills` with a `Kind` and a handler in `CombatService.HANDLERS`:
+- **Arc Lightning** (`Chain`, Epic ring) — chain lightning that jumps between enemies.
+- **Fireball** (`Projectile`, Ember Band, Rare 1 in 80) — a fireball flies to the target and explodes, hitting everything in
+  `ExplosionRadius`.
+- **Meteor** (`Meteor`, Starfall Ring, Legendary 1 in 7,500) — marks the ground, `Delay` seconds later a meteor hits the
+  circle; an enemy that walks away in time is safe.
+Damage, mana, cooldown, range and targets are validated on the server; `client/VFX/SkillEffects.luau` only draws the
+effect. The first skill ring sits on the big Attack button, up to three more get small buttons around it. To add a
+skill: a config, a registry entry on the server and client, a ring in `RingsConfig` and (for a new kind) a handler.
 
 **Arc Lightning.** The lightning hits a target (the selected one or, with no target, the nearest enemy within cast
 range), then jumps to the nearest enemies within the bounce radius, never hitting the same enemy twice in a chain.
@@ -218,7 +229,8 @@ players get their Index automatically. Progress math is in `shared/Gacha/IndexMa
 ## Sounds
 
 The sounds (`arc_lightning_charge.ogg` — cast charge, `arc_lightning_zap.ogg` — impact crackle,
-`thunder_boom.ogg` — rare-roll thunder, `reveal_tick.ogg` — card flip tick, all in `assets/audio`) are synthesized by `tools/make_audio.py` (re-run it to regenerate). Roblox can only play uploaded
+`thunder_boom.ogg` — rare-roll thunder, `reveal_tick.ogg` — card flip tick, `fireball_cast.ogg` — Fireball/Meteor cast,
+`explosion.ogg` — explosion, all in `assets/audio`) are synthesized by `tools/make_audio.py` (re-run it to regenerate). Roblox can only play uploaded
 assets, so upload them once:
 
 1. `rokit add jacktabscode/asphalt` (adds [Asphalt](https://github.com/jackTabsCode/asphalt) to `rokit.toml`).

@@ -17,6 +17,7 @@ local DEFINITIONS: { [string]: string } = {
 	InventoryEquip = "RemoteFunction", -- клиент -> сервер: (itemId: string, slot: number) -> boolean
 	InventoryUnequip = "RemoteFunction", -- клиент -> сервер: (slot: number) -> boolean
 	InventoryChanged = "RemoteEvent", -- сервер -> клиент: InventoryState
+	SkillEffect = "RemoteEvent", -- сервер -> все клиенты: SkillEffect (визуал Fireball/Meteor; урон считает сервер)
 	DamageDealt = "RemoteEvent", -- сервер -> клиент нанёсшего урон: DamageEvent
 	GachaGetState = "RemoteFunction", -- клиент -> сервер: () -> GachaState
 	GachaRoll = "RemoteFunction", -- клиент -> сервер: (count: number, free: boolean) -> GachaRollResponse

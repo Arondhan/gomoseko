@@ -1,27 +1,42 @@
 --!strict
 -- Общие типы для боевой системы / инвентаря колец. Только типы — кода здесь нет.
 
+-- Вид скилла: как он работает на сервере (CombatService.HANDLERS) и как рисуется на клиенте
+export type SkillKind = "Chain" | "Projectile" | "Meteor"
+
 export type SkillConfig = {
 	Id: string,
 	Name: string,
+	Kind: SkillKind,
 	CastRange: number,
 	Damage: number,
-	MaxBounces: number,
-	BounceRadius: number,
-	BounceDelay: number,
 	Cooldown: number,
 	ManaCost: number,
 	CastTime: number, -- время каста, сек (0 = мгновенно, cast bar скрыт)
 	DefaultKey: Enum.KeyCode?,
 	Color: Color3,
 	CoreColor: Color3,
-	Width: number,
-	CoreWidth: number,
-	ZigzagSegments: number,
-	ZigzagAmplitude: number,
-	FadeTime: number,
 	SoundId: string,
 	SoundVolume: number,
+
+	-- Chain (цепная молния)
+	MaxBounces: number?,
+	BounceRadius: number?,
+	BounceDelay: number?,
+	Width: number?,
+	CoreWidth: number?,
+	ZigzagSegments: number?,
+	ZigzagAmplitude: number?,
+	FadeTime: number?,
+
+	-- Projectile (снаряд со взрывом)
+	ProjectileSpeed: number?, -- studs/сек
+	ExplosionRadius: number?,
+
+	-- Meteor (отложенный удар по точке)
+	Radius: number?,
+	Delay: number?, -- сек между меткой и ударом
+	FallHeight: number?, -- с какой высоты падает метеор (визуал)
 }
 
 export type Quality = "Common" | "Uncommon" | "Rare" | "Epic" | "Legendary" | "Mythic" | "Divine"
@@ -62,6 +77,17 @@ export type LightningHop = {
 	hopIndex: number,
 	from: Vector3,
 	to: Vector3,
+}
+
+-- Визуальный эффект скилла (сервер -> все клиенты): снаряд летит from -> to за duration секунд, метеор падает на to
+export type SkillEffect = {
+	skillId: string,
+	kind: SkillKind,
+	casterUserId: number,
+	from: Vector3,
+	to: Vector3,
+	radius: number,
+	duration: number,
 }
 
 -- Ответ сервера на запрос каста (castTime — сколько секунд длится каст, для cast bar)

@@ -120,7 +120,7 @@ local function playHop(hop: Types.LightningHop)
 	anchor.Parent = getContainer()
 
 	local attachments: { Attachment } = {}
-	for _, point in zigzagPoints(hop.from, hop.to, config.ZigzagSegments, config.ZigzagAmplitude) do
+	for _, point in zigzagPoints(hop.from, hop.to, config.ZigzagSegments or 7, config.ZigzagAmplitude or 1.6) do
 		local attachment = Instance.new("Attachment")
 		attachment.Parent = anchor
 		attachment.WorldPosition = point
@@ -128,20 +128,20 @@ local function playHop(hop: Types.LightningHop)
 	end
 
 	-- на каждое звено ломаной: широкое цветное свечение + узкое яркое ядро
+	local width = config.Width or 1.4
+	local coreWidth = config.CoreWidth or 0.45
+	local fadeTime = config.FadeTime or 0.3
 	local beams: { { beam: Beam, width: number } } = {}
 	for i = 1, #attachments - 1 do
 		local a0, a1 = attachments[i], attachments[i + 1]
-		table.insert(beams, { beam = newBeam(anchor, a0, a1, config.Color, config.Width), width = config.Width })
-		table.insert(
-			beams,
-			{ beam = newBeam(anchor, a0, a1, config.CoreColor, config.CoreWidth), width = config.CoreWidth }
-		)
+		table.insert(beams, { beam = newBeam(anchor, a0, a1, config.Color, width), width = width })
+		table.insert(beams, { beam = newBeam(anchor, a0, a1, config.CoreColor, coreWidth), width = coreWidth })
 	end
 
 	impactEffect(anchor, hop.to, config)
 
 	-- звук разряда в точке попадания (последний Attachment ломаной); ID из конфига скилла или из Assets (Asphalt)
-	local lifetime = config.FadeTime
+	local lifetime = fadeTime
 	local zapId = if config.SoundId ~= "" then config.SoundId else Sounds.id("ArcLightningZap")
 	if zapId ~= "" then
 		Sfx.play3D(zapId, attachments[#attachments], config.SoundVolume)
@@ -160,7 +160,7 @@ local function playHop(hop: Types.LightningHop)
 	end)
 	local tween = TweenService:Create(
 		fade,
-		TweenInfo.new(config.FadeTime, Enum.EasingStyle.Quad, Enum.EasingDirection.In),
+		TweenInfo.new(fadeTime, Enum.EasingStyle.Quad, Enum.EasingDirection.In),
 		{ Value = 1 }
 	)
 	tween.Completed:Once(function()
