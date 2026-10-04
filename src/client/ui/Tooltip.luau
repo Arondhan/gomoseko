@@ -37,13 +37,13 @@ function Tooltip.build(parent: Instance, getSkill: (skillId: string) -> Types.Sk
 		return #lines + 1
 	end
 
-	local function addLine(text: string, color: Color3, size: number, font: Enum.Font?)
+	local function addLine(text: string, color: Color3, size: number, font: Font?)
 		local label = Chrome.label(frame, {
 			LayoutOrder = nextOrder(),
 			Size = UDim2.new(1, 0, 0, 0),
 			AutomaticSize = Enum.AutomaticSize.Y,
 			Text = text,
-			Font = font or Theme.BodyFont,
+			FontFace = font or Theme.Fonts.Body,
 			TextSize = size,
 			TextColor3 = color,
 			TextStrokeTransparency = 0.6,
@@ -66,7 +66,7 @@ function Tooltip.build(parent: Instance, getSkill: (skillId: string) -> Types.Sk
 			Size = UDim2.fromScale(0.5, 1),
 			Text = left,
 			TextSize = 13,
-			Font = Theme.BodyFont,
+			FontFace = Theme.Fonts.Body,
 			TextColor3 = leftColor,
 			TextStrokeTransparency = 0.6,
 			TextXAlignment = Enum.TextXAlignment.Left,
@@ -78,7 +78,7 @@ function Tooltip.build(parent: Instance, getSkill: (skillId: string) -> Types.Sk
 			Size = UDim2.fromScale(0.5, 1),
 			Text = right,
 			TextSize = 13,
-			Font = Theme.BodyFont,
+			FontFace = Theme.Fonts.Body,
 			TextColor3 = rightColor,
 			TextStrokeTransparency = 0.6,
 			TextXAlignment = Enum.TextXAlignment.Right,
@@ -146,7 +146,7 @@ function Tooltip.build(parent: Instance, getSkill: (skillId: string) -> Types.Sk
 	-- простая подсказка: название, подзаголовок, строки текста
 	function tooltip.show(title: string, subtitle: string?, body: { string }, titleColor: Color3?)
 		clear()
-		addLine(title, titleColor or Theme.GoldLight, 17, Theme.TitleFont)
+		addLine(title, titleColor or Theme.GoldLight, 17, Theme.Fonts.Title)
 		if subtitle then
 			addLine(subtitle, Theme.Muted, 12)
 		end
@@ -160,29 +160,27 @@ function Tooltip.build(parent: Instance, getSkill: (skillId: string) -> Types.Sk
 	function tooltip.showRing(ring: Types.RingDef)
 		clear()
 		local quality = Theme.Quality[ring.Quality] or Theme.Quality.Common
-		addLine(ring.Name, quality, 17, Theme.TitleFont)
-		addRow("Кольцо", Theme.QualityNames[ring.Quality] or "", Color3.new(1, 1, 1), quality)
+		addLine(ring.Name, quality, 17, Theme.Fonts.Title)
+		addRow("Ring", Theme.QualityNames[ring.Quality] or "", Color3.new(1, 1, 1), quality)
 
 		local skill = getSkill(ring.SkillId)
 		if skill then
 			addSeparator()
 			addRow(
-				string.format("%d маны", skill.ManaCost),
-				string.format("Дальность %d", skill.CastRange),
+				string.format("%d mana", skill.ManaCost),
+				string.format("Range %d", skill.CastRange),
 				Color3.new(1, 1, 1),
 				Color3.new(1, 1, 1)
 			)
 			addRow(
-				if skill.CastTime > 0
-					then string.format("%g сек. каст", skill.CastTime)
-					else "Мгновенно",
-				string.format("Перезарядка %g сек.", skill.Cooldown),
+				if skill.CastTime > 0 then string.format("%g sec cast", skill.CastTime) else "Instant",
+				string.format("Cooldown %g sec", skill.Cooldown),
 				Color3.new(1, 1, 1),
 				Color3.new(1, 1, 1)
 			)
 			addLine(
 				string.format(
-					"Использование: %s Урон %d, до %d целей, радиус прыжка %d.",
+					"Use: %s Deals %d damage, hits up to %d targets, jump radius %d.",
 					ring.Description,
 					skill.Damage,
 					skill.MaxBounces + 1,
@@ -190,10 +188,10 @@ function Tooltip.build(parent: Instance, getSkill: (skillId: string) -> Types.Sk
 				),
 				Theme.Warn,
 				14,
-				Theme.SerifFont
+				Theme.Fonts.Serif
 			)
 		else
-			addLine(ring.Description, Theme.Warn, 14, Theme.SerifFont)
+			addLine(ring.Description, Theme.Warn, 14, Theme.Fonts.Serif)
 		end
 		open()
 	end

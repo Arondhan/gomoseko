@@ -63,7 +63,7 @@ function MicroMenu.build(parent: Instance, tooltip: any)
 
 		hit.MouseEnter:Connect(function()
 			Theme.tween(glow, 0.12, { Transparency = 0.4 })
-			tooltip.show(tip, "Горячая клавиша: " .. hotkey, {}, Theme.GoldLight)
+			tooltip.show(tip, "Hotkey: " .. hotkey, {}, Theme.GoldLight)
 		end)
 		hit.MouseLeave:Connect(function()
 			Theme.tween(glow, 0.12, { Transparency = if button.active then 0.5 else 1 })
@@ -77,8 +77,8 @@ function MicroMenu.build(parent: Instance, tooltip: any)
 
 	return {
 		frame = menu,
-		inventory = addButton("InventoryButton", 1, "I", "Инвентарь", Glyphs.bag),
-		shop = addButton("ShopButton", 2, "B", "Магазин", Glyphs.coin),
+		inventory = addButton("InventoryButton", 1, "I", "Inventory", Glyphs.bag),
+		shop = addButton("ShopButton", 2, "B", "Shop", Glyphs.coin),
 	}
 end
 

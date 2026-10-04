@@ -129,7 +129,7 @@ local function cycleTarget(backwards: boolean)
 		end
 	end
 	if #list == 0 then
-		notify("Нет целей поблизости")
+		notify("No targets nearby")
 		return
 	end
 	table.sort(list, function(a, b)

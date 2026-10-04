@@ -32,7 +32,7 @@ function TargetFrame.build(parent: Instance)
 		Name = "Name",
 		Position = UDim2.fromOffset(10, 4),
 		Size = UDim2.new(1, -66, 0, 20),
-		Font = Theme.TitleFont,
+		FontFace = Theme.Fonts.Title,
 		TextSize = 17,
 		TextColor3 = Theme.EnemyName,
 		TextXAlignment = Enum.TextXAlignment.Left,

@@ -14,6 +14,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Workspace = game:GetService("Workspace")
 
 local Config = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("Config"))
+local Fonts = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("Fonts"))
 
 local PI, TAU = math.pi, math.pi * 2
 local H = Config.HALF
@@ -387,12 +388,12 @@ local function prepareStallTemplate()
 		return InsertService:LoadAsset(Config.StallAssetId)
 	end)
 	if not ok or not result then
-		warn("[BuildHub] LoadAsset палатки не удался, используем процедурные палатки: " .. tostring(result))
+		warn("[BuildHub] Stall LoadAsset failed, using procedural stalls: " .. tostring(result))
 		return nil
 	end
 	local picked = pickStall(result)
 	if not picked then
-		warn("[BuildHub] в загруженной модели не найдена палатка, используем процедурные")
+		warn("[BuildHub] no stall found in the loaded model, using procedural stalls")
 		result:Destroy()
 		return nil
 	end
@@ -627,9 +628,9 @@ do
 	local tl = Instance.new("TextLabel")
 	tl.Size = UDim2.fromScale(1, 1)
 	tl.BackgroundTransparency = 1
-	tl.Text = "Комната порталов"
+	tl.Text = "Portal Room"
 	tl.TextScaled = true
-	tl.Font = Enum.Font.GothamBold
+	tl.FontFace = Fonts.Banner
 	tl.TextColor3 = Color3.fromRGB(255, 214, 140)
 	tl.TextStrokeColor3 = Color3.fromRGB(40, 20, 8)
 	tl.TextStrokeTransparency = 0.4
@@ -852,7 +853,7 @@ local function buildDummy(index, cf)
 	local hum = Instance.new("Humanoid")
 	hum.MaxHealth = Config.Dummies.MaxHealth
 	hum.Health = Config.Dummies.MaxHealth
-	hum.DisplayName = "Манекен"
+	hum.DisplayName = "Training Dummy"
 	hum.DisplayDistanceType = Enum.HumanoidDisplayDistanceType.None
 	hum.HealthDisplayType = Enum.HumanoidHealthDisplayType.AlwaysOff
 	hum.BreakJointsOnDeath = false
@@ -873,11 +874,11 @@ local function buildDummy(index, cf)
 	label.Name = "Label"
 	label.Size = UDim2.new(1, 0, 0, 16)
 	label.BackgroundTransparency = 1
-	label.Font = Enum.Font.GothamBold
+	label.FontFace = Fonts.Title
 	label.TextSize = 14
 	label.TextColor3 = Color3.new(1, 1, 1)
 	label.TextStrokeTransparency = 0.4
-	label.Text = "Манекен 100/100"
+	label.Text = "Training Dummy 100/100"
 	label.Parent = gui
 	local back = Instance.new("Frame")
 	back.Name = "Back"
@@ -973,4 +974,4 @@ cc.Parent = Lighting
 -------------------------------------------------------------------------------
 hub.Parent = Workspace
 Workspace:SetAttribute("HubReady", true) -- Dummies дожидается этого флага
-print(string.format("[BuildHub] Workspace.MainHub создан: %d деталей.", partCount))
+print(string.format("[BuildHub] Workspace.MainHub built: %d parts.", partCount))

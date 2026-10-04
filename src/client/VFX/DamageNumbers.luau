@@ -10,6 +10,7 @@ local Workspace = game:GetService("Workspace")
 local Shared = ReplicatedStorage:WaitForChild("Shared")
 local Types = require(Shared:WaitForChild("Types"))
 local Remotes = require(Shared:WaitForChild("Remotes"))
+local Fonts = require(Shared:WaitForChild("Fonts"))
 local ArcLightningConfig =
 	require(Shared:WaitForChild("Configs"):WaitForChild("Skills"):WaitForChild("ArcLightningConfig"))
 
@@ -70,7 +71,7 @@ local function spawnNumber(event: Types.DamageEvent)
 	local label = Instance.new("TextLabel")
 	label.Size = UDim2.fromScale(1, 1)
 	label.BackgroundTransparency = 1
-	label.Font = Enum.Font.GothamBlack
+	label.FontFace = Fonts.Impact
 	label.Text = tostring(math.floor(event.amount + 0.5))
 	label.TextSize = 30
 	label.TextColor3 = color

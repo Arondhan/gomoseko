@@ -68,7 +68,7 @@ function CastBar.build(parent: Instance)
 		Name = "SkillName",
 		Size = UDim2.fromScale(1, 1),
 		TextSize = 13,
-		Font = Theme.TitleFont,
+		FontFace = Theme.Fonts.Title,
 		ZIndex = 5,
 	})
 	local timeLabel = Chrome.label(root, {
@@ -149,7 +149,7 @@ function CastBar.build(parent: Instance)
 		spark.Visible = false
 		timeLabel.Text = ""
 		setFillColor(Theme.Danger)
-		nameLabel.Text = reason or "Прервано"
+		nameLabel.Text = reason or "Interrupted"
 		hideLater(mine)
 	end
 

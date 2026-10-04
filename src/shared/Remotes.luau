@@ -23,7 +23,7 @@ local DEFINITIONS: { [string]: string } = {
 
 -- Только сервер: создаёт папку и все ремоуты
 function Remotes.init()
-	assert(RunService:IsServer(), "Remotes.init() можно вызывать только на сервере")
+	assert(RunService:IsServer(), "Remotes.init() can only be called on the server")
 	local folder = ReplicatedStorage:FindFirstChild(FOLDER_NAME)
 	if not folder then
 		folder = Instance.new("Folder")
@@ -41,7 +41,7 @@ end
 
 -- Сервер и клиент: получить ремоут (клиент ждёт, пока сервер его создаст)
 function Remotes.get(name: string): Instance
-	assert(DEFINITIONS[name], "Неизвестный ремоут: " .. name)
+	assert(DEFINITIONS[name], "Unknown remote: " .. name)
 	local folder = ReplicatedStorage:WaitForChild(FOLDER_NAME)
 	return folder:WaitForChild(name)
 end

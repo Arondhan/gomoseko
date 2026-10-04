@@ -1,6 +1,9 @@
 -- Палитра и мелкие помощники для UI в стиле WoW (Dragonflight).
 
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local TweenService = game:GetService("TweenService")
+
+local Fonts = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("Fonts"))
 
 local Theme = {
 	Bg = Color3.fromRGB(14, 16, 22),
@@ -33,11 +36,8 @@ local Theme = {
 	Good = Color3.fromRGB(30, 255, 0),
 	Warn = Color3.fromRGB(255, 209, 0),
 
-	-- Шрифты: заголовки — антиква, числа и мелкий текст — Gotham, описания — Garamond
-	TitleFont = Enum.Font.Antique,
-	BodyFont = Enum.Font.GothamMedium,
-	BoldFont = Enum.Font.GothamBold,
-	SerifFont = Enum.Font.Garamond,
+	-- Шрифты (FontFace) — см. shared/Fonts.luau: Title, Banner, Serif, Body, Numbers, Impact
+	Fonts = Fonts,
 
 	-- Качество предметов (как в WoW): серый, зелёный, синий, фиолетовый, оранжевый
 	Quality = {
@@ -48,11 +48,11 @@ local Theme = {
 		Legendary = Color3.fromRGB(255, 128, 0),
 	} :: { [string]: Color3 },
 	QualityNames = {
-		Common = "Обычное",
-		Uncommon = "Необычное",
-		Rare = "Редкое",
-		Epic = "Эпическое",
-		Legendary = "Легендарное",
+		Common = "Common",
+		Uncommon = "Uncommon",
+		Rare = "Rare",
+		Epic = "Epic",
+		Legendary = "Legendary",
 	} :: { [string]: string },
 }
 

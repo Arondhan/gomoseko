@@ -24,7 +24,7 @@ function Inventory.build(parent: Instance, deps: any)
 
 	local window = Window.new(parent, {
 		name = "InventoryWindow",
-		title = "Инвентарь",
+		title = "Inventory",
 		size = UDim2.fromOffset(384, 420),
 		position = UDim2.new(0.5, -200, 0.45, 0),
 	})
@@ -58,7 +58,7 @@ function Inventory.build(parent: Instance, deps: any)
 	Chrome.label(goldRow, {
 		Size = UDim2.new(1, -30, 1, 0),
 		Text = "0",
-		Font = Theme.BoldFont,
+		FontFace = Theme.Fonts.Numbers,
 		TextSize = 16,
 		TextColor3 = Theme.Coin,
 		TextXAlignment = Enum.TextXAlignment.Right,
