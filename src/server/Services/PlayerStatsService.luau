@@ -11,6 +11,8 @@ local RunService = game:GetService("RunService")
 local Shared = ReplicatedStorage:WaitForChild("Shared")
 local CombatConfig = require(Shared:WaitForChild("Configs"):WaitForChild("CombatConfig"))
 local Progression = require(Shared:WaitForChild("Combat"):WaitForChild("Progression"))
+local PowerMath = require(Shared:WaitForChild("Combat"):WaitForChild("PowerMath"))
+local PowerConfig = require(Shared:WaitForChild("Configs"):WaitForChild("PowerConfig"))
 
 local Services = script.Parent
 local CurrencyService = require(Services:WaitForChild("CurrencyService"))
@@ -25,6 +27,28 @@ local mana: { [Player]: number } = {}
 local maxMana: { [Player]: number } = {}
 local sinceLastPublish = 0
 
+-- Максимум здоровья от уровня: при спавне — полное здоровье, при повышении уровня — добавка лечится сразу
+local function applyHealth(player: Player, fill: boolean)
+	local profile = DataService.get(player)
+	local character = player.Character
+	local humanoid = character and character:FindFirstChildOfClass("Humanoid")
+	if not (profile and humanoid) then
+		return
+	end
+	local target = PowerMath.levelMaxHealth(profile.Level, PowerConfig.Level)
+	if humanoid.MaxHealth ~= target then
+		local gained = target - humanoid.MaxHealth
+		humanoid.MaxHealth = target
+		if fill then
+			humanoid.Health = target
+		elseif gained > 0 and humanoid.Health > 0 then
+			humanoid.Health = math.min(target, humanoid.Health + gained)
+		end
+	elseif fill then
+		humanoid.Health = target
+	end
+end
+
 local function publishXp(player: Player)
 	local profile = DataService.get(player)
 	if not profile then
@@ -34,6 +58,7 @@ local function publishXp(player: Player)
 	player:SetAttribute("Level", profile.Level)
 	player:SetAttribute("XP", profile.XP)
 	player:SetAttribute("XPToNext", Progression.xpToNext(profile.Level, config.BaseXp, config.Growth))
+	applyHealth(player, false)
 end
 
 local function publishMana(player: Player)
@@ -83,10 +108,18 @@ function PlayerStatsService.addXp(player: Player, amount: number)
 		return
 	end
 	local config = CombatConfig.Progression
+	if profile.Level >= PowerConfig.Level.MaxLevel then
+		return -- потолок уровня: опыт дальше не копится
+	end
 	local gained
 	profile.Level, profile.XP, gained = Progression.add(profile.Level, profile.XP, amount, config.BaseXp, config.Growth)
+	if profile.Level >= PowerConfig.Level.MaxLevel then
+		profile.Level = PowerConfig.Level.MaxLevel
+		profile.XP = 0
+	end
 	if gained > 0 then
 		CurrencyService.rewardLevelUp(player, gained)
+		StatsService.recalculate(player) -- бонусы уровня (урон, мана) пересчитываются
 	end
 	publishXp(player)
 end
@@ -95,8 +128,9 @@ end
 function PlayerStatsService.setLevel(player: Player, level: number)
 	local profile = DataService.get(player)
 	if profile then
-		profile.Level = math.max(1, math.floor(level))
+		profile.Level = math.clamp(math.floor(level), 1, PowerConfig.Level.MaxLevel)
 		profile.XP = 0
+		StatsService.recalculate(player)
 		publishXp(player)
 	end
 end
@@ -109,12 +143,24 @@ function PlayerStatsService.refillMana(player: Player)
 end
 
 function PlayerStatsService.start()
+	local function watchCharacters(player: Player)
+		player.CharacterAdded:Connect(function(character)
+			character:WaitForChild("Humanoid")
+			applyHealth(player, true)
+		end)
+	end
+	Players.PlayerAdded:Connect(watchCharacters)
+	for _, player in Players:GetPlayers() do
+		watchCharacters(player)
+	end
+
 	DataService.onLoaded(function(player)
 		mana[player] = CombatConfig.Mana.Max + StatsService.get(player).MaxMana
 		refreshMax(player)
 		mana[player] = maxMana[player]
 		publishMana(player)
 		publishXp(player)
+		applyHealth(player, true)
 	end)
 	StatsService.changed.Event:Connect(function(player: Player)
 		refreshMax(player)

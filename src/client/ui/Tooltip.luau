@@ -5,7 +5,12 @@
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
 
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Types = require(game:GetService("ReplicatedStorage"):WaitForChild("Shared"):WaitForChild("Types"))
+local PowerConfig =
+	require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("Configs"):WaitForChild("PowerConfig"))
+local PowerMath = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("Combat"):WaitForChild("PowerMath"))
+
 local Chrome = require(script.Parent.Chrome)
 local Theme = require(script.Parent.Theme)
 
@@ -158,32 +163,43 @@ function Tooltip.build(parent: Instance, getSkill: (skillId: string) -> Types.Sk
 	end
 
 	-- подсказка кольца: название цвета качества, пассивные бонусы (зелёным, как в WoW), статы скилла и описание
-	function tooltip.showRing(ring: Types.RingDef)
+	function tooltip.showRing(ring: Types.RingDef, ringLevel: number?)
 		clear()
 		local quality = Theme.Quality[ring.Quality] or Theme.Quality.Common
 		addLine(ring.Name, quality, 17, Theme.Fonts.Title)
 		addRow("Ring", Theme.QualityNames[ring.Quality] or "", Color3.new(1, 1, 1), quality)
+		local level = PowerMath.ringLevel(ringLevel, PowerConfig.Rings)
+		local multiplier = PowerMath.ringStatMultiplier(level, PowerConfig.Rings)
+		local owned = ringLevel ~= nil -- без уровня (например, окно Index) показываем только базовые свойства кольца
+		if owned then
+			addRow(
+				string.format("Level %d / %d", level, PowerConfig.Rings.MaxLevel),
+				if level > 1 then string.format("Bonuses x%.2f", multiplier) else "",
+				Theme.GoldLight,
+				Theme.Good
+			)
+		end
 
 		-- пассивные бонусы
 		local stats = ring.Stats
 		local bonuses: { string } = {}
 		if stats.DamagePct then
-			table.insert(bonuses, string.format("+%g%% Damage", stats.DamagePct))
+			table.insert(bonuses, string.format("+%g%% Damage", stats.DamagePct * multiplier))
 		end
 		if stats.MaxMana then
-			table.insert(bonuses, string.format("+%g Max Mana", stats.MaxMana))
+			table.insert(bonuses, string.format("+%g Max Mana", stats.MaxMana * multiplier))
 		end
 		if stats.ManaRegen then
-			table.insert(bonuses, string.format("+%g Mana regen / s", stats.ManaRegen))
+			table.insert(bonuses, string.format("+%g Mana regen / s", stats.ManaRegen * multiplier))
 		end
 		if stats.CooldownReductionPct then
-			table.insert(bonuses, string.format("-%g%% Cooldown", stats.CooldownReductionPct))
+			table.insert(bonuses, string.format("-%g%% Cooldown", stats.CooldownReductionPct * multiplier))
 		end
 		if stats.CastRange then
-			table.insert(bonuses, string.format("+%g Cast range", stats.CastRange))
+			table.insert(bonuses, string.format("+%g Cast range", stats.CastRange * multiplier))
 		end
 		if stats.LuckPct then
-			table.insert(bonuses, string.format("+%g%% Summon luck", stats.LuckPct))
+			table.insert(bonuses, string.format("+%g%% Summon luck", stats.LuckPct * multiplier))
 		end
 		if #bonuses > 0 then
 			addSeparator()
@@ -232,6 +248,22 @@ function Tooltip.build(parent: Instance, getSkill: (skillId: string) -> Types.Sk
 			addLine(string.format("Use: %s %s", ring.Description, effect), Theme.Warn, 14, Theme.Fonts.Serif)
 		else
 			addLine(ring.Description, Theme.Warn, 14, Theme.Fonts.Serif)
+		end
+		if ring.SkillId and level > 1 then
+			addLine(
+				string.format("+%g%% skill damage from ring level", PowerMath.skillDamagePct(level, PowerConfig.Rings)),
+				Theme.Good,
+				14
+			)
+		end
+		if owned then
+			local essence, gold =
+				PowerMath.upgradeCost(PowerConfig.QualityMultiplier[ring.Quality] or 1, level, PowerConfig.Rings)
+			if essence and gold then
+				addLine(string.format("Next level: %d Essence + %d Gold", essence, gold), Theme.GoldLight, 14)
+			else
+				addLine("Maximum level", Theme.GoldLight, 14)
+			end
 		end
 		addLine(string.format("Base rarity: 1 in %s", tostring(ring.OneIn)), Theme.Muted, 12)
 		open()

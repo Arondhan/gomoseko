@@ -219,6 +219,18 @@ turned off and only the free roll remains. Review the current
   clock, so all servers agree). Config: `GachaConfig.LuckEvent`. Both bonuses are free luck sources: they apply to the
   free roll too and appear in the luck breakdown and the odds table, so the shown odds stay the real ones.
 
+## Power progression (level and ring upgrades)
+
+Two layers of growth (`Configs/PowerConfig.luau`, math in `shared/Combat/PowerMath.luau`, tested):
+- **Player level** (XP from kills and Rift, cap 60): every level above 1 gives +2 % skill damage, +6 max HP (applied on spawn and
+  on level-up) and +1 max mana.
+- **Ring levels** (1–10, `profile.RingLevels`): tap the green **▲** on a ring (in the grid or a slot of the Rings window) to
+  spend **Essence and Gold**. Each level above 1 adds +12 % to the ring's passive bonuses and, for a skill ring, +8 % damage to
+  that skill. Cost per level = base × quality multiplier × 1.5^(level-1) (Essence 8 / Gold 50 base; Common x1 … Divine x150).
+  Duplicates (Essence), Rift waves and chests feed the upgrade currencies; Gold from kills finally has a use.
+Upgrades are validated on the server (`InventoryService.upgradeRing`, remote `RingUpgrade`); the ring tooltip shows the
+level, scaled bonuses and the next cost. Admin menu: *All rings Lv 5 / Lv 10 / Reset ring levels*.
+
 ## Rift (endless waves)
 
 The main activity that earns Summon Crystals: enter the **Rift** (cyan portal in the temple, the Rift tile or `T`) and fight

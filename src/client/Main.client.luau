@@ -165,6 +165,7 @@ local rings = RingsWindow.build(gui, {
 	controller = InventoryController,
 	tooltip = tooltip,
 	startDrag = startSlotDrag,
+	notify = notice.show,
 })
 
 -- цель переноса колец: слоты окна Rings

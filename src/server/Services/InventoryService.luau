@@ -9,9 +9,12 @@ local Shared = ReplicatedStorage:WaitForChild("Shared")
 local Types = require(Shared:WaitForChild("Types"))
 local Remotes = require(Shared:WaitForChild("Remotes"))
 local CombatConfig = require(Shared:WaitForChild("Configs"):WaitForChild("CombatConfig"))
+local PowerConfig = require(Shared:WaitForChild("Configs"):WaitForChild("PowerConfig"))
+local PowerMath = require(Shared:WaitForChild("Combat"):WaitForChild("PowerMath"))
 local RingsConfig = require(Shared:WaitForChild("Configs"):WaitForChild("Rings"):WaitForChild("RingsConfig"))
 
 local Services = script.Parent
+local CurrencyService = require(Services:WaitForChild("CurrencyService"))
 local DataService = require(Services:WaitForChild("DataService"))
 local OnboardingService = require(Services:WaitForChild("OnboardingService"))
 local StatsService = require(Services:WaitForChild("StatsService"))
@@ -23,7 +26,11 @@ local changedRemote: RemoteEvent
 
 -- копия состояния для отправки клиенту (клиент не получает ссылку на серверную таблицу)
 local function snapshot(profile: DataService.Profile): Types.InventoryState
-	return { items = table.clone(profile.Rings), equipped = table.clone(profile.Equipped) }
+	return {
+		items = table.clone(profile.Rings),
+		equipped = table.clone(profile.Equipped),
+		levels = table.clone(profile.RingLevels),
+	}
 end
 
 local function emptyState(): Types.InventoryState
@@ -31,7 +38,7 @@ local function emptyState(): Types.InventoryState
 	for i = 1, CombatConfig.RingSlotCount do
 		equipped[i] = EMPTY
 	end
-	return { items = {}, equipped = equipped }
+	return { items = {}, equipped = equipped, levels = {} }
 end
 
 local function notify(player: Player)
@@ -130,8 +137,58 @@ function InventoryService.resetRings(player: Player)
 		return
 	end
 	profile.Rings = table.clone(RingsConfig.StartingItems)
+	profile.RingLevels = {}
 	for slot = 1, CombatConfig.RingSlotCount do
 		profile.Equipped[slot] = EMPTY
+	end
+	StatsService.recalculate(player)
+	notify(player)
+end
+
+-- Улучшение кольца на 1 уровень за Essence и Gold. Всё проверяет сервер: кольцо есть, уровень ниже максимума,
+-- хватает обеих валют (проверяем оба баланса до списания, чтобы не остаться с половиной оплаты).
+local function upgradeRing(player: Player, ringId: any): (boolean, string)
+	local profile = DataService.get(player)
+	local ring = if type(ringId) == "string" then RingsConfig.Rings[ringId :: string] else nil
+	if not profile or not ring then
+		return false, "Unknown ring"
+	end
+	if not table.find(profile.Rings, ring.Id) then
+		return false, "You do not have this ring"
+	end
+	local level = PowerMath.ringLevel(profile.RingLevels[ring.Id], PowerConfig.Rings)
+	local essence, gold =
+		PowerMath.upgradeCost(PowerConfig.QualityMultiplier[ring.Quality] or 1, level, PowerConfig.Rings)
+	if not essence or not gold then
+		return false, "This ring is already at the maximum level"
+	end
+	if CurrencyService.get(player, "Essence") < essence or CurrencyService.get(player, "Gold") < gold then
+		return false, string.format("Not enough: need %d Essence and %d Gold", essence, gold)
+	end
+	if not CurrencyService.trySpend(player, "Essence", essence, "Gameplay", "ring_upgrade") then
+		return false, "Not enough Essence"
+	end
+	if not CurrencyService.trySpend(player, "Gold", gold, "Gameplay", "ring_upgrade") then
+		CurrencyService.add(player, "Essence", essence, "Gameplay", "ring_upgrade_refund")
+		return false, "Not enough Gold"
+	end
+	profile.RingLevels[ring.Id] = level + 1
+	StatsService.recalculate(player)
+	notify(player)
+	return true, string.format("%s is now level %d", ring.Name, level + 1)
+end
+
+-- Админ/тест: задать уровень всем кольцам игрока (0 — сбросить к 1)
+function InventoryService.setAllRingLevels(player: Player, level: number)
+	local profile = DataService.get(player)
+	if not profile then
+		return
+	end
+	profile.RingLevels = {}
+	if level > 1 then
+		for _, ringId in profile.Rings do
+			profile.RingLevels[ringId] = PowerMath.ringLevel(level, PowerConfig.Rings)
+		end
 	end
 	StatsService.recalculate(player)
 	notify(player)
@@ -142,6 +199,7 @@ function InventoryService.start()
 	local getRemote = Remotes.get("InventoryGet") :: RemoteFunction
 	local equipRemote = Remotes.get("InventoryEquip") :: RemoteFunction
 	local unequipRemote = Remotes.get("InventoryUnequip") :: RemoteFunction
+	local upgradeRemote = Remotes.get("RingUpgrade") :: RemoteFunction
 
 	DataService.onLoaded(function(player)
 		notify(player) -- первое состояние сразу после загрузки профиля
@@ -153,6 +211,7 @@ function InventoryService.start()
 	end
 	equipRemote.OnServerInvoke = equip
 	unequipRemote.OnServerInvoke = unequip
+	upgradeRemote.OnServerInvoke = upgradeRing
 end
 
 return InventoryService

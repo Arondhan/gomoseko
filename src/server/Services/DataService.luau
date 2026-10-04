@@ -30,6 +30,7 @@ export type Profile = {
 	Level: number,
 	XP: number,
 	Rings: { string }, -- уникальные кольца в инвентаре
+	RingLevels: { [string]: number }, -- уровни колец (нет записи = 1), см. Configs/PowerConfig
 	Equipped: { string }, -- по слотам 1..RingSlotCount, "" = пусто
 	Gacha: { Rolls: number, LastFreeRoll: number, Recent: { { ringId: string, t: number } } },
 	Boosts: { LuckPercent: number, LuckUntil: number },
@@ -87,6 +88,7 @@ local function defaults(): Profile
 		Level = 1,
 		XP = 0,
 		Rings = table.clone(RingsConfig.StartingItems),
+		RingLevels = {},
 		Equipped = defaultEquipped(),
 		Gacha = { Rolls = 0, LastFreeRoll = 0, Recent = {} },
 		Boosts = { LuckPercent = 0, LuckUntil = 0 },

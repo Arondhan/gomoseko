@@ -8,6 +8,7 @@ local Players = game:GetService("Players")
 local Chrome = require(script.Parent.Chrome)
 local Drag = require(script.Parent.Drag)
 local Inventory = require(script.Parent.Inventory)
+local RingBadges = require(script.Parent.RingBadges)
 local RingIcon = require(script.Parent.RingIcon)
 local Theme = require(script.Parent.Theme)
 local Window = require(script.Parent.Window)
@@ -23,6 +24,7 @@ type Slot = {
 	glow: UIStroke,
 	icon: Frame?,
 	empty: Frame,
+	badges: { update: () -> (), destroy: () -> () }?,
 	hovered: boolean,
 	dropTarget: boolean,
 }
@@ -32,10 +34,11 @@ local function number(player: Player, name: string): number?
 	return if type(value) == "number" then value else nil
 end
 
--- deps: { controller = InventoryController, tooltip = Tooltip, startDrag = (ring, fromSlot) -> () }
+-- deps: { controller = InventoryController, tooltip = Tooltip, startDrag = (ring, fromSlot) -> (), notify = (text, color?) -> () }
 function RingsWindow.build(parent: Instance, deps: any)
 	local controller = deps.controller
 	local tooltip = deps.tooltip
+	local notify: (string, Color3?) -> () = deps.notify or function() end
 	local player = Players.LocalPlayer
 
 	local window = Window.new(parent, {
@@ -106,6 +109,7 @@ function RingsWindow.build(parent: Instance, deps: any)
 			glow = glow,
 			icon = nil,
 			empty = empty,
+			badges = nil,
 			hovered = false,
 			dropTarget = false,
 		}
@@ -118,7 +122,7 @@ function RingsWindow.build(parent: Instance, deps: any)
 			refreshGlow(slot)
 			local ring = controller.getRingInSlot(i)
 			if ring then
-				tooltip.showRing(ring)
+				tooltip.showRing(ring, controller.getLevel(ring.Id))
 			end
 		end)
 		hit.MouseLeave:Connect(function()
@@ -152,13 +156,28 @@ function RingsWindow.build(parent: Instance, deps: any)
 			slot.icon:Destroy()
 			slot.icon = nil
 		end
+		if slot.badges then
+			slot.badges.destroy()
+			slot.badges = nil
+		end
 		slot.empty.Visible = ring == nil
 		if ring then
 			slot.icon = RingIcon.new(slot.frame, ring)
+			slot.badges = RingBadges.add(slot.frame, ring, controller, notify)
 			Chrome.tintBevel(slot.bevel, Theme.Quality[ring.Quality or "Common"])
 		else
 			Chrome.tintBevel(slot.bevel, nil)
 		end
+	end
+
+	for _, name in { "Essence", "Gold" } do
+		player:GetAttributeChangedSignal(name):Connect(function()
+			for _, slot in slots do
+				if slot.badges then
+					slot.badges.update()
+				end
+			end
+		end)
 	end
 
 	local function getSlotAtPosition(position: Vector2): number?
@@ -216,13 +235,19 @@ function RingsWindow.build(parent: Instance, deps: any)
 				table.insert(parts, label .. " " .. string.format(format, value))
 			end
 		end
-		add("Damage", number(player, "Bonus_DamagePct"), "%+g%%")
+		local totalDamage = number(player, "Bonus_DamagePct")
+		if totalDamage and totalDamage ~= 0 then
+			local fromLevel = number(player, "Bonus_LevelDamagePct") or 0
+			table.insert(parts, string.format("Damage %+g%% (level %+g%%)", totalDamage, fromLevel))
+		end
 		add("Cooldown", -(number(player, "Bonus_CooldownReductionPct") or 0), "%+g%%")
 		add("Mana regen", number(player, "Bonus_ManaRegen"), "%+g/s")
 		add("Luck", number(player, "Bonus_LuckPct"), "%+g%%")
 		statsLabel.Text = if #parts > 0 then table.concat(parts, "   ·   ") else "Wear rings to get bonuses"
 	end
-	for _, name in { "Bonus_DamagePct", "Bonus_CooldownReductionPct", "Bonus_ManaRegen", "Bonus_LuckPct" } do
+	for _, name in
+		{ "Bonus_DamagePct", "Bonus_LevelDamagePct", "Bonus_CooldownReductionPct", "Bonus_ManaRegen", "Bonus_LuckPct" }
+	do
 		player:GetAttributeChangedSignal(name):Connect(refreshStats)
 	end
 	refreshStats()
@@ -234,7 +259,7 @@ function RingsWindow.build(parent: Instance, deps: any)
 		Size = UDim2.new(1, 0, 1, -(SLOT_SIZE + 86)),
 		BackgroundTransparency = 1,
 	}, body)
-	Inventory.build(parent, gridHolder, { controller = controller, tooltip = tooltip })
+	Inventory.build(parent, gridHolder, { controller = controller, tooltip = tooltip, notify = notify })
 
 	return {
 		window = window,

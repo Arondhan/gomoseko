@@ -202,6 +202,13 @@ function AdminWindow.build(parent: Instance, deps: any)
 		{ text = "Level 50", action = "SetLevel", a = 50 },
 	})
 
+	heading("Power")
+	grid({
+		{ text = "All rings Lv 5", action = "RingLevels", a = 5 },
+		{ text = "All rings Lv 10", action = "RingLevels", a = 10 },
+		{ text = "Reset ring levels", action = "RingLevels", a = 0 },
+	})
+
 	heading("Combat test")
 	grid({
 		{ text = "Infinite mana", action = "ToggleFlag", a = "InfiniteMana", flag = "InfiniteMana" },

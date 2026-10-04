@@ -110,7 +110,8 @@ local function applyDamage(player: Player, config: Types.SkillConfig, model: Mod
 	if not (humanoid and root) then
 		return
 	end
-	local damage = config.Damage * (1 + StatsService.get(player).DamagePct / 100)
+	local bonuses = StatsService.get(player)
+	local damage = config.Damage * (1 + (bonuses.DamagePct + (bonuses.SkillDamagePct[config.Id] or 0)) / 100)
 	if model:GetAttribute("Immortal") == true then
 		DpsService.recordHit(player, damage)
 	else
