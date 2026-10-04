@@ -107,11 +107,7 @@ end
 local function load(player: Player): (Profile, boolean)
 	local dataStore = getStore()
 	if not dataStore then
-		warn(
-			"[DataService] DataStore недоступен — данные игрока "
-				.. player.Name
-				.. " живут только в памяти"
-		)
+		warn("[DataService] DataStore unavailable: data of player " .. player.Name .. " lives in memory only")
 		return defaults(), false
 	end
 
@@ -135,30 +131,15 @@ local function load(player: Player): (Profile, boolean)
 			return result :: Profile, true
 		end
 		if ok and lockedByOther then
-			warn(
-				("[DataService] профиль %s занят другим сервером, попытка %d"):format(
-					player.Name,
-					attempt
-				)
-			)
+			warn(("[DataService] profile %s is locked by another server, attempt %d"):format(player.Name, attempt))
 			task.wait(5)
 		else
-			warn(
-				("[DataService] ошибка загрузки %s (попытка %d): %s"):format(
-					player.Name,
-					attempt,
-					tostring(result)
-				)
-			)
+			warn(("[DataService] load error for %s (attempt %d): %s"):format(player.Name, attempt, tostring(result)))
 			task.wait(2 ^ attempt)
 		end
 	end
 
-	warn(
-		"[DataService] не удалось загрузить профиль "
-			.. player.Name
-			.. " — временный профиль в памяти"
-	)
+	warn("[DataService] could not load profile of " .. player.Name .. ": using a temporary in-memory profile")
 	return defaults(), false
 end
 
@@ -187,7 +168,7 @@ function DataService.save(player: Player, release: boolean?): boolean
 	end)
 	slot.saving = false
 	if not ok then
-		warn(("[DataService] ошибка сохранения %s: %s"):format(player.Name, tostring(err)))
+		warn(("[DataService] save error for %s: %s"):format(player.Name, tostring(err)))
 	end
 	return ok
 end
@@ -290,7 +271,7 @@ function DataService.start()
 
 	if RunService:IsStudio() then
 		print(
-			"[DataService] Studio: для сохранения включите Game Settings → Security → Enable Studio Access to API Services"
+			"[DataService] Studio: to persist data enable Game Settings > Security > Enable Studio Access to API Services"
 		)
 	end
 end

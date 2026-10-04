@@ -46,7 +46,7 @@ local function loadPolicy(player: Player)
 	restricted[player] = not RunService:IsStudio()
 	policyLoaded[player] = true
 	warn(
-		"[Monetization] PolicyService недоступен для "
+		"[Monetization] PolicyService unavailable for "
 			.. player.Name
 			.. ", restricted = "
 			.. tostring(restricted[player])
@@ -127,14 +127,12 @@ local function processReceipt(info: any): Enum.ProductPurchaseDecision
 	end
 	local product = productById(info.ProductId)
 	if not product then
-		warn("[Monetization] неизвестный ProductId " .. tostring(info.ProductId))
+		warn("[Monetization] unknown ProductId " .. tostring(info.ProductId))
 		return Enum.ProductPurchaseDecision.NotProcessedYet
 	end
 	-- без сохранения данных настоящую покупку подтверждать нельзя: она пропала бы при выходе
 	if not DataService.isPersistent(player) then
-		warn(
-			"[Monetization] профиль не сохраняется (DataStore недоступен) — покупка отложена"
-		)
+		warn("[Monetization] profile is not persistent (DataStore unavailable): purchase deferred")
 		return Enum.ProductPurchaseDecision.NotProcessedYet
 	end
 

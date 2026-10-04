@@ -176,4 +176,97 @@ function Glyphs.summon(parent: Instance)
 	Theme.corner(spark, 1)
 end
 
+-- Кристалл призыва: огранённый ромб с бликом
+function Glyphs.crystal(parent: Instance)
+	local z = parent:IsA("GuiObject") and parent.ZIndex + 1 or 2
+	local gem = Theme.new("Frame", {
+		Name = "Glyph",
+		AnchorPoint = Vector2.new(0.5, 0.5),
+		Position = UDim2.fromScale(0.5, 0.5),
+		Size = UDim2.fromOffset(18, 18),
+		Rotation = 45,
+		BorderSizePixel = 0,
+		ZIndex = z,
+	}, parent)
+	Theme.corner(gem, 2)
+	shaded(gem, Color3.fromRGB(160, 220, 255), Color3.fromRGB(70, 90, 230))
+	Theme.new("UIStroke", { Color = Color3.fromRGB(30, 40, 120), Thickness = 1.5 }, gem)
+	local facet = Theme.new("Frame", {
+		AnchorPoint = Vector2.new(0.5, 0.5),
+		Position = UDim2.fromScale(0.36, 0.36),
+		Size = UDim2.fromScale(0.35, 0.35),
+		BackgroundColor3 = Color3.new(1, 1, 1),
+		BackgroundTransparency = 0.25,
+		BorderSizePixel = 0,
+		ZIndex = z + 1,
+	}, gem)
+	Theme.corner(facet, 1)
+end
+
+-- Эссенция колец: золотисто-бирюзовая капля-орб
+function Glyphs.essence(parent: Instance)
+	local z = parent:IsA("GuiObject") and parent.ZIndex + 1 or 2
+	local orb = Theme.new("Frame", {
+		Name = "Glyph",
+		AnchorPoint = Vector2.new(0.5, 0.5),
+		Position = UDim2.fromScale(0.5, 0.5),
+		Size = UDim2.fromOffset(18, 18),
+		BorderSizePixel = 0,
+		ZIndex = z,
+	}, parent)
+	Theme.corner(orb, 9)
+	shaded(orb, Color3.fromRGB(200, 255, 230), Color3.fromRGB(40, 150, 130))
+	Theme.new("UIStroke", { Color = Theme.GoldDark, Thickness = 1.5 }, orb)
+	local hole = Theme.new("Frame", {
+		AnchorPoint = Vector2.new(0.5, 0.5),
+		Position = UDim2.fromScale(0.5, 0.5),
+		Size = UDim2.fromScale(0.4, 0.4),
+		BackgroundColor3 = Color3.fromRGB(20, 70, 64),
+		BorderSizePixel = 0,
+		ZIndex = z + 1,
+	}, orb)
+	Theme.corner(hole, 6)
+end
+
+-- Зелье: колба с горлышком и пробкой
+function Glyphs.potion(parent: Instance)
+	local z = parent:IsA("GuiObject") and parent.ZIndex + 1 or 2
+	local holder = Theme.new("Frame", {
+		Name = "Glyph",
+		AnchorPoint = Vector2.new(0.5, 0.5),
+		Position = UDim2.fromScale(0.5, 0.5),
+		Size = UDim2.fromOffset(26, 26),
+		BackgroundTransparency = 1,
+		ZIndex = z,
+	}, parent)
+	local neck = Theme.new("Frame", {
+		AnchorPoint = Vector2.new(0.5, 0),
+		Position = UDim2.fromScale(0.5, 0.04),
+		Size = UDim2.fromOffset(8, 9),
+		BackgroundColor3 = Color3.fromRGB(190, 220, 200),
+		BorderSizePixel = 0,
+		ZIndex = z,
+	}, holder)
+	Theme.new("UIStroke", { Color = Color3.fromRGB(40, 70, 60), Thickness = 1.5 }, neck)
+	local cork = Theme.new("Frame", {
+		AnchorPoint = Vector2.new(0.5, 0),
+		Position = UDim2.fromScale(0.5, 0),
+		Size = UDim2.fromOffset(10, 4),
+		BackgroundColor3 = Color3.fromRGB(150, 100, 60),
+		BorderSizePixel = 0,
+		ZIndex = z + 1,
+	}, holder)
+	Theme.corner(cork, 2)
+	local body = Theme.new("Frame", {
+		AnchorPoint = Vector2.new(0.5, 1),
+		Position = UDim2.fromScale(0.5, 1),
+		Size = UDim2.fromOffset(20, 17),
+		BorderSizePixel = 0,
+		ZIndex = z,
+	}, holder)
+	Theme.corner(body, 9)
+	shaded(body, Color3.fromRGB(150, 255, 150), Color3.fromRGB(30, 140, 60))
+	Theme.new("UIStroke", { Color = Color3.fromRGB(20, 70, 40), Thickness = 1.5 }, body)
+end
+
 return Glyphs

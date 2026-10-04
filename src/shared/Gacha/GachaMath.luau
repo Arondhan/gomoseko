@@ -55,7 +55,7 @@ function GachaMath.roll(pool: { Entry }, luck: number, rng: Rng): string
 			return entry.id
 		end
 	end
-	error("пустой пул Gacha")
+	error("Gacha pool is empty")
 end
 
 ---------------------------------------------------------------------------
