@@ -67,7 +67,7 @@ function CastBar.build(parent: Instance)
 	local nameLabel = Chrome.label(root, {
 		Name = "SkillName",
 		Size = UDim2.fromScale(1, 1),
-		TextSize = 13,
+		TextSize = 15,
 		FontFace = Theme.Fonts.Title,
 		ZIndex = 5,
 	})
@@ -76,7 +76,7 @@ function CastBar.build(parent: Instance)
 		AnchorPoint = Vector2.new(1, 0),
 		Position = UDim2.new(1, -8, 0, 0),
 		Size = UDim2.fromOffset(40, 24),
-		TextSize = 12,
+		TextSize = 14,
 		TextXAlignment = Enum.TextXAlignment.Right,
 		ZIndex = 5,
 	})

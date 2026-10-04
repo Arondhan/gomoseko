@@ -86,7 +86,7 @@ function Window.new(parent: Instance, config: { name: string, title: string, siz
 		BorderSizePixel = 0,
 		Text = "X",
 		FontFace = Theme.Fonts.Numbers,
-		TextSize = 15,
+		TextSize = 17,
 		TextColor3 = Color3.fromRGB(255, 232, 170),
 		TextStrokeTransparency = 0.3,
 		ZIndex = 5,

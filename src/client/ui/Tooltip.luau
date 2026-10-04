@@ -65,7 +65,7 @@ function Tooltip.build(parent: Instance, getSkill: (skillId: string) -> Types.Sk
 		Chrome.label(row, {
 			Size = UDim2.fromScale(0.5, 1),
 			Text = left,
-			TextSize = 13,
+			TextSize = 15,
 			FontFace = Theme.Fonts.Body,
 			TextColor3 = leftColor,
 			TextStrokeTransparency = 0.6,
@@ -77,7 +77,7 @@ function Tooltip.build(parent: Instance, getSkill: (skillId: string) -> Types.Sk
 			Position = UDim2.fromScale(1, 0),
 			Size = UDim2.fromScale(0.5, 1),
 			Text = right,
-			TextSize = 13,
+			TextSize = 15,
 			FontFace = Theme.Fonts.Body,
 			TextColor3 = rightColor,
 			TextStrokeTransparency = 0.6,

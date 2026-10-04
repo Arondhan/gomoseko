@@ -56,7 +56,7 @@ function Leaderboard.build(parent: Instance, deps: any)
 			AutoButtonColor = false,
 			Text = tab.title,
 			FontFace = Theme.Fonts.Title,
-			TextSize = 15,
+			TextSize = 17,
 			TextColor3 = Theme.GoldLight,
 			ZIndex = 5,
 		}, body)
@@ -84,7 +84,7 @@ function Leaderboard.build(parent: Instance, deps: any)
 		Size = UDim2.new(1, 0, 0, 52),
 		Text = "",
 		FontFace = Theme.Fonts.Body,
-		TextSize = 13,
+		TextSize = 15,
 		TextColor3 = Theme.Muted,
 		TextStrokeTransparency = 0.7,
 		TextWrapped = true,
@@ -112,7 +112,7 @@ function Leaderboard.build(parent: Instance, deps: any)
 				Size = UDim2.new(1, 0, 0, 60),
 				Text = "No scores yet. Hit a training dummy for 30 seconds!",
 				FontFace = Theme.Fonts.Body,
-				TextSize = 14,
+				TextSize = 16,
 				TextColor3 = Theme.Muted,
 			})
 		end
@@ -131,7 +131,7 @@ function Leaderboard.build(parent: Instance, deps: any)
 				Position = UDim2.fromOffset(8, 0),
 				Size = UDim2.fromOffset(46, 30),
 				Text = "#" .. entry.rank,
-				TextSize = 14,
+				TextSize = 16,
 				TextColor3 = color,
 				TextXAlignment = Enum.TextXAlignment.Left,
 			})
@@ -140,7 +140,7 @@ function Leaderboard.build(parent: Instance, deps: any)
 				Size = UDim2.new(1, -170, 1, 0),
 				Text = entry.name,
 				FontFace = Theme.Fonts.Title,
-				TextSize = 14,
+				TextSize = 16,
 				TextColor3 = if mine then Theme.GoldLight else color,
 				TextXAlignment = Enum.TextXAlignment.Left,
 				TextTruncate = Enum.TextTruncate.AtEnd,
@@ -150,7 +150,7 @@ function Leaderboard.build(parent: Instance, deps: any)
 				Position = UDim2.new(1, -8, 0, 0),
 				Size = UDim2.fromOffset(100, 30),
 				Text = format(entry.score) .. " DPS",
-				TextSize = 14,
+				TextSize = 16,
 				TextColor3 = color,
 				TextXAlignment = Enum.TextXAlignment.Right,
 			})

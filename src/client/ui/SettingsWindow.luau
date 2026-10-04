@@ -16,7 +16,7 @@ function SettingsWindow.build(parent: Instance, deps: any)
 	local window = Window.new(parent, {
 		name = "SettingsWindow",
 		title = "Settings",
-		size = UDim2.fromOffset(380, 270),
+		size = UDim2.fromOffset(420, 600),
 		position = UDim2.new(0.5, 0, 0.47, 0),
 	})
 	local body = window.body
@@ -26,7 +26,7 @@ function SettingsWindow.build(parent: Instance, deps: any)
 		Size = UDim2.new(1, 0, 0, 22),
 		Text = "Sound effects volume",
 		FontFace = Theme.Fonts.Title,
-		TextSize = 15,
+		TextSize = Theme.TextSize.Header,
 		TextColor3 = Theme.GoldLight,
 		TextXAlignment = Enum.TextXAlignment.Left,
 	})
@@ -35,7 +35,7 @@ function SettingsWindow.build(parent: Instance, deps: any)
 		Position = UDim2.fromScale(1, 0),
 		Size = UDim2.fromOffset(60, 22),
 		Text = "100%",
-		TextSize = 14,
+		TextSize = Theme.TextSize.Body,
 		TextColor3 = Theme.Text,
 		TextXAlignment = Enum.TextXAlignment.Right,
 	})
@@ -114,66 +114,102 @@ function SettingsWindow.build(parent: Instance, deps: any)
 		end
 	end)
 
-	-- Low graphics
-	Chrome.label(body, {
-		Position = UDim2.fromOffset(0, 78),
-		Size = UDim2.new(1, 0, 0, 22),
-		Text = "Graphics",
-		FontFace = Theme.Fonts.Title,
-		TextSize = 15,
-		TextColor3 = Theme.GoldLight,
-		TextXAlignment = Enum.TextXAlignment.Left,
-	})
-	local toggle = Theme.new("TextButton", {
-		Position = UDim2.fromOffset(0, 106),
-		Size = UDim2.new(1, 0, 0, 40),
-		BackgroundColor3 = Color3.new(1, 1, 1),
-		BorderSizePixel = 0,
-		AutoButtonColor = false,
-		Text = "",
-		ZIndex = 5,
-	}, body)
-	Theme.corner(toggle, 8)
-	local toggleGradient = Theme.gradient(toggle, 90, Color3.fromRGB(110, 84, 36), Color3.fromRGB(58, 42, 16))
-	Chrome.bevel(toggle, 2, 8, true)
-	local toggleLabel = Chrome.label(toggle, {
-		Size = UDim2.fromScale(1, 1),
-		Text = "",
-		FontFace = Theme.Fonts.Title,
-		TextSize = 16,
-		TextColor3 = Theme.GoldLight,
-		ZIndex = 6,
-	})
-	local function showQuality()
-		local low = settings.isLowQuality()
-		toggleLabel.Text = if low then "Low graphics: ON" else "Low graphics: OFF"
-		toggleGradient.Color = if low
-			then ColorSequence.new(Color3.fromRGB(70, 110, 60), Color3.fromRGB(36, 60, 32))
-			else ColorSequence.new(Color3.fromRGB(110, 84, 36), Color3.fromRGB(58, 42, 16))
+	-- переключатели: (заголовок секции +) кнопка ON/OFF и пояснение
+	local refreshers: { () -> () } = {}
+	local function addToggle(y: number, label: string, isOn: () -> boolean, set: (boolean) -> ())
+		local toggle = Theme.new("TextButton", {
+			Position = UDim2.fromOffset(0, y),
+			Size = UDim2.new(1, 0, 0, 42),
+			BackgroundColor3 = Color3.new(1, 1, 1),
+			BorderSizePixel = 0,
+			AutoButtonColor = false,
+			Text = "",
+			ZIndex = 5,
+		}, body)
+		Theme.corner(toggle, 8)
+		local toggleGradient = Theme.gradient(toggle, 90, Color3.fromRGB(110, 84, 36), Color3.fromRGB(58, 42, 16))
+		Chrome.bevel(toggle, 2, 8, true)
+		local toggleLabel = Chrome.label(toggle, {
+			Size = UDim2.fromScale(1, 1),
+			Text = "",
+			FontFace = Theme.Fonts.Title,
+			TextSize = Theme.TextSize.Header,
+			TextColor3 = Theme.GoldLight,
+			ZIndex = 6,
+		})
+		local function show()
+			local on = isOn()
+			toggleLabel.Text = label .. (if on then ": ON" else ": OFF")
+			toggleGradient.Color = if on
+				then ColorSequence.new(Color3.fromRGB(70, 110, 60), Color3.fromRGB(36, 60, 32))
+				else ColorSequence.new(Color3.fromRGB(110, 84, 36), Color3.fromRGB(58, 42, 16))
+		end
+		show()
+		toggle.MouseButton1Click:Connect(function()
+			set(not isOn())
+			show()
+		end)
+		table.insert(refreshers, show)
 	end
-	showQuality()
-	toggle.MouseButton1Click:Connect(function()
-		settings.setLowQuality(not settings.isLowQuality())
-		showQuality()
-	end)
-	Chrome.label(body, {
-		Position = UDim2.fromOffset(0, 152),
-		Size = UDim2.new(1, 0, 0, 54),
-		Text = "Low graphics hides decorative lights and particles, shadows and glow. Recommended on phones and weaker devices.",
-		FontFace = Theme.Fonts.Body,
-		TextSize = 13,
-		TextColor3 = Theme.Muted,
-		TextStrokeTransparency = 1,
-		TextWrapped = true,
-		TextXAlignment = Enum.TextXAlignment.Left,
-		TextYAlignment = Enum.TextYAlignment.Top,
-	})
+	local function addNote(y: number, height: number, text: string)
+		Chrome.label(body, {
+			Position = UDim2.fromOffset(0, y),
+			Size = UDim2.new(1, 0, 0, height),
+			Text = text,
+			FontFace = Theme.Fonts.Body,
+			TextSize = Theme.TextSize.Small,
+			TextColor3 = Theme.Muted,
+			TextStrokeTransparency = 1,
+			TextWrapped = true,
+			TextXAlignment = Enum.TextXAlignment.Left,
+			TextYAlignment = Enum.TextYAlignment.Top,
+		})
+	end
+	local function addHeading(y: number, text: string)
+		Chrome.label(body, {
+			Position = UDim2.fromOffset(0, y),
+			Size = UDim2.new(1, 0, 0, 24),
+			Text = text,
+			FontFace = Theme.Fonts.Title,
+			TextSize = Theme.TextSize.Header,
+			TextColor3 = Theme.GoldLight,
+			TextXAlignment = Enum.TextXAlignment.Left,
+		})
+	end
+
+	addHeading(84, "Graphics")
+	addToggle(112, "Low graphics", settings.isLowQuality, settings.setLowQuality)
+	addNote(
+		158,
+		60,
+		"Hides decorative lights and particles, shadows and glow. Recommended on phones and weaker devices."
+	)
+
+	addHeading(226, "Summon effects")
+	local function flag(name: string): (() -> boolean, (boolean) -> ())
+		return function()
+			return settings.getFlag(name)
+		end, function(value: boolean)
+			settings.setFlag(name, value)
+		end
+	end
+	addToggle(254, "Cinematic rare rolls", flag("Cinematic"))
+	addToggle(302, "Screen shake", flag("Shake"))
+	addToggle(350, "Quick roll (skip animation)", flag("SkipAnim"))
+	addToggle(398, "Controller vibration", flag("Haptics"))
+	addNote(
+		446,
+		76,
+		"Cinematic rolls briefly take over the camera when you find a very rare ring. Quick roll shows results instantly. Vibration works on gamepads (Roblox has no phone vibration)."
+	)
 
 	settings.changed.Event:Connect(function()
 		if not dragging then
 			showVolume(settings.getVolume())
 		end
-		showQuality()
+		for _, refresh in refreshers do
+			refresh()
+		end
 	end)
 
 	return window

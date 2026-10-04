@@ -40,9 +40,9 @@ function MicroMenu.build(parent: Instance, tooltip: any, options: { summon: bool
 		-- маленькая клавиша в углу
 		Chrome.label(frame, {
 			Position = UDim2.fromOffset(4, 1),
-			Size = UDim2.fromOffset(14, 12),
+			Size = UDim2.fromOffset(20, 18),
 			Text = hotkey,
-			TextSize = 11,
+			TextSize = 13,
 			TextColor3 = Theme.GoldLight,
 			TextXAlignment = Enum.TextXAlignment.Left,
 			ZIndex = 15,

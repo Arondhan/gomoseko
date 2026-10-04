@@ -48,10 +48,10 @@ function PlayerFrame.build(parent: Instance)
 	Chrome.label(body, {
 		Name = "Name",
 		Position = UDim2.fromOffset(46, 4),
-		Size = UDim2.new(1, -56, 0, 20),
+		Size = UDim2.new(1, -56, 0, 24),
 		Text = player.DisplayName,
 		FontFace = Theme.Fonts.Title,
-		TextSize = 17,
+		TextSize = 19,
 		TextColor3 = Theme.GoldLight,
 		TextXAlignment = Enum.TextXAlignment.Left,
 	})
@@ -79,7 +79,7 @@ function PlayerFrame.build(parent: Instance)
 		Name = "Level",
 		Size = UDim2.fromScale(1, 1),
 		Text = "1",
-		TextSize = 13,
+		TextSize = 15,
 		TextColor3 = Theme.GoldLight,
 		ZIndex = 9,
 	})

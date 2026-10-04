@@ -106,9 +106,9 @@ function RingBar.build(parent: Instance, hooks: Hooks?)
 		Chrome.label(frame, {
 			Name = "Key",
 			Position = UDim2.fromOffset(5, 2),
-			Size = UDim2.fromOffset(16, 14),
+			Size = UDim2.fromOffset(16, 19),
 			Text = tostring(i),
-			TextSize = 12,
+			TextSize = 14,
 			TextColor3 = Theme.GoldLight,
 			TextXAlignment = Enum.TextXAlignment.Left,
 			ZIndex = 15,

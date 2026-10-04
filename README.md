@@ -177,10 +177,24 @@ Store's "View odds" cover the first two; for restricted players paid summons, pa
 turned off and only the free roll remains. Review the current
 [policy](https://create.roblox.com/docs/en-us/production/monetization/paid-random-items) before enabling real sales.
 
+## Roll "juice", cinematic rare finds and text size
+
+- **Cinematic rare roll** (`client/VFX/RareCutscene.luau`): a find of `GachaConfig.Cinematic.MinOneIn` (1 in 1,000) or
+  rarer hides the HUD for 2–3 s, blocks the controls (`PlayerModule:GetControls():Disable()`), tweens the camera onto
+  your character (TweenService), shakes the screen lightly, dims the world with a `ColorCorrectionEffect`, then a
+  thunder boom and a flash in the ring's quality colour. Space / tap / gamepad A skips it; death or any error restores
+  camera and controls. The result is decided by the server before this starts — it is only a presentation.
+- **Reveal style by tier** (`ui/Summon.luau`): the charging orb takes the colour of the best find (Epic+), sparks and a
+  shockwave scale with rarity, "1 in N" counts up, card flips play a tick whose pitch rises, the multi-roll shows
+  "Best find". Settings → *Summon effects*: Cinematic rolls, Screen shake, Quick roll (no animation) and Controller
+  vibration (gamepads only — Roblox has no API for phone vibration).
+- **Text size**: sizes are bigger (`Theme.TextSize`) and the UI scale is `clamp(height / 800, 0.6, 1.4)` so text stays
+  readable on 1080p+ monitors; on phones please test on a real device.
+
 ## Sounds
 
-The two Arc Lightning sounds (`assets/audio/arc_lightning_charge.ogg` — cast charge, `arc_lightning_zap.ogg` —
-impact crackle) are synthesized by `tools/make_audio.py` (re-run it to regenerate). Roblox can only play uploaded
+The sounds (`arc_lightning_charge.ogg` — cast charge, `arc_lightning_zap.ogg` — impact crackle,
+`thunder_boom.ogg` — rare-roll thunder, `reveal_tick.ogg` — card flip tick, all in `assets/audio`) are synthesized by `tools/make_audio.py` (re-run it to regenerate). Roblox can only play uploaded
 assets, so upload them once:
 
 1. `rokit add jacktabscode/asphalt` (adds [Asphalt](https://github.com/jackTabsCode/asphalt) to `rokit.toml`).

@@ -53,9 +53,9 @@ function Character.build(parent: Instance, deps: any)
 
 	Chrome.label(body, {
 		Position = UDim2.new(0.5, -98, 0, 292),
-		Size = UDim2.fromOffset(196, 16),
+		Size = UDim2.fromOffset(196, 18),
 		Text = "Drag to rotate",
-		TextSize = 11,
+		TextSize = 13,
 		TextColor3 = Theme.Muted,
 		FontFace = Theme.Fonts.Body,
 	})
@@ -95,18 +95,18 @@ function Character.build(parent: Instance, deps: any)
 
 		Chrome.label(frame, {
 			Position = UDim2.fromOffset(5, 2),
-			Size = UDim2.fromOffset(16, 14),
+			Size = UDim2.fromOffset(16, 19),
 			Text = tostring(i),
-			TextSize = 12,
+			TextSize = 14,
 			TextColor3 = Theme.GoldLight,
 			TextXAlignment = Enum.TextXAlignment.Left,
 			ZIndex = 15,
 		})
 		Chrome.label(body, {
 			Position = slotPosition(i) + UDim2.fromOffset(0, SLOT_SIZE + 2),
-			Size = UDim2.fromOffset(SLOT_SIZE, 14),
+			Size = UDim2.fromOffset(SLOT_SIZE, 18),
 			Text = "Ring " .. i,
-			TextSize = 11,
+			TextSize = 13,
 			TextColor3 = Theme.Muted,
 			FontFace = Theme.Fonts.Body,
 		})
@@ -234,7 +234,7 @@ function Character.build(parent: Instance, deps: any)
 		local left = Chrome.label(holder, {
 			Size = UDim2.fromScale(0.5, 1),
 			Text = label,
-			TextSize = 13,
+			TextSize = 15,
 			FontFace = Theme.Fonts.Body,
 			TextColor3 = Theme.Text,
 			TextXAlignment = Enum.TextXAlignment.Left,
@@ -245,7 +245,7 @@ function Character.build(parent: Instance, deps: any)
 			Position = UDim2.fromScale(1, 0),
 			Size = UDim2.fromScale(0.5, 1),
 			Text = "",
-			TextSize = 13,
+			TextSize = 15,
 			TextColor3 = Color3.new(1, 1, 1),
 			TextXAlignment = Enum.TextXAlignment.Right,
 			ZIndex = 4,

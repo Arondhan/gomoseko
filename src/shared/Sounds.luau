@@ -10,15 +10,19 @@ local Sounds = {}
 Sounds.Manual = {
 	ArcLightningCharge = "",
 	ArcLightningZap = "",
+	ThunderBoom = "",
+	RevealTick = "",
 }
 
 -- Имя звука -> имя файла в assets/audio (без расширения)
 local FILES = {
 	ArcLightningCharge = "arc_lightning_charge",
 	ArcLightningZap = "arc_lightning_zap",
+	ThunderBoom = "thunder_boom",
+	RevealTick = "reveal_tick",
 }
 
-export type SoundName = "ArcLightningCharge" | "ArcLightningZap"
+export type SoundName = "ArcLightningCharge" | "ArcLightningZap" | "ThunderBoom" | "RevealTick"
 
 -- Asphalt может назвать ключ по-разному (с расширением, с папкой) — ищем по вхождению имени файла
 local function lookup(file: string): string

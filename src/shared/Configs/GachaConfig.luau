@@ -19,6 +19,11 @@ local GachaConfig = {
 		MinOneIn = 100000,
 	},
 
+	-- Кинематографичная катсцена (камера, затемнение, гром) для находок не реже 1 из MinOneIn
+	Cinematic = {
+		MinOneIn = 1000,
+	},
+
 	-- Ring Essence за дубликат (по качеству)
 	Essence = {
 		Common = 1,
