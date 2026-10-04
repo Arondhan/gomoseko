@@ -177,7 +177,7 @@ function Window.new(parent: Instance, config: { name: string, title: string, siz
 				or input.UserInputType == Enum.UserInputType.Touch
 			)
 		then
-			local delta = input.Position - dragStart
+			local delta = (input.Position - dragStart) / Theme.scaleOf(frame)
 			frame.Position =
 				UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
 		end

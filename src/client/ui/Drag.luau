@@ -2,6 +2,7 @@
 -- Единое перетаскивание колец: из инвентаря в слот, из слота в слот (обмен), из слота «в никуда» (снять).
 -- Цели (панель колец, окно персонажа) регистрируются через Drag.registerTarget; подсветка и поиск слота — их дело.
 
+local GuiService = game:GetService("GuiService")
 local UserInputService = game:GetService("UserInputService")
 
 local RingIcon = require(script.Parent.RingIcon)
@@ -25,6 +26,19 @@ end
 
 function Drag.isDragging(): boolean
 	return active
+end
+
+-- Положение курсора/пальца в экранных координатах (как GetMouseLocation: с учётом верхней панели Roblox)
+local function pointerOf(input: InputObject): Vector2
+	return Vector2.new(input.Position.X, input.Position.Y) + GuiService:GetGuiInset()
+end
+
+local function isPointerDown(input: InputObject): boolean
+	return input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch
+end
+
+local function isPointerMove(input: InputObject): boolean
+	return input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch
 end
 
 -- Слот под курсором среди всех целей (nil — ни один)
@@ -55,10 +69,10 @@ function Drag.start(gui: Instance, ring: any, onDrop: (slot: number?) -> ())
 	}, gui)
 	RingIcon.new(ghost, ring)
 
+	local pointer = UserInputService:GetMouseLocation()
 	local function place()
-		local mouse = UserInputService:GetMouseLocation()
-		ghost.Position = UDim2.fromOffset(mouse.X, mouse.Y)
-		local target, slot = slotAt(mouse)
+		ghost.Position = UDim2.fromOffset(pointer.X / Theme.scaleOf(ghost), pointer.Y / Theme.scaleOf(ghost))
+		local target, slot = slotAt(pointer)
 		for _, t in targets do
 			t.highlight(if t == target then slot else nil)
 		end
@@ -67,18 +81,24 @@ function Drag.start(gui: Instance, ring: any, onDrop: (slot: number?) -> ())
 
 	local moveConnection: RBXScriptConnection
 	local endConnection: RBXScriptConnection
-	moveConnection = UserInputService.InputChanged:Connect(function(input)
-		if input.UserInputType == Enum.UserInputType.MouseMovement then
+	moveConnection = UserInputService.InputChanged:Connect(function(input: InputObject)
+		if isPointerMove(input) then
+			pointer = if input.UserInputType == Enum.UserInputType.Touch
+				then pointerOf(input)
+				else UserInputService:GetMouseLocation()
 			place()
 		end
 	end)
-	endConnection = UserInputService.InputEnded:Connect(function(input)
-		if input.UserInputType ~= Enum.UserInputType.MouseButton1 then
+	endConnection = UserInputService.InputEnded:Connect(function(input: InputObject)
+		if not isPointerDown(input) then
 			return
 		end
 		moveConnection:Disconnect()
 		endConnection:Disconnect()
-		local _, slot = slotAt(UserInputService:GetMouseLocation())
+		if input.UserInputType == Enum.UserInputType.Touch then
+			pointer = pointerOf(input)
+		end
+		local _, slot = slotAt(pointer)
 		for _, t in targets do
 			t.highlight(nil)
 		end
@@ -88,19 +108,19 @@ function Drag.start(gui: Instance, ring: any, onDrop: (slot: number?) -> ())
 	end)
 end
 
--- Делает кнопку источником переноса: зажали ЛКМ и сдвинули курсор > 8 px — вызывается onStart(ring).
--- Обычный клик (без сдвига) не затрагивается. getRing возвращает кольцо в источнике или nil, если слот пуст.
+-- Делает кнопку источником переноса: зажали и сдвинули курсор/палец > 8 px — вызывается onStart(ring).
+-- Обычный клик/тап (без сдвига) не затрагивается. getRing возвращает кольцо в источнике или nil, если слот пуст.
 function Drag.makeSource(button: GuiObject, getRing: () -> any?, onStart: (ring: any) -> ())
 	local pressing = false
 	local startPos = Vector2.zero
-	button.InputBegan:Connect(function(input)
-		if input.UserInputType == Enum.UserInputType.MouseButton1 then
+	button.InputBegan:Connect(function(input: InputObject)
+		if isPointerDown(input) then
 			pressing = true
 			startPos = Vector2.new(input.Position.X, input.Position.Y)
 		end
 	end)
-	UserInputService.InputChanged:Connect(function(input)
-		if pressing and not active and input.UserInputType == Enum.UserInputType.MouseMovement then
+	UserInputService.InputChanged:Connect(function(input: InputObject)
+		if pressing and not active and isPointerMove(input) then
 			local position = Vector2.new(input.Position.X, input.Position.Y)
 			if (position - startPos).Magnitude > 8 then
 				pressing = false
@@ -111,8 +131,8 @@ function Drag.makeSource(button: GuiObject, getRing: () -> any?, onStart: (ring:
 			end
 		end
 	end)
-	UserInputService.InputEnded:Connect(function(input)
-		if input.UserInputType == Enum.UserInputType.MouseButton1 then
+	UserInputService.InputEnded:Connect(function(input: InputObject)
+		if isPointerDown(input) then
 			pressing = false
 		end
 	end)

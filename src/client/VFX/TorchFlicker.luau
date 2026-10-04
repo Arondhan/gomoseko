@@ -23,6 +23,7 @@ type Entry = {
 }
 
 local entries: { [PointLight]: Entry } = {}
+local enabled = true
 
 local function add(instance: Instance)
 	if not instance:IsA("PointLight") then
@@ -40,6 +41,17 @@ local function add(instance: Instance)
 	}
 end
 
+-- Включить/выключить мерцание (режим Low graphics): при выключении возвращаем базовые значения
+function TorchFlicker.setEnabled(value: boolean)
+	enabled = value
+	if not value then
+		for light, entry in entries do
+			light.Brightness = entry.baseBrightness
+			light.Range = entry.baseRange
+		end
+	end
+end
+
 function TorchFlicker.start()
 	for _, instance in CollectionService:GetTagged(TAG) do
 		add(instance)
@@ -53,7 +65,7 @@ function TorchFlicker.start()
 
 	RunService.Heartbeat:Connect(function()
 		local camera = Workspace.CurrentCamera
-		if not camera then
+		if not camera or not enabled then
 			return
 		end
 		local origin = camera.CFrame.Position

@@ -22,6 +22,7 @@ local InventoryController = require(Controllers:WaitForChild("InventoryControlle
 local TargetController = require(Controllers:WaitForChild("TargetController"))
 local SkillController = require(Controllers:WaitForChild("SkillController"))
 local GachaController = require(Controllers:WaitForChild("GachaController"))
+local SettingsController = require(Controllers:WaitForChild("SettingsController"))
 local LightningRenderer = require(script.Parent:WaitForChild("VFX"):WaitForChild("LightningRenderer"))
 local DamageNumbers = require(script.Parent:WaitForChild("VFX"):WaitForChild("DamageNumbers"))
 local TorchFlicker = require(script.Parent:WaitForChild("VFX"):WaitForChild("TorchFlicker"))
@@ -38,6 +39,9 @@ local Drag = require(ui:WaitForChild("Drag"))
 local Shop = require(ui:WaitForChild("Shop"))
 local Summon = require(ui:WaitForChild("Summon"))
 local CurrencyBar = require(ui:WaitForChild("CurrencyBar"))
+local SettingsWindow = require(ui:WaitForChild("SettingsWindow"))
+local OnboardingTracker = require(ui:WaitForChild("OnboardingTracker"))
+local TouchButtons = require(ui:WaitForChild("TouchButtons"))
 local PlayerFrame = require(ui:WaitForChild("PlayerFrame"))
 local TargetFrame = require(ui:WaitForChild("TargetFrame"))
 local Tooltip = require(ui:WaitForChild("Tooltip"))
@@ -66,6 +70,19 @@ local gui = Theme.new("ScreenGui", {
 	ZIndexBehavior = Enum.ZIndexBehavior.Sibling,
 	DisplayOrder = 10,
 }, playerGui)
+
+-- масштаб интерфейса: на маленьких экранах (телефон) уменьшаем, на обычных остаётся 1
+local uiScale = Theme.new("UIScale", { Scale = 1 }, gui)
+local function updateScale()
+	local camera = workspace.CurrentCamera
+	local height = if camera then camera.ViewportSize.Y else 1080
+	uiScale.Scale = math.clamp(height / 800, 0.5, 1)
+end
+updateScale()
+if workspace.CurrentCamera then
+	workspace.CurrentCamera:GetPropertyChangedSignal("ViewportSize"):Connect(updateScale)
+end
+local isPhone = UserInputService.TouchEnabled and not UserInputService.KeyboardEnabled
 
 PlayerFrame.build(gui)
 local targetFrame = TargetFrame.build(gui)
@@ -104,7 +121,23 @@ local ringBar = RingBar.build(gui, {
 	end,
 })
 local menu = MicroMenu.build(gui, tooltip)
-CurrencyBar.build(gui, tooltip)
+local currencyBar = CurrencyBar.build(gui, tooltip)
+
+-- на телефоне справа внизу кнопка прыжка Roblox: переносим меню и валюты вверх вправо
+if isPhone then
+	menu.frame.AnchorPoint = Vector2.new(1, 0)
+	menu.frame.Position = UDim2.new(1, -8, 0, 64)
+	currencyBar.frame.AnchorPoint = Vector2.new(1, 0)
+	currencyBar.frame.Position = UDim2.new(1, -8, 0, 136)
+end
+TouchButtons.build(gui, {
+	onTarget = function()
+		TargetController.cycle(false)
+	end,
+})
+OnboardingTracker.build(gui, function()
+	notice.show("Tutorial complete! Crystals added.", Theme.GoldLight)
+end)
 
 local character = Character.build(gui, {
 	controller = InventoryController,
@@ -127,6 +160,11 @@ local windows = {
 		key = Enum.KeyCode.I,
 	},
 	{ window = summon.window, button = menu.summon, key = Enum.KeyCode.G },
+	{
+		window = SettingsWindow.build(gui, { settings = SettingsController }),
+		button = menu.settings,
+		key = Enum.KeyCode.O,
+	},
 	{
 		window = Shop.build(gui, { notify = notice.show, openOdds = summon.openOdds, gacha = GachaController }),
 		button = menu.shop,
@@ -198,6 +236,7 @@ localPlayer:GetAttributeChangedSignal("Level"):Connect(function()
 end)
 
 -- запуск контроллеров (они ждут ремоуты, которые создаёт server/Main)
+SettingsController.start()
 InventoryController.start()
 GachaController.start()
 TargetController.start(notice.show)

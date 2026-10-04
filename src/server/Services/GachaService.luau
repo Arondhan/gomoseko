@@ -21,6 +21,7 @@ local CurrencyService = require(Services:WaitForChild("CurrencyService"))
 local DataService = require(Services:WaitForChild("DataService"))
 local InventoryService = require(Services:WaitForChild("InventoryService"))
 local MonetizationService = require(Services:WaitForChild("MonetizationService"))
+local OnboardingService = require(Services:WaitForChild("OnboardingService"))
 local StatsService = require(Services:WaitForChild("StatsService"))
 
 local GachaService = {}
@@ -167,7 +168,7 @@ local function roll(player: Player, count: any, free: any): Types.GachaRollRespo
 			busy[player] = nil
 			return fail("Paid summons are not available in your region")
 		end
-		if not CurrencyService.trySpend(player, "Crystals", GachaConfig.RollCost * count) then
+		if not CurrencyService.trySpend(player, "Crystals", GachaConfig.RollCost * count, "Shop", "ring_summon") then
 			busy[player] = nil
 			return fail("Not enough Summon Crystals")
 		end
@@ -183,7 +184,7 @@ local function roll(player: Player, count: any, free: any): Types.GachaRollRespo
 		local essence = 0
 		if not isNew then
 			essence = GachaConfig.Essence[ring.Quality] or 0
-			CurrencyService.add(player, "Essence", essence)
+			CurrencyService.add(player, "Essence", essence, "Gameplay", "duplicate_ring")
 		end
 		table.insert(
 			results,
@@ -207,6 +208,7 @@ local function roll(player: Player, count: any, free: any): Types.GachaRollRespo
 	end
 
 	busy[player] = nil
+	OnboardingService.notify(player, "Summon")
 	return { ok = true, results = results, state = buildState(player) }
 end
 

@@ -13,6 +13,7 @@ local RingsConfig = require(Shared:WaitForChild("Configs"):WaitForChild("Rings")
 
 local Services = script.Parent
 local DataService = require(Services:WaitForChild("DataService"))
+local OnboardingService = require(Services:WaitForChild("OnboardingService"))
 local StatsService = require(Services:WaitForChild("StatsService"))
 
 local InventoryService = {}
@@ -107,6 +108,7 @@ local function equip(player: Player, itemId: any, slot: any): boolean
 	profile.Equipped[target] = itemId
 	StatsService.recalculate(player)
 	notify(player)
+	OnboardingService.notify(player, "EquipRing")
 	return true
 end
 

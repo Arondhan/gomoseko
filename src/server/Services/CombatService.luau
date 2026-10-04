@@ -19,6 +19,7 @@ local Services = script.Parent
 local InventoryService = require(Services:WaitForChild("InventoryService"))
 local PlayerStatsService = require(Services:WaitForChild("PlayerStatsService"))
 local CurrencyService = require(Services:WaitForChild("CurrencyService"))
+local OnboardingService = require(Services:WaitForChild("OnboardingService"))
 local StatsService = require(Services:WaitForChild("StatsService"))
 
 local CombatService = {}
@@ -215,6 +216,7 @@ local function cast(player: Player, skillId: any, target: any): Types.CastResult
 	-- мгновенный каст — сразу цепочка
 	if config.CastTime <= 0 then
 		task.spawn(runChain, player, config, primary, casterRoot.Position + CASTER_HAND_OFFSET)
+		OnboardingService.notify(player, "CastSpell")
 		return { ok = true, castTime = 0, cooldown = cooldown }
 	end
 
@@ -243,6 +245,7 @@ local function cast(player: Player, skillId: any, target: any): Types.CastResult
 		end
 		runChain(player, config, primary, (root :: BasePart).Position + CASTER_HAND_OFFSET)
 	end)
+	OnboardingService.notify(player, "CastSpell")
 	return { ok = true, castTime = config.CastTime, cooldown = cooldown }
 end
 
