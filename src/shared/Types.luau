@@ -208,14 +208,37 @@ export type RiftState = {
 	enraged: boolean,
 	chestWave: boolean, -- текущая волна — сундучная
 	bossWave: boolean,
+	bossHealth: number, -- HP живого босса (0 — босса нет)
+	bossMax: number,
 }
+
+export type RiftEntry = { rank: number, userId: number, name: string, score: number } -- score = лучшая волна недели
 
 export type RiftInfo = {
 	state: RiftState,
 	inArena: boolean,
 	best: number, -- личный рекорд (лучшая волна)
 	weekBest: number,
+	board: { RiftEntry }, -- топ недели
+	weekEndsIn: number, -- секунд до конца недели (UTC)
+	source: string, -- "datastore" или "memory"
 }
+
+-- Результат открытия сундука
+export type RiftChest = {
+	wave: number,
+	boss: boolean,
+	title: string,
+	label: string,
+	crystals: number,
+	essence: number,
+	ringName: string?, -- выпало кольцо
+	ringIsNew: boolean?,
+}
+
+export type RiftWeekly = { rank: number, crystals: number }
+
+export type RiftTelegraph = { position: Vector3, radius: number, duration: number }
 
 export type RiftWaveReward = { wave: number, crystals: number, essence: number, chest: boolean }
 

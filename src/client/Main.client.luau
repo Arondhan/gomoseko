@@ -45,6 +45,7 @@ local RingsWindow = require(ui:WaitForChild("RingsWindow"))
 local SkillPad = require(ui:WaitForChild("SkillPad"))
 local AdminWindow = require(ui:WaitForChild("AdminWindow"))
 local RiftHud = require(ui:WaitForChild("RiftHud"))
+local RiftTelegraph = require(script.Parent:WaitForChild("VFX"):WaitForChild("RiftTelegraph"))
 local RiftWindow = require(ui:WaitForChild("RiftWindow"))
 local SideMenu = require(ui:WaitForChild("SideMenu"))
 local BoostWindow = require(ui:WaitForChild("BoostWindow"))
@@ -337,6 +338,13 @@ InventoryController.start()
 GachaController.start()
 LuckController.start()
 RiftController.start()
+RiftTelegraph.start()
+RiftController.weekly.Event:Connect(function(weekly)
+	notice.show(
+		string.format("Weekly Rift reward: rank #%d  +%d crystals!", weekly.rank, weekly.crystals),
+		Theme.GoldLight
+	)
+end)
 RiftHud.build(gui, { rift = RiftController, notify = notice.show })
 -- вход в Rift через портал: отказ сервера (нет кольца со скиллом и т.п.) приходит атрибутом
 localPlayer:GetAttributeChangedSignal("RiftMessage"):Connect(function()

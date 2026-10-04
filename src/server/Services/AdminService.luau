@@ -191,6 +191,11 @@ ACTIONS.RiftKillAll = function()
 	return true, "Rift enemies removed"
 end
 
+ACTIONS.RiftChest = function(player: Player, boss: any)
+	RiftService.adminChest(player, boss == true)
+	return true, if boss == true then "Titan chest opened" else "Rift chest opened"
+end
+
 ACTIONS.RiftLeave = function(player: Player)
 	return RiftService.leave(player)
 end

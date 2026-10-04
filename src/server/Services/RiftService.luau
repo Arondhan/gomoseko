@@ -13,8 +13,12 @@ local Shared = ReplicatedStorage:WaitForChild("Shared")
 local Types = require(Shared:WaitForChild("Types"))
 local Remotes = require(Shared:WaitForChild("Remotes"))
 local Config = require(Shared:WaitForChild("Config"))
+local DpsMath = require(Shared:WaitForChild("Dps"):WaitForChild("DpsMath"))
+local GachaMath = require(Shared:WaitForChild("Gacha"):WaitForChild("GachaMath"))
+local ChestMath = require(Shared:WaitForChild("Rift"):WaitForChild("ChestMath"))
 local WaveMath = require(Shared:WaitForChild("Rift"):WaitForChild("WaveMath"))
 local Configs = Shared:WaitForChild("Configs")
+local GachaConfig = require(Configs:WaitForChild("GachaConfig"))
 local RiftConfig = require(Configs:WaitForChild("RiftConfig"))
 local RingsConfig = require(Configs:WaitForChild("Rings"):WaitForChild("RingsConfig"))
 
@@ -22,6 +26,8 @@ local Services = script.Parent
 local CombatService = require(Services:WaitForChild("CombatService"))
 local CurrencyService = require(Services:WaitForChild("CurrencyService"))
 local DataService = require(Services:WaitForChild("DataService"))
+local InventoryService = require(Services:WaitForChild("InventoryService"))
+local RiftBoardService = require(Services:WaitForChild("RiftBoardService"))
 local RiftEnemyAI = require(Services:WaitForChild("RiftEnemyAI"))
 local Hub = script.Parent.Parent:WaitForChild("Hub")
 local EnemyFactory = require(Hub:WaitForChild("EnemyFactory"))
@@ -59,12 +65,21 @@ local aliveEnemies: { [Model]: boolean } = {}
 local aliveCount = 0
 
 local arena: RiftArena.Arena? = nil
+local bossModel: Model? = nil
+local chestRemote: RemoteEvent
+local telegraphRemote: RemoteEvent
 local enemiesFolder: Folder
 local stateRemote: RemoteEvent
 local resultRemote: RemoteEvent
 local rewardRemote: RemoteEvent
 
 local rng = Random.new()
+
+-- пул колец для исхода «Ring!» сундука: те же шансы, что у Summon при удаче ×1
+local ringPool: { GachaMath.Entry } = {}
+for _, ring in RingsConfig.List do
+	table.insert(ringPool, { id = ring.Id, oneIn = ring.OneIn })
+end
 
 ---------------------------------------------------------------------------
 -- Состояние и вспомогательные функции
@@ -80,6 +95,12 @@ end
 
 local function makeState(): Types.RiftState
 	local scaling = RiftConfig.Scaling
+	local bossHealth, bossMax = 0, 0
+	local boss = bossModel
+	local bossHumanoid = boss and boss:FindFirstChildOfClass("Humanoid")
+	if bossHumanoid and bossHumanoid.Health > 0 then
+		bossHealth, bossMax = math.ceil(bossHumanoid.Health), bossHumanoid.MaxHealth
+	end
 	return {
 		phase = phase,
 		wave = wave,
@@ -90,6 +111,8 @@ local function makeState(): Types.RiftState
 		enraged = enraged,
 		chestWave = WaveMath.isChestWave(wave, scaling),
 		bossWave = WaveMath.isBossWave(wave, scaling),
+		bossHealth = bossHealth,
+		bossMax = bossMax,
 	}
 end
 
@@ -154,19 +177,23 @@ local function onEnemyGone(model: Model)
 	RiftEnemyAI.unregister(model)
 end
 
-local function spawnEnemy(kind: string)
+local function spawnEnemy(kind: string, at: Vector3?): Model?
 	local stats = RiftConfig.Enemies[kind]
 	local current = arena
 	if not stats or not current then
-		return
+		return nil
 	end
-	local angle = rng:NextNumber() * math.pi * 2
-	local radius = RiftConfig.Arena.SpawnRadius
-	local position = current.center
-		+ Vector3.new(math.cos(angle) * radius, 2 * stats.Size + 0.5, math.sin(angle) * radius)
-	local model = EnemyFactory.create(kind, position, waveHealthMultiplier, waveDamageMultiplier, enemiesFolder)
+	local position = at
+	if not position then
+		local angle = rng:NextNumber() * math.pi * 2
+		local radius = RiftConfig.Arena.SpawnRadius
+		position = current.center
+			+ Vector3.new(math.cos(angle) * radius, 2 * stats.Size + 0.5, math.sin(angle) * radius)
+	end
+	local model =
+		EnemyFactory.create(kind, position :: Vector3, waveHealthMultiplier, waveDamageMultiplier, enemiesFolder)
 	if not model then
-		return
+		return nil
 	end
 	aliveEnemies[model] = true
 	aliveCount += 1
@@ -177,16 +204,16 @@ local function spawnEnemy(kind: string)
 			onEnemyGone(model)
 			Debris:AddItem(model, 2)
 		end)
-	end
-	if enraged then
-		if humanoid then
+		if enraged then
 			humanoid.WalkSpeed *= RiftConfig.EnrageSpeedMultiplier
 		end
 	end
+	return model
 end
 
 local function clearEnemies()
 	table.clear(queue)
+	bossModel = nil
 	for model in aliveEnemies do
 		RiftEnemyAI.unregister(model)
 		model:Destroy()
@@ -213,14 +240,29 @@ local function sendIdle(player: Player)
 		enraged = false,
 		chestWave = false,
 		bossWave = false,
+		bossHealth = 0,
+		bossMax = 0,
 	}
 	stateRemote:FireClient(player, idle)
 end
 
 local function recordBest(player: Player): boolean
 	local profile = DataService.get(player)
-	if profile and clearedWave > profile.Rift.BestWave then
-		profile.Rift.BestWave = clearedWave
+	if not profile then
+		return false
+	end
+	local rift = profile.Rift
+	local weekId = DpsMath.weekId(os.time())
+	if rift.WeekId ~= weekId then
+		rift.WeekId = weekId
+		rift.WeekBest = 0
+	end
+	if clearedWave > rift.WeekBest then
+		rift.WeekBest = clearedWave
+		RiftBoardService.submit(player.UserId, clearedWave)
+	end
+	if clearedWave > rift.BestWave then
+		rift.BestWave = clearedWave
 		return true
 	end
 	return false
@@ -311,6 +353,115 @@ local function waitUntil(endsAt: number, token: number): boolean
 	return token == runToken and next(runs) ~= nil
 end
 
+-- Босс: каждые SlamInterval секунд красный круг (TelegraphSeconds на то, чтобы выйти), затем удар по площади;
+-- при падении HP ниже порогов призывает миньонов. Живёт, пока босс жив и волна та же.
+local function bossLoop(model: Model, serial: number, token: number)
+	local humanoid = model:FindFirstChildOfClass("Humanoid")
+	local root = model:FindFirstChild("HumanoidRootPart")
+	local current = arena
+	if not (humanoid and root and root:IsA("BasePart") and current) then
+		return
+	end
+	local config = RiftConfig.Boss
+	local nextThreshold = 1
+	local lastSlam = os.clock()
+	local function alive(): boolean
+		return humanoid.Health > 0 and model.Parent ~= nil and token == runToken and serial == waveSerial
+	end
+	while alive() do
+		task.wait(STEP)
+		if not alive() then
+			break
+		end
+
+		local threshold = config.SummonThresholds[nextThreshold]
+		if threshold and humanoid.Health / humanoid.MaxHealth <= threshold then
+			nextThreshold += 1
+			for i = 1, config.SummonCount do
+				local angle = i / config.SummonCount * math.pi * 2
+				local spot = Vector3.new(
+					root.Position.X + math.cos(angle) * 9,
+					current.center.Y + 2.5,
+					root.Position.Z + math.sin(angle) * 9
+				)
+				if spawnEnemy("Grunt", spot) then
+					waveTotal += 1
+				end
+			end
+		end
+
+		if os.clock() - lastSlam >= config.SlamInterval and next(runs) ~= nil then
+			lastSlam = os.clock()
+			local ground = Vector3.new(root.Position.X, current.center.Y + 0.2, root.Position.Z)
+			local savedSpeed = humanoid.WalkSpeed
+			humanoid.WalkSpeed = 0 -- замирает на время «замаха»
+			local telegraph: Types.RiftTelegraph =
+				{ position = ground, radius = config.SlamRadius, duration = config.TelegraphSeconds }
+			for player in runs do
+				telegraphRemote:FireClient(player, telegraph)
+			end
+			task.wait(config.TelegraphSeconds)
+			if humanoid.Health > 0 then
+				humanoid.WalkSpeed = savedSpeed
+				local damage = ((model:GetAttribute("Damage") :: number?) or 20) * config.SlamDamageMultiplier
+				for _, target in getTargets() do
+					local flat = Vector3.new(target.root.Position.X - ground.X, 0, target.root.Position.Z - ground.Z)
+					if flat.Magnitude <= config.SlamRadius then
+						target.humanoid:TakeDamage(damage)
+					end
+				end
+			end
+		end
+	end
+	if bossModel == model then
+		bossModel = nil
+	end
+end
+
+-- Сундук: исход выбирается по раскрытым шансам (RiftConfig.Chests), «Ring!» = обычный бросок Summon при удаче ×1
+local function openChest(player: Player, waveNumber: number, boss: boolean)
+	local chests = RiftConfig.Chests
+	local config = if boss then chests.Boss else chests.Normal
+	local outcome = ChestMath.pick(config.Outcomes, rng:NextNumber())
+	local crystals = ChestMath.scaled(outcome.Crystals, waveNumber, chests.WaveScale)
+	local essence = ChestMath.scaled(outcome.Essence, waveNumber, chests.WaveScale)
+	local ringName: string? = nil
+	local ringIsNew: boolean? = nil
+	if outcome.Ring then
+		local ringId = GachaMath.roll(ringPool, 1, rng :: any)
+		local ring = RingsConfig.Rings[ringId]
+		ringIsNew = InventoryService.grantRing(player, ringId)
+		ringName = ring.Name
+		if not ringIsNew then
+			essence += GachaConfig.Essence[ring.Quality] or 0 -- дубликат -> Essence, как в Summon
+		else
+			task.spawn(DataService.save, player, false)
+		end
+	end
+	if crystals > 0 then
+		CurrencyService.add(player, "Crystals", crystals, "Gameplay", "rift_chest")
+	end
+	if essence > 0 then
+		CurrencyService.add(player, "Essence", essence, "Gameplay", "rift_chest")
+	end
+	local run = runs[player]
+	if run then
+		run.crystals += crystals
+		run.essence += essence
+	end
+	local result: Types.RiftChest = {
+		wave = waveNumber,
+		boss = boss,
+		title = config.Title,
+		label = outcome.Label,
+		crystals = crystals,
+		essence = essence,
+		ringName = ringName,
+		ringIsNew = ringIsNew,
+	}
+	chestRemote:FireClient(player, result)
+end
+
 -- Награда за зачищенную волну: по доле урона каждого игрока
 local function payWave(waveNumber: number)
 	local players = playerCount()
@@ -377,7 +528,11 @@ local function runWave(token: number): string
 			if aliveCount < RiftConfig.MaxAliveEnemies then
 				local kind = table.remove(queue, 1)
 				if kind then
-					spawnEnemy(kind)
+					local model = spawnEnemy(kind)
+					if model and kind == "Boss" then
+						bossModel = model
+						task.spawn(bossLoop, model, serial, token)
+					end
 				end
 			end
 			task.wait(RiftConfig.SpawnInterval)
@@ -441,6 +596,12 @@ local function runLoop(token: number)
 				recordBest(player)
 			end
 			payWave(wave)
+			if WaveMath.isChestWave(wave, RiftConfig.Scaling) then
+				local boss = WaveMath.isBossWave(wave, RiftConfig.Scaling)
+				for player in table.clone(runs) do
+					openChest(player, wave, boss)
+				end
+			end
 			phase = "Intermission"
 			phaseEndsAt = os.clock() + RiftConfig.IntermissionSeconds
 			healPlayers()
@@ -522,9 +683,15 @@ function RiftService.adminJump(player: Player, startWave: number): (boolean, str
 	return true, string.format("Rift: wave %d", n)
 end
 
+-- Админ/тест: открыть сундук прямо сейчас (проверка шансов и окна результата)
+function RiftService.adminChest(player: Player, boss: boolean)
+	openChest(player, math.max(1, if wave > 0 then wave else 5), boss)
+end
+
 -- Админ/тест: убить всех врагов текущей волны (волна засчитается зачищенной)
 function RiftService.killAll()
 	table.clear(queue)
+	bossModel = nil
 	for model in aliveEnemies do
 		RiftEnemyAI.unregister(model)
 		model:Destroy()
@@ -537,6 +704,8 @@ function RiftService.start()
 	stateRemote = Remotes.get("RiftState") :: RemoteEvent
 	resultRemote = Remotes.get("RiftResult") :: RemoteEvent
 	rewardRemote = Remotes.get("RiftWaveReward") :: RemoteEvent
+	chestRemote = Remotes.get("RiftChest") :: RemoteEvent
+	telegraphRemote = Remotes.get("RiftTelegraph") :: RemoteEvent
 	local getRemote = Remotes.get("RiftGet") :: RemoteFunction
 	local actionRemote = Remotes.get("RiftAction") :: RemoteFunction
 
@@ -549,11 +718,17 @@ function RiftService.start()
 
 	getRemote.OnServerInvoke = function(player: Player): Types.RiftInfo
 		local profile = DataService.get(player)
+		local entries, source = RiftBoardService.top(10)
 		return {
 			state = makeState(),
 			inArena = runs[player] ~= nil,
 			best = if profile then profile.Rift.BestWave else 0,
-			weekBest = if profile then profile.Rift.WeekBest else 0,
+			weekBest = if profile and profile.Rift.WeekId == DpsMath.weekId(os.time())
+				then profile.Rift.WeekBest
+				else 0,
+			board = entries,
+			weekEndsIn = DpsMath.secondsToWeekEnd(os.time()),
+			source = source,
 		}
 	end
 	actionRemote.OnServerInvoke = function(player: Player, action: any): (boolean, string)

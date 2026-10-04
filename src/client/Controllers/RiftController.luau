@@ -15,6 +15,10 @@ local RiftController = {}
 RiftController.changed = Instance.new("BindableEvent")
 -- Fire(reward: RiftWaveReward) после зачищенной волны
 RiftController.reward = Instance.new("BindableEvent")
+-- Fire(chest: RiftChest) после открытия сундука
+RiftController.chest = Instance.new("BindableEvent")
+-- Fire(weekly: RiftWeekly) недельная награда по месту прошлой недели
+RiftController.weekly = Instance.new("BindableEvent")
 -- Fire(result: RiftResult) когда игрок выбыл из забега (итоги)
 RiftController.result = Instance.new("BindableEvent")
 
@@ -73,6 +77,18 @@ function RiftController.start()
 	local stateRemote = Remotes.get("RiftState") :: RemoteEvent
 	local rewardRemote = Remotes.get("RiftWaveReward") :: RemoteEvent
 	local resultRemote = Remotes.get("RiftResult") :: RemoteEvent
+	local chestRemote = Remotes.get("RiftChest") :: RemoteEvent
+	local weeklyRemote = Remotes.get("RiftWeekly") :: RemoteEvent
+	chestRemote.OnClientEvent:Connect(function(value: Types.RiftChest)
+		if type(value) == "table" and type(value.title) == "string" then
+			RiftController.chest:Fire(value)
+		end
+	end)
+	weeklyRemote.OnClientEvent:Connect(function(value: Types.RiftWeekly)
+		if type(value) == "table" and type(value.crystals) == "number" then
+			RiftController.weekly:Fire(value)
+		end
+	end)
 	stateRemote.OnClientEvent:Connect(function(value: Types.RiftState)
 		if type(value) == "table" and type(value.phase) == "string" then
 			state = value

@@ -226,6 +226,8 @@ function AdminWindow.build(parent: Instance, deps: any)
 		{ text = "Rift: wave 30", action = "RiftJump", a = 30 },
 		{ text = "Kill Rift enemies", action = "RiftKillAll" },
 		{ text = "Leave Rift", action = "RiftLeave" },
+		{ text = "Open Rift chest", action = "RiftChest", a = false },
+		{ text = "Open Titan chest", action = "RiftChest", a = true },
 	})
 
 	heading("Luck and events")

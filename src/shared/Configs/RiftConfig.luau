@@ -2,6 +2,8 @@
 -- Rift: бесконечные волны врагов в отдельной арене. Всё, что влияет на баланс, правится здесь.
 -- Сервер читает числа (волны, враги, награды), клиент — только тексты и тайминги для показа.
 
+local ChestMath = require(script.Parent.Parent.Rift.ChestMath)
+
 local RiftConfig = {}
 
 -- Арена: круглая площадка далеко от хаба (хаб занимает квадрат ±160 вокруг (0,0,0))
@@ -111,6 +113,49 @@ RiftConfig.Rewards = {
 	EssenceBase = 1,
 	EssencePerWave = 1,
 	FreeloaderMultiplier = 0.5, -- минимум за присутствие (множитель 0.5..1 по доле урона)
+}
+
+-- Босс: площадной удар с телеграфом (красный круг), призыв миньонов при потере HP
+RiftConfig.Boss = {
+	SlamInterval = 7, -- сек между ударами
+	TelegraphSeconds = 1.4, -- время «предупреждения»: за это время нужно выйти из круга
+	SlamRadius = 15,
+	SlamDamageMultiplier = 1.5, -- к урону босса (атрибут Damage модели)
+	SummonThresholds = { 0.66, 0.33 }, -- при падении HP ниже этих долей призываются миньоны
+	SummonCount = 4,
+}
+
+-- Сундуки: каждая 5-я волна — обычный, каждая 10-я (босс) — сундук Титана. Шансы раскрываются игроку заранее
+-- (окно Rift). Ring = один обычный бросок Summon с удачей ×1 (те же шансы, что в таблице Odds).
+-- Награды Crystals/Essence растут на WaveScale за каждую волну сверх первой.
+RiftConfig.Chests = {
+	WaveScale = 0.05,
+	Normal = {
+		Title = "Rift Chest",
+		Outcomes = {
+			{ Id = "crystals", Label = "Crystal haul", Weight = 60, Crystals = 40 },
+			{ Id = "essence", Label = "Essence cache", Weight = 30, Essence = 25 },
+			{ Id = "ring", Label = "Ring!", Weight = 10, Ring = true },
+		} :: { ChestMath.Outcome },
+	},
+	Boss = {
+		Title = "Titan Chest",
+		Outcomes = {
+			{ Id = "crystals", Label = "Crystal hoard", Weight = 40, Crystals = 200 },
+			{ Id = "essence", Label = "Essence hoard", Weight = 30, Essence = 120 },
+			{ Id = "ring", Label = "Ring!", Weight = 30, Ring = true },
+		} :: { ChestMath.Outcome },
+	},
+}
+
+-- Недельная награда по месту в прошлой неделе (Summon Crystals), забирается автоматически при входе
+RiftConfig.LeaderboardSize = 50
+RiftConfig.RefreshSeconds = 60
+RiftConfig.WeeklyRewards = {
+	{ MaxRank = 1, Crystals = 600 },
+	{ MaxRank = 3, Crystals = 350 },
+	{ MaxRank = 10, Crystals = 180 },
+	{ MaxRank = 50, Crystals = 60 },
 }
 
 return RiftConfig

@@ -229,8 +229,15 @@ Types: Grunt, Runner (from wave 3), Brute (from wave 6) and a Titan boss every 1
 extra, and your best wave is saved (`profile.Rift.BestWave`). If you fall you keep what you earned. A wave that drags on
 for 150 s enrages the enemies. You need a ring with a skill equipped to enter (the admin menu can bypass that).
 Enemies are plain Humanoid models with a shared AI loop (`RiftEnemyAI`, straight-line movement, melee hits), tagged
-`Enemy` so every skill works on them. Admin menu: *Rift: wave 1/10/30*, *Kill Rift enemies*, *Leave Rift*.
-Balance numbers (HP, damage, rewards, timings) are all in `RiftConfig`; they are untested in play and need tuning.
+`Enemy` so every skill works on them. Admin menu: *Rift: wave 1/10/30*, *Kill Rift enemies*, *Leave Rift*, *Open Rift/Titan chest*.
+**Bosses.** Every 10th wave a Rift Titan: every 7 s it freezes and marks a red circle on the ground (1.4 s to step out), then
+slams everything inside; at 66 % and 33 % HP it summons four Grunts; its HP bar is in the HUD.
+**Chests.** Wave 5, 15... opens a Rift Chest, boss waves 10, 20... a Titan Chest. The odds are shown in the Rift window and come
+from the same config the server uses (`RiftConfig.Chests`, `shared/Rift/ChestMath.luau`, tested): Crystals, Essence or "Ring!"
+(a normal Summon roll with luck x1; a duplicate turns into Essence). Chests are free; there are no paid Rift purchases.
+**Leaderboard.** Weekly "best wave" (`RiftBoardService`, OrderedDataStore `RiftWeekly_<week>`, in-memory fallback without API
+access) with Crystal rewards for last week's top places, claimed automatically on join (`RiftConfig.WeeklyRewards`).
+Balance numbers (HP, damage, rewards, timings, chest odds) are all in `RiftConfig`; they are untested in play and need tuning.
 
 ## Admin menu (testing)
 
