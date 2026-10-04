@@ -17,11 +17,13 @@ local function weighted(font: Enum.Font, weight: Enum.FontWeight): Font
 	return Font.new(Font.fromEnum(font).Family, weight, Enum.FontStyle.Normal)
 end
 
-Fonts.Title = weighted(Enum.Font.Merriweather, Enum.FontWeight.Bold) -- заголовки, имена, названия предметов
-Fonts.Banner = regular(Enum.Font.Fondamento) -- крупные баннеры и уведомления (каллиграфия)
-Fonts.Serif = regular(Enum.Font.Merriweather) -- описания и «художественный» текст
-Fonts.Body = weighted(Enum.Font.Nunito, Enum.FontWeight.Medium) -- обычный текст
-Fonts.Numbers = weighted(Enum.Font.GothamBold, Enum.FontWeight.Bold) -- числа, ключи, полосы HP/маны
+-- Мультяшный стиль: один жирный округлый шрифт (Fredoka One) почти везде — читается на телефонах, выглядит «играбельно».
+-- Цифры урона — GothamBlack (контрастнее на фоне мира).
+Fonts.Title = regular(Enum.Font.FredokaOne) -- заголовки, имена, названия предметов
+Fonts.Banner = regular(Enum.Font.FredokaOne) -- крупные баннеры и уведомления
+Fonts.Serif = regular(Enum.Font.FredokaOne) -- описания
+Fonts.Body = regular(Enum.Font.FredokaOne) -- обычный текст
+Fonts.Numbers = regular(Enum.Font.FredokaOne) -- числа, ключи, полосы HP/маны
 Fonts.Impact = weighted(Enum.Font.GothamBlack, Enum.FontWeight.Heavy) -- цифры урона
 
 -- Прогрев: создаём скрытые TextLabel с каждым шрифтом и ждём загрузки, чтобы текст не «мигал» при первом показе.

@@ -1,5 +1,5 @@
 --!strict
--- Полоска валют справа внизу над меню: золото, Summon Crystals, Ring Essence. Данные — атрибуты Player (ведёт сервер).
+-- Валюты слева внизу крупными числами: золото, Summon Crystals, Ring Essence. Данные — атрибуты Player (ведёт сервер).
 
 local Players = game:GetService("Players")
 
@@ -15,55 +15,57 @@ local ENTRIES: { { attribute: string, tip: string, glyph: (Instance) -> (), colo
 	{ attribute = "Essence", tip = "Ring Essence", glyph = Glyphs.essence, color = Color3.fromRGB(150, 240, 210) },
 }
 
-local ENTRY_WIDTH = 92
+local ROW_HEIGHT = 40
 
 function CurrencyBar.build(parent: Instance, tooltip: any)
 	local player = Players.LocalPlayer
 
-	local bar = Chrome.panel(parent, {
+	-- без панели: крупные числа с обводкой прямо на экране слева внизу (как на референсе)
+	local bar = Theme.new("Frame", {
 		Name = "CurrencyBar",
-		AnchorPoint = Vector2.new(1, 1),
-		Position = UDim2.new(1, -16, 1, -88),
-		Size = UDim2.fromOffset(#ENTRIES * ENTRY_WIDTH + 14, 34),
-	}, 8)
-
-	local row = Theme.new("Frame", { Size = UDim2.fromScale(1, 1), BackgroundTransparency = 1, ZIndex = 3 }, bar)
+		AnchorPoint = Vector2.new(0, 1),
+		Position = UDim2.new(0, 16, 1, -46),
+		Size = UDim2.fromOffset(250, #ENTRIES * ROW_HEIGHT),
+		BackgroundTransparency = 1,
+	}, parent)
 	Theme.new("UIListLayout", {
-		FillDirection = Enum.FillDirection.Horizontal,
-		HorizontalAlignment = Enum.HorizontalAlignment.Center,
-		VerticalAlignment = Enum.VerticalAlignment.Center,
-	}, row)
+		FillDirection = Enum.FillDirection.Vertical,
+		SortOrder = Enum.SortOrder.LayoutOrder,
+		VerticalAlignment = Enum.VerticalAlignment.Bottom,
+	}, bar)
 
 	for index, entry in ENTRIES do
 		local holder = Theme.new("Frame", {
 			LayoutOrder = index,
-			Size = UDim2.fromOffset(ENTRY_WIDTH, 28),
+			Size = UDim2.new(1, 0, 0, ROW_HEIGHT),
 			BackgroundTransparency = 1,
 			ZIndex = 3,
-		}, row)
+		}, bar)
 		local iconHolder = Theme.new("Frame", {
-			Size = UDim2.fromOffset(26, 26),
-			Position = UDim2.fromOffset(2, 1),
+			Size = UDim2.fromOffset(34, 34),
+			Position = UDim2.fromOffset(0, 3),
 			BackgroundTransparency = 1,
 			ZIndex = 3,
 		}, holder)
 		entry.glyph(iconHolder)
 		local label = Chrome.label(holder, {
-			Position = UDim2.fromOffset(30, 0),
-			Size = UDim2.new(1, -32, 1, 0),
+			Position = UDim2.fromOffset(42, 0),
+			Size = UDim2.new(1, -42, 1, 0),
 			Text = "0",
-			TextSize = 16,
+			FontFace = Theme.Fonts.Title,
+			TextSize = Theme.TextSize.Banner - 6,
 			TextColor3 = entry.color,
 			TextXAlignment = Enum.TextXAlignment.Left,
 			ZIndex = 4,
 		})
 		local function refresh()
 			local value = player:GetAttribute(entry.attribute)
-			label.Text = tostring(if type(value) == "number" then value else 0)
+			label.Text = Theme.abbreviate(if type(value) == "number" then value else 0)
 		end
 		player:GetAttributeChangedSignal(entry.attribute):Connect(refresh)
 		refresh()
 
+		holder.Active = true
 		holder.MouseEnter:Connect(function()
 			tooltip.show(entry.tip, nil, {}, entry.color)
 		end)

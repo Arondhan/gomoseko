@@ -127,7 +127,7 @@ function SettingsWindow.build(parent: Instance, deps: any)
 			ZIndex = 5,
 		}, body)
 		Theme.corner(toggle, 8)
-		local toggleGradient = Theme.gradient(toggle, 90, Color3.fromRGB(110, 84, 36), Color3.fromRGB(58, 42, 16))
+		local toggleGradient = Theme.gradient(toggle, 90, Theme.ButtonTop, Theme.ButtonBottom)
 		Chrome.bevel(toggle, 2, 8, true)
 		local toggleLabel = Chrome.label(toggle, {
 			Size = UDim2.fromScale(1, 1),
@@ -142,7 +142,7 @@ function SettingsWindow.build(parent: Instance, deps: any)
 			toggleLabel.Text = label .. (if on then ": ON" else ": OFF")
 			toggleGradient.Color = if on
 				then ColorSequence.new(Color3.fromRGB(70, 110, 60), Color3.fromRGB(36, 60, 32))
-				else ColorSequence.new(Color3.fromRGB(110, 84, 36), Color3.fromRGB(58, 42, 16))
+				else ColorSequence.new(Theme.ButtonTop, Theme.ButtonBottom)
 		end
 		show()
 		toggle.MouseButton1Click:Connect(function()

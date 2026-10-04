@@ -4,6 +4,7 @@
 
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local TweenService = game:GetService("TweenService")
 
 local OnboardingConfig =
 	require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("Configs"):WaitForChild("OnboardingConfig"))
@@ -17,39 +18,28 @@ local OnboardingTracker = {}
 function OnboardingTracker.build(parent: Instance, onComplete: (() -> ())?)
 	local player = Players.LocalPlayer
 
-	local panel = Chrome.panel(parent, {
+	-- текст-подсказка без панели: крупный оранжевый шрифт с обводкой, мягко «дышит»
+	local panel = Chrome.label(parent, {
 		Name = "OnboardingTracker",
 		AnchorPoint = Vector2.new(0.5, 0),
-		Position = UDim2.new(0.5, 0, 0, 64),
-		Size = UDim2.fromOffset(440, 62),
-		Visible = false,
-	}, 8)
-	Chrome.diamond(panel, 9, UDim2.new(0, 10, 0.5, 0), 8)
-	local glow = Chrome.glow(panel, Theme.GoldLight, 3)
-
-	local title = Chrome.label(panel, {
-		Position = UDim2.fromOffset(26, 6),
-		Size = UDim2.new(1, -36, 0, 21),
+		Position = UDim2.new(0.5, 0, 0, 14),
+		Size = UDim2.fromOffset(760, 84),
 		Text = "",
 		FontFace = Theme.Fonts.Title,
-		TextSize = 16,
-		TextColor3 = Theme.GoldLight,
-		TextXAlignment = Enum.TextXAlignment.Left,
-		ZIndex = 4,
-	})
-	local text = Chrome.label(panel, {
-		Position = UDim2.fromOffset(26, 24),
-		Size = UDim2.new(1, -36, 0, 34),
-		Text = "",
-		FontFace = Theme.Fonts.Body,
-		TextSize = 15,
-		TextColor3 = Theme.Text,
-		TextStrokeTransparency = 0.6,
+		TextSize = 34,
+		TextColor3 = Color3.fromRGB(255, 170, 30),
 		TextWrapped = true,
-		TextXAlignment = Enum.TextXAlignment.Left,
-		TextYAlignment = Enum.TextYAlignment.Top,
-		ZIndex = 4,
+		Visible = false,
 	})
+	local pulse = Theme.new("UIScale", { Scale = 1 }, panel)
+	task.spawn(function()
+		while panel.Parent do
+			TweenService:Create(pulse, TweenInfo.new(0.9, Enum.EasingStyle.Sine), { Scale = 1.04 }):Play()
+			task.wait(0.9)
+			TweenService:Create(pulse, TweenInfo.new(0.9, Enum.EasingStyle.Sine), { Scale = 1 }):Play()
+			task.wait(0.9)
+		end
+	end)
 
 	local previous: number? = nil
 	local function refresh()
@@ -58,12 +48,7 @@ function OnboardingTracker.build(parent: Instance, onComplete: (() -> ())?)
 		local info = if current then OnboardingConfig.Steps[current] else nil
 		if info and current then
 			panel.Visible = true
-			title.Text = string.format("Getting started  %d / %d", current, #OnboardingConfig.Steps)
-			text.Text = info.Text
-			if previous ~= current then
-				glow.Transparency = 0
-				Theme.tween(glow, 1.2, { Transparency = 1 })
-			end
+			panel.Text = string.format("%s  (%d/%d)", info.Text, current, #OnboardingConfig.Steps)
 		else
 			panel.Visible = false
 			if previous and previous > 0 and current == 0 and onComplete then

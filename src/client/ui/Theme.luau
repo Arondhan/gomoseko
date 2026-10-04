@@ -7,25 +7,42 @@ local Fonts = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("Fon
 local Rarity = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("Gacha"):WaitForChild("Rarity"))
 
 local Theme = {
-	Bg = Color3.fromRGB(14, 16, 22),
-	Panel = Color3.fromRGB(18, 20, 26),
-	Header = Color3.fromRGB(26, 28, 36),
-	Inset = Color3.fromRGB(22, 24, 30),
-	Gold = Color3.fromRGB(190, 160, 90),
-	GoldBright = Color3.fromRGB(245, 215, 130),
-	GoldDim = Color3.fromRGB(95, 85, 60),
-	Text = Color3.fromRGB(235, 220, 170),
-	Coin = Color3.fromRGB(230, 190, 60),
-	Muted = Color3.fromRGB(150, 140, 110),
+	-- Мультяшная палитра: тёмно-синие окна, яркие жёлто-оранжевые акценты (имена Gold* сохранены — это «акцентный» цвет)
+	Bg = Color3.fromRGB(20, 26, 60),
+	Panel = Color3.fromRGB(30, 40, 96),
+	Header = Color3.fromRGB(40, 54, 130),
+	Inset = Color3.fromRGB(24, 32, 80),
+	Gold = Color3.fromRGB(255, 190, 50),
+	GoldBright = Color3.fromRGB(255, 225, 90),
+	GoldDim = Color3.fromRGB(150, 110, 40),
+	Text = Color3.fromRGB(255, 248, 225),
+	Coin = Color3.fromRGB(255, 214, 64),
+	Muted = Color3.fromRGB(190, 200, 235),
 
-	-- Золото для объёмных рамок: тёмное -> среднее -> светлое
-	GoldLight = Color3.fromRGB(255, 226, 150),
-	GoldMid = Color3.fromRGB(200, 160, 80),
-	GoldDark = Color3.fromRGB(96, 70, 30),
+	-- Акцент для заливок: светлое -> среднее -> тёмное
+	GoldLight = Color3.fromRGB(255, 236, 110),
+	GoldMid = Color3.fromRGB(255, 170, 35),
+	GoldDark = Color3.fromRGB(200, 95, 15),
+
+	-- Кнопки (оранжевые) и обводка элементов
+	ButtonTop = Color3.fromRGB(255, 176, 40),
+	ButtonBottom = Color3.fromRGB(214, 110, 20),
+	Outline = Color3.fromRGB(14, 18, 48),
+
+	-- Цвета плиток меню
+	Tiles = {
+		Summon = Color3.fromRGB(150, 80, 240),
+		Rings = Color3.fromRGB(40, 190, 230),
+		Index = Color3.fromRGB(50, 110, 240),
+		Shop = Color3.fromRGB(235, 60, 60),
+		Boost = Color3.fromRGB(250, 200, 30),
+		Ranks = Color3.fromRGB(60, 200, 90),
+		Settings = Color3.fromRGB(140, 150, 175),
+	} :: { [string]: Color3 },
 
 	-- Фон панелей: вертикальный градиент сверху вниз
-	PanelTop = Color3.fromRGB(36, 40, 54),
-	PanelBottom = Color3.fromRGB(12, 14, 20),
+	PanelTop = Color3.fromRGB(62, 96, 210),
+	PanelBottom = Color3.fromRGB(30, 44, 128),
 
 	-- Полосы и сообщения
 	Health = Color3.fromRGB(60, 190, 80),
@@ -55,6 +72,22 @@ local Theme = {
 		Divine = "Divine",
 	} :: { [string]: string },
 }
+
+-- Сокращение больших чисел для валют: 1234 -> 1.2K, 3 400 000 -> 3.4M
+function Theme.abbreviate(value: number): string
+	local units = { "", "K", "M", "B", "T", "Qa", "Qn" }
+	local n = math.floor(value)
+	if math.abs(n) < 1000 then
+		return tostring(n)
+	end
+	local index = 1
+	local scaled = n :: number
+	while math.abs(scaled) >= 1000 and index < #units do
+		scaled /= 1000
+		index += 1
+	end
+	return string.format("%.1f%s", math.floor(scaled * 10) / 10, units[index])
+end
 
 function Theme.new(class: string, props: { [string]: any }, parent: Instance?): any
 	local obj = Instance.new(class)
