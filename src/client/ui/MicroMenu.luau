@@ -1,145 +1,73 @@
--- Меню справа внизу: кнопки «Инвентарь» (I) и «Магазин» (B) + подсказка.
+-- Меню справа внизу: кнопки «Инвентарь» (I) и «Магазин» (B) в золотой рамке, с процедурными пиктограммами,
+-- свечением при наведении и подсказкой (общий Tooltip).
 
+local Chrome = require(script.Parent.Chrome)
+local Glyphs = require(script.Parent.Glyphs)
 local Theme = require(script.Parent.Theme)
 
 local MicroMenu = {}
 
--- пиктограмма рюкзака из рамок
-local function drawBag(button: Frame)
-	local body = Theme.new("Frame", {
-		Name = "Icon",
-		AnchorPoint = Vector2.new(0.5, 0.5),
-		Position = UDim2.fromScale(0.5, 0.56),
-		Size = UDim2.fromOffset(18, 18),
-		BackgroundColor3 = Color3.fromRGB(176, 120, 60),
-		BorderSizePixel = 0,
-	}, button)
-	Theme.corner(body, 5)
-	Theme.new("Frame", {
-		Name = "Pocket",
-		AnchorPoint = Vector2.new(0.5, 1),
-		Position = UDim2.fromScale(0.5, 0.9),
-		Size = UDim2.fromOffset(12, 7),
-		BackgroundColor3 = Color3.fromRGB(120, 78, 38),
-		BorderSizePixel = 0,
-	}, body)
-	local strap = Theme.new("Frame", {
-		Name = "Strap",
-		AnchorPoint = Vector2.new(0.5, 1),
-		Position = UDim2.fromScale(0.5, 0.05),
-		Size = UDim2.fromOffset(10, 6),
-		BackgroundTransparency = 1,
-		BorderSizePixel = 0,
-	}, body)
-	Theme.corner(strap, 4)
-	Theme.stroke(strap, Color3.fromRGB(176, 120, 60), 2)
-end
+local BUTTON_SIZE = 42
 
--- пиктограмма монеты
-local function drawCoin(button: Frame)
-	local coin = Theme.new("Frame", {
-		Name = "Icon",
-		AnchorPoint = Vector2.new(0.5, 0.5),
-		Position = UDim2.fromScale(0.5, 0.5),
-		Size = UDim2.fromOffset(20, 20),
-		BackgroundColor3 = Theme.Coin,
-		BorderSizePixel = 0,
-	}, button)
-	Theme.corner(coin, 10)
-	Theme.stroke(coin, Color3.fromRGB(170, 130, 30), 2)
-	local inner = Theme.new("Frame", {
-		Name = "Inner",
-		AnchorPoint = Vector2.new(0.5, 0.5),
-		Position = UDim2.fromScale(0.5, 0.5),
-		Size = UDim2.fromOffset(10, 10),
-		BackgroundTransparency = 1,
-		BorderSizePixel = 0,
-	}, coin)
-	Theme.corner(inner, 5)
-	Theme.stroke(inner, Color3.fromRGB(170, 130, 30), 2)
-end
-
-function MicroMenu.build(parent: Instance)
-	local menu = Theme.new("Frame", {
+-- tooltip — общий Tooltip (ui/Tooltip): показываем название и клавишу
+function MicroMenu.build(parent: Instance, tooltip: any)
+	local menu = Chrome.panel(parent, {
 		Name = "MicroMenu",
 		AnchorPoint = Vector2.new(1, 1),
 		Position = UDim2.new(1, -16, 1, -16),
-		Size = UDim2.fromOffset(92, 52),
-		BackgroundColor3 = Theme.Bg,
-		BackgroundTransparency = 0.15,
-		BorderSizePixel = 0,
-	}, parent)
-	Theme.corner(menu, 8)
-	Theme.stroke(menu, Theme.Gold, 1.5)
+		Size = UDim2.fromOffset(104, 62),
+	}, 10)
+	Chrome.diamond(menu, 8, UDim2.new(0, 6, 0, 6), 8)
+	Chrome.diamond(menu, 8, UDim2.new(1, -6, 0, 6), 8)
 
 	local row = Theme.new("Frame", { Name = "Buttons", Size = UDim2.fromScale(1, 1), BackgroundTransparency = 1 }, menu)
 	Theme.new("UIListLayout", {
 		FillDirection = Enum.FillDirection.Horizontal,
-		Padding = UDim.new(0, 4),
+		Padding = UDim.new(0, 6),
 		HorizontalAlignment = Enum.HorizontalAlignment.Center,
 		VerticalAlignment = Enum.VerticalAlignment.Center,
 	}, row)
 
-	local tooltip = Theme.new("Frame", {
-		Name = "Tooltip",
-		AnchorPoint = Vector2.new(1, 1),
-		Position = UDim2.new(1, -16, 1, -76),
-		Size = UDim2.fromOffset(140, 28),
-		BackgroundColor3 = Theme.Bg,
-		BackgroundTransparency = 0.05,
-		BorderSizePixel = 0,
-		Visible = false,
-		ZIndex = 20,
-	}, parent)
-	Theme.corner(tooltip, 6)
-	Theme.stroke(tooltip, Theme.Gold, 1)
-	local tipLabel = Theme.new("TextLabel", {
-		Name = "Label",
-		Size = UDim2.fromScale(1, 1),
-		BackgroundTransparency = 1,
-		Text = "",
-		Font = Enum.Font.GothamMedium,
-		TextSize = 14,
-		TextColor3 = Theme.Text,
-		ZIndex = 21,
-	}, tooltip)
-
-	local function addButton(name: string, order: number, hotkey: string, tip: string, draw: (Frame) -> ())
-		local frame = Theme.new("Frame", {
-			Name = name,
-			LayoutOrder = order,
-			Size = UDim2.fromOffset(38, 38),
-			BackgroundColor3 = Theme.Inset,
-			BorderSizePixel = 0,
-		}, row)
-		Theme.corner(frame, 6)
-		local stroke = Theme.stroke(frame, Theme.GoldDim, 1.5)
+	local function addButton(name: string, order: number, hotkey: string, tip: string, draw: (Instance) -> ())
+		local frame, bevel = Chrome.slot(row, UDim2.fromOffset(BUTTON_SIZE, BUTTON_SIZE), 7)
+		frame.Name = name
+		frame.LayoutOrder = order
+		local glow = Chrome.glow(frame, Theme.GoldLight, 3)
 		draw(frame)
+
+		-- маленькая клавиша в углу
+		Chrome.label(frame, {
+			Position = UDim2.fromOffset(4, 1),
+			Size = UDim2.fromOffset(14, 12),
+			Text = hotkey,
+			TextSize = 11,
+			TextColor3 = Theme.GoldLight,
+			TextXAlignment = Enum.TextXAlignment.Left,
+			ZIndex = 15,
+		})
 		local hit = Theme.new("TextButton", {
 			Name = "Hit",
 			Size = UDim2.fromScale(1, 1),
 			BackgroundTransparency = 1,
 			Text = "",
-			ZIndex = 5,
+			ZIndex = 30,
 		}, frame)
 
 		local button = { frame = frame, active = false, hotkey = hotkey, click = Instance.new("BindableEvent") }
 
 		function button.setActive(active: boolean)
 			button.active = active
-			Theme.tween(stroke, 0.12, { Color = active and Theme.GoldBright or Theme.GoldDim })
+			Chrome.tintBevel(bevel, if active then Theme.GoldLight else nil)
+			Theme.tween(glow, 0.12, { Transparency = if active then 0.5 else 1 })
 		end
 
 		hit.MouseEnter:Connect(function()
-			Theme.tween(stroke, 0.12, { Color = Theme.GoldBright })
-			tipLabel.Text = tip .. " (" .. hotkey .. ")"
-			tooltip.Visible = true
+			Theme.tween(glow, 0.12, { Transparency = 0.4 })
+			tooltip.show(tip, "Горячая клавиша: " .. hotkey, {}, Theme.GoldLight)
 		end)
 		hit.MouseLeave:Connect(function()
-			if not button.active then
-				Theme.tween(stroke, 0.12, { Color = Theme.GoldDim })
-			end
-			tooltip.Visible = false
+			Theme.tween(glow, 0.12, { Transparency = if button.active then 0.5 else 1 })
+			tooltip.hide()
 		end)
 		hit.MouseButton1Click:Connect(function()
 			button.click:Fire()
@@ -149,8 +77,8 @@ function MicroMenu.build(parent: Instance)
 
 	return {
 		frame = menu,
-		inventory = addButton("InventoryButton", 1, "I", "Инвентарь", drawBag),
-		shop = addButton("ShopButton", 2, "B", "Магазин", drawCoin),
+		inventory = addButton("InventoryButton", 1, "I", "Инвентарь", Glyphs.bag),
+		shop = addButton("ShopButton", 2, "B", "Магазин", Glyphs.coin),
 	}
 end
 

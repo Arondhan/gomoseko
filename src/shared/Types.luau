@@ -11,6 +11,7 @@ export type SkillConfig = {
 	BounceDelay: number,
 	Cooldown: number,
 	ManaCost: number,
+	CastTime: number, -- время каста, сек (0 = мгновенно, cast bar скрыт)
 	DefaultKey: Enum.KeyCode?,
 	Color: Color3,
 	CoreColor: Color3,
@@ -23,13 +24,16 @@ export type SkillConfig = {
 	SoundVolume: number,
 }
 
+export type Quality = "Common" | "Uncommon" | "Rare" | "Epic" | "Legendary"
+
 export type RingDef = {
 	Id: string,
 	Name: string,
 	Description: string,
 	SkillId: string,
 	Color: Color3,
-	Rarity: string,
+	Quality: Quality,
+	Image: string?, -- необязательно: "rbxassetid://..." заменяет процедурную иконку
 }
 
 -- Состояние инвентаря игрока: список предметов и надетые кольца по слотам 1..N.
@@ -48,10 +52,18 @@ export type LightningHop = {
 	to: Vector3,
 }
 
--- Ответ сервера на запрос каста
+-- Ответ сервера на запрос каста (castTime — сколько секунд длится каст, для cast bar)
 export type CastResult = {
 	ok: boolean,
 	reason: string?,
+	castTime: number?,
+}
+
+-- Нанесённый урон (сервер -> клиент кастера, для плавающих цифр)
+export type DamageEvent = {
+	skillId: string,
+	position: Vector3,
+	amount: number,
 }
 
 return {}

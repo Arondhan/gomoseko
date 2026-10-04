@@ -12,6 +12,7 @@ local InventoryController = require(Controllers:WaitForChild("InventoryControlle
 local TargetController = require(Controllers:WaitForChild("TargetController"))
 local SkillController = require(Controllers:WaitForChild("SkillController"))
 local LightningRenderer = require(script.Parent:WaitForChild("VFX"):WaitForChild("LightningRenderer"))
+local DamageNumbers = require(script.Parent:WaitForChild("VFX"):WaitForChild("DamageNumbers"))
 
 local ui = script.Parent:WaitForChild("ui")
 local Theme = require(ui:WaitForChild("Theme"))
@@ -23,6 +24,8 @@ local PlayerFrame = require(ui:WaitForChild("PlayerFrame"))
 local TargetFrame = require(ui:WaitForChild("TargetFrame"))
 local Tooltip = require(ui:WaitForChild("Tooltip"))
 local Notice = require(ui:WaitForChild("Notice"))
+local XpBar = require(ui:WaitForChild("XpBar"))
+local CastBar = require(ui:WaitForChild("CastBar"))
 
 -- стандартный рюкзак мешает клавишам 1-4, а стандартная полоска здоровья дублирует PlayerFrame
 pcall(function()
@@ -30,7 +33,8 @@ pcall(function()
 	StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.Health, false)
 end)
 
-local playerGui = Players.LocalPlayer:WaitForChild("PlayerGui")
+local localPlayer = Players.LocalPlayer
+local playerGui = localPlayer:WaitForChild("PlayerGui")
 local old = playerGui:FindFirstChild("HubUI")
 if old then
 	old:Destroy()
@@ -47,6 +51,8 @@ local gui = Theme.new("ScreenGui", {
 PlayerFrame.build(gui)
 local targetFrame = TargetFrame.build(gui)
 local notice = Notice.build(gui)
+XpBar.build(gui)
+local castBar = CastBar.build(gui)
 local tooltip = Tooltip.build(gui, SkillController.getSkill)
 
 local ringBar = RingBar.build(gui, {
@@ -61,7 +67,7 @@ local ringBar = RingBar.build(gui, {
 		end
 	end,
 })
-local menu = MicroMenu.build(gui)
+local menu = MicroMenu.build(gui, tooltip)
 
 -- окна и привязка к кнопкам меню
 local windows = {
@@ -104,11 +110,27 @@ TargetController.changed.Event:Connect(function(model)
 	targetFrame.setTarget(model)
 end)
 
+-- cast bar следует за событиями скилл-контроллера
+SkillController.castStarted.Event:Connect(castBar.start)
+SkillController.castFinished.Event:Connect(castBar.finish)
+SkillController.castCancelled.Event:Connect(castBar.cancel)
+
+-- «ding» при повышении уровня (атрибут Level растёт на сервере)
+local lastLevel = localPlayer:GetAttribute("Level")
+localPlayer:GetAttributeChangedSignal("Level"):Connect(function()
+	local level = localPlayer:GetAttribute("Level")
+	if type(level) == "number" and type(lastLevel) == "number" and level > lastLevel then
+		notice.show("Новый уровень: " .. level .. "!", Theme.GoldLight)
+	end
+	lastLevel = level
+end)
+
 -- запуск контроллеров (они ждут ремоуты, которые создаёт server/Main)
 InventoryController.start()
 TargetController.start()
 SkillController.start(notice.show, ringBar.press)
 LightningRenderer.start()
+DamageNumbers.start()
 
 local slotKeys = { Enum.KeyCode.One, Enum.KeyCode.Two, Enum.KeyCode.Three, Enum.KeyCode.Four }
 

@@ -17,6 +17,8 @@ local DEFINITIONS: { [string]: string } = {
 	InventoryEquip = "RemoteFunction", -- клиент -> сервер: (itemId: string, slot: number) -> boolean
 	InventoryUnequip = "RemoteFunction", -- клиент -> сервер: (slot: number) -> boolean
 	InventoryChanged = "RemoteEvent", -- сервер -> клиент: InventoryState
+	DamageDealt = "RemoteEvent", -- сервер -> клиент нанёсшего урон: DamageEvent
+	CastCancelled = "RemoteEvent", -- сервер -> клиент кастера: (skillId: string, reason: string) — каст сорван
 }
 
 -- Только сервер: создаёт папку и все ремоуты

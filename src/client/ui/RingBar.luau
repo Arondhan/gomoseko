@@ -1,143 +1,150 @@
--- Панель из 4 слотов для колец (внизу по центру): иконка надетого кольца, оверлей кулдауна,
--- подсказка при наведении. Логики здесь нет — действия уходят наружу через hooks (см. Main.client).
+--!strict
+-- Панель из 4 слотов для колец (внизу по центру), как панель способностей WoW: объёмная золотая рамка
+-- с ромбами по бокам, слоты-«гнёзда», рамка цвета качества у надетого кольца, радиальный кулдаун,
+-- свечение при наведении и вспышка при нажатии. Логики здесь нет — действия уходят через hooks (см. Main.client).
 
-local Theme = require(script.Parent.Theme)
+local Chrome = require(script.Parent.Chrome)
+local RadialCooldown = require(script.Parent.RadialCooldown)
 local RingIcon = require(script.Parent.RingIcon)
+local Theme = require(script.Parent.Theme)
 
 local RingBar = {}
 
 local SLOT_COUNT = 4
+local SLOT_SIZE = 56
+local SLOT_GAP = 8
+
+type Slot = {
+	frame: Frame,
+	bevel: UIStroke,
+	glow: UIStroke,
+	scale: UIScale,
+	emptyMark: Frame,
+	cooldown: RadialCooldown.Radial,
+	icon: Frame?,
+	hovered: boolean,
+	dropTarget: boolean,
+}
 
 -- hooks (все необязательные):
 --   onActivate(slot)  — ЛКМ по слоту (применить кольцо)
 --   onUnequip(slot)   — ПКМ по слоту (снять кольцо)
 --   onHover(slot?)    — курсор над слотом / ушёл (nil)
-function RingBar.build(
-	parent: Instance,
-	hooks: {
-		onActivate: ((slot: number) -> ())?,
-		onUnequip: ((slot: number) -> ())?,
-		onHover: ((slot: number?) -> ())?,
-	}?
-)
-	local callbacks = hooks or {}
-	local bar = Theme.new("Frame", {
+export type Hooks = {
+	onActivate: ((slot: number) -> ())?,
+	onUnequip: ((slot: number) -> ())?,
+	onHover: ((slot: number?) -> ())?,
+}
+
+function RingBar.build(parent: Instance, hooks: Hooks?)
+	local callbacks: Hooks = hooks or {}
+
+	local bar = Chrome.panel(parent, {
 		Name = "RingBar",
 		AnchorPoint = Vector2.new(0.5, 1),
 		Position = UDim2.new(0.5, 0, 1, -24),
-		Size = UDim2.fromOffset(268, 76),
-		BackgroundColor3 = Theme.Bg,
-		BackgroundTransparency = 0.15,
-		BorderSizePixel = 0,
-	}, parent)
-	Theme.corner(bar, 8)
-	Theme.stroke(bar, Theme.Gold, 1.5)
-	Theme.new("UIPadding", {
-		PaddingTop = UDim.new(0, 8),
-		PaddingBottom = UDim.new(0, 8),
-		PaddingLeft = UDim.new(0, 8),
-		PaddingRight = UDim.new(0, 8),
-	}, bar)
+		Size = UDim2.fromOffset(300, 84),
+	}, 10)
+	-- ромбы-«грифоны» по бокам панели и по углам
+	Chrome.diamond(bar, 16, UDim2.new(0, -4, 0.5, 0), 8)
+	Chrome.diamond(bar, 16, UDim2.new(1, 4, 0.5, 0), 8)
+	Chrome.diamond(bar, 8, UDim2.new(0, 6, 0, 6), 8)
+	Chrome.diamond(bar, 8, UDim2.new(1, -6, 0, 6), 8)
+	Chrome.diamond(bar, 8, UDim2.new(0, 6, 1, -6), 8)
+	Chrome.diamond(bar, 8, UDim2.new(1, -6, 1, -6), 8)
 
 	local list = Theme.new("Frame", { Name = "Slots", Size = UDim2.fromScale(1, 1), BackgroundTransparency = 1 }, bar)
 	Theme.new("UIListLayout", {
 		FillDirection = Enum.FillDirection.Horizontal,
-		Padding = UDim.new(0, 6),
+		Padding = UDim.new(0, SLOT_GAP),
 		HorizontalAlignment = Enum.HorizontalAlignment.Center,
 		VerticalAlignment = Enum.VerticalAlignment.Center,
 	}, list)
 
-	local slots = {}
+	local slots: { Slot } = {}
+
+	local function refreshGlow(slot: Slot)
+		local target = if slot.dropTarget then 0.05 elseif slot.hovered then 0.45 else 1
+		Theme.tween(slot.glow, 0.12, { Transparency = target })
+	end
 
 	local function press(i: number)
 		local slot = slots[i]
 		if not slot then
 			return
 		end
-		slot.stroke.Color = Theme.GoldBright
+		slot.glow.Color = Theme.GoldLight
+		slot.glow.Transparency = 0
 		slot.scale.Scale = 0.92
 		Theme.tween(slot.scale, 0.15, { Scale = 1 })
-		task.delay(0.15, function()
-			Theme.tween(slot.stroke, 0.2, { Color = Theme.GoldDim })
+		task.delay(0.12, function()
+			refreshGlow(slot)
 		end)
 	end
 
 	for i = 1, SLOT_COUNT do
-		local frame = Theme.new("Frame", {
-			Name = "Slot" .. i,
-			LayoutOrder = i,
-			Size = UDim2.fromOffset(56, 56),
-			BackgroundColor3 = Theme.Inset,
-			BorderSizePixel = 0,
-		}, list)
-		Theme.corner(frame, 6)
-		local stroke = Theme.stroke(frame, Theme.GoldDim, 1.5)
+		local frame, bevel = Chrome.slot(list, UDim2.fromOffset(SLOT_SIZE, SLOT_SIZE), 6)
+		frame.Name = "Slot" .. i
+		frame.LayoutOrder = i
 		local scale = Theme.new("UIScale", { Name = "Scale", Scale = 1 }, frame)
-		Theme.new("ImageLabel", {
-			Name = "Icon",
-			Size = UDim2.new(1, -8, 1, -8),
-			Position = UDim2.fromOffset(4, 4),
+		local glow = Chrome.glow(frame, Theme.GoldLight, 3)
+
+		-- еле заметный силуэт кольца в пустом слоте
+		local emptyMark = Theme.new("Frame", {
+			Name = "EmptyMark",
+			AnchorPoint = Vector2.new(0.5, 0.5),
+			Position = UDim2.fromScale(0.5, 0.5),
+			Size = UDim2.fromScale(0.46, 0.46),
 			BackgroundTransparency = 1,
-			Image = "",
-		}, frame)
-		Theme.new("TextLabel", {
-			Name = "Key",
-			Size = UDim2.fromOffset(16, 14),
-			Position = UDim2.fromOffset(4, 2),
-			BackgroundTransparency = 1,
-			Text = tostring(i),
-			Font = Enum.Font.GothamBold,
-			TextSize = 13,
-			TextColor3 = Theme.Text,
-			TextXAlignment = Enum.TextXAlignment.Left,
 			ZIndex = 2,
 		}, frame)
-		local cooldownOverlay = Theme.new("Frame", {
-			Name = "Cooldown",
-			Size = UDim2.fromScale(1, 0),
-			BackgroundColor3 = Color3.new(0, 0, 0),
-			BackgroundTransparency = 0.45,
-			BorderSizePixel = 0,
-			Visible = false,
-			ZIndex = 3,
-		}, frame)
-		Theme.corner(cooldownOverlay, 6)
-		local cooldownText = Theme.new("TextLabel", {
-			Name = "CooldownText",
-			Size = UDim2.fromScale(1, 1),
-			BackgroundTransparency = 1,
-			Text = "",
-			Font = Enum.Font.GothamBold,
-			TextSize = 18,
-			TextColor3 = Color3.new(1, 1, 1),
-			TextStrokeTransparency = 0.4,
-			ZIndex = 4,
-		}, frame)
+		Theme.corner(emptyMark, 999)
+		Theme.new("UIStroke", { Color = Color3.fromRGB(80, 80, 96), Thickness = 3, Transparency = 0.6 }, emptyMark)
+
+		Chrome.label(frame, {
+			Name = "Key",
+			Position = UDim2.fromOffset(5, 2),
+			Size = UDim2.fromOffset(16, 14),
+			Text = tostring(i),
+			TextSize = 12,
+			TextColor3 = Theme.GoldLight,
+			TextXAlignment = Enum.TextXAlignment.Left,
+			ZIndex = 15,
+		})
+
+		local cooldown = RadialCooldown.new(frame, 20)
 		local hit = Theme.new("TextButton", {
 			Name = "Hit",
 			Size = UDim2.fromScale(1, 1),
 			BackgroundTransparency = 1,
 			Text = "",
-			ZIndex = 5,
+			ZIndex = 30,
 		}, frame)
 
-		slots[i] = {
+		local slot: Slot = {
 			frame = frame,
-			stroke = stroke,
+			bevel = bevel,
+			glow = glow,
 			scale = scale,
+			emptyMark = emptyMark,
+			cooldown = cooldown,
 			icon = nil,
-			overlay = cooldownOverlay,
-			cooldownText = cooldownText,
+			hovered = false,
+			dropTarget = false,
 		}
+		slots[i] = slot
 
 		hit.MouseEnter:Connect(function()
-			Theme.tween(stroke, 0.12, { Color = Theme.GoldBright })
-			if callbacks.onHover and slots[i].icon then
+			slot.hovered = true
+			glow.Color = Theme.GoldLight
+			refreshGlow(slot)
+			if callbacks.onHover and slot.icon then
 				callbacks.onHover(i)
 			end
 		end)
 		hit.MouseLeave:Connect(function()
-			Theme.tween(stroke, 0.12, { Color = Theme.GoldDim })
+			slot.hovered = false
+			refreshGlow(slot)
 			if callbacks.onHover then
 				callbacks.onHover(nil)
 			end
@@ -156,7 +163,7 @@ function RingBar.build(
 	end
 
 	-- показать кольцо в слоте (nil — очистить слот)
-	local function setSlot(i: number, ring: { Color: Color3 }?)
+	local function setSlot(i: number, ring: RingIcon.Def?)
 		local slot = slots[i]
 		if not slot then
 			return
@@ -165,26 +172,20 @@ function RingBar.build(
 			slot.icon:Destroy()
 			slot.icon = nil
 		end
+		slot.emptyMark.Visible = ring == nil
 		if ring then
-			slot.icon = RingIcon.new(slot.frame, ring.Color)
+			slot.icon = RingIcon.new(slot.frame, ring)
+			Chrome.tintBevel(slot.bevel, Theme.Quality[ring.Quality or "Common"])
+		else
+			Chrome.tintBevel(slot.bevel, nil)
 		end
 	end
 
-	-- оверлей кулдауна: затемнение «стекает» вниз, по центру — секунды
+	-- радиальный кулдаун слота
 	local function setCooldown(i: number, remaining: number, total: number)
 		local slot = slots[i]
-		if not slot then
-			return
-		end
-		if remaining > 0 and total > 0 then
-			slot.overlay.Visible = true
-			slot.overlay.Size = UDim2.fromScale(1, math.clamp(remaining / total, 0, 1))
-			slot.cooldownText.Text = if remaining >= 1
-				then tostring(math.ceil(remaining))
-				else string.format("%.1f", remaining)
-		else
-			slot.overlay.Visible = false
-			slot.cooldownText.Text = ""
+		if slot then
+			slot.cooldown.set(remaining, total)
 		end
 	end
 
@@ -207,7 +208,12 @@ function RingBar.build(
 	-- подсветка слота-приёмника во время перетаскивания (nil — убрать)
 	local function highlightSlot(index: number?)
 		for i, slot in slots do
-			slot.stroke.Color = if i == index then Theme.GoldBright else Theme.GoldDim
+			local isTarget = i == index
+			if slot.dropTarget ~= isTarget then
+				slot.dropTarget = isTarget
+				slot.glow.Color = Theme.GoldLight
+				refreshGlow(slot)
+			end
 		end
 	end
 

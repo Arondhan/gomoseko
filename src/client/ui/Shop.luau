@@ -1,5 +1,6 @@
--- Окно «Магазин»: список строк-заглушек. Покупок пока нет.
+-- Окно «Магазин»: список строк-заглушек в стиле WoW (панели с фаской и слотами под иконки). Покупок пока нет.
 
+local Chrome = require(script.Parent.Chrome)
 local Theme = require(script.Parent.Theme)
 local Window = require(script.Parent.Window)
 
@@ -11,7 +12,7 @@ function Shop.build(parent: Instance)
 	local window = Window.new(parent, {
 		name = "ShopWindow",
 		title = "Магазин",
-		size = UDim2.fromOffset(380, 420),
+		size = UDim2.fromOffset(392, 430),
 		position = UDim2.new(0.5, 200, 0.45, 0),
 	})
 
@@ -20,68 +21,53 @@ function Shop.build(parent: Instance)
 		Size = UDim2.fromScale(1, 1),
 		BackgroundTransparency = 1,
 		BorderSizePixel = 0,
-		ScrollBarThickness = 4,
-		ScrollBarImageColor3 = Theme.Gold,
+		ScrollBarThickness = 5,
+		ScrollBarImageColor3 = Theme.GoldMid,
 		CanvasSize = UDim2.new(),
 		AutomaticCanvasSize = Enum.AutomaticSize.Y,
 	}, window.body)
 	Theme.new("UIListLayout", { Padding = UDim.new(0, 6), SortOrder = Enum.SortOrder.LayoutOrder }, list)
 
 	for i = 1, ROWS do
-		local row = Theme.new("Frame", {
+		local row = Chrome.panel(list, {
 			Name = "Item" .. i,
 			LayoutOrder = i,
-			Size = UDim2.new(1, -8, 0, 54),
-			BackgroundColor3 = Theme.Inset,
-			BorderSizePixel = 0,
-		}, list)
-		Theme.corner(row, 6)
-		Theme.stroke(row, Theme.GoldDim, 1)
+			Size = UDim2.new(1, -10, 0, 58),
+		}, 6)
 
-		local icon = Theme.new("Frame", {
-			Name = "Icon",
-			Position = UDim2.fromOffset(6, 6),
-			Size = UDim2.fromOffset(42, 42),
-			BackgroundColor3 = Theme.Panel,
-			BorderSizePixel = 0,
-		}, row)
-		Theme.corner(icon, 5)
-		Theme.stroke(icon, Theme.GoldDim, 1)
+		Chrome.slot(row, UDim2.fromOffset(42, 42), 5).Position = UDim2.fromOffset(8, 8)
 
-		Theme.new("TextLabel", {
+		Chrome.label(row, {
 			Name = "Name",
-			Position = UDim2.fromOffset(58, 8),
-			Size = UDim2.new(1, -150, 0, 20),
-			BackgroundTransparency = 1,
+			Position = UDim2.fromOffset(60, 9),
+			Size = UDim2.new(1, -160, 0, 20),
 			Text = "Товар №" .. i,
-			Font = Enum.Font.GothamMedium,
-			TextSize = 15,
-			TextColor3 = Theme.Text,
+			Font = Theme.TitleFont,
+			TextSize = 16,
+			TextColor3 = Theme.GoldLight,
 			TextXAlignment = Enum.TextXAlignment.Left,
-		}, row)
-		Theme.new("TextLabel", {
+		})
+		Chrome.label(row, {
 			Name = "Sub",
-			Position = UDim2.fromOffset(58, 28),
-			Size = UDim2.new(1, -150, 0, 18),
-			BackgroundTransparency = 1,
+			Position = UDim2.fromOffset(60, 31),
+			Size = UDim2.new(1, -160, 0, 18),
 			Text = "Скоро в продаже",
-			Font = Enum.Font.Gotham,
-			TextSize = 12,
+			Font = Theme.SerifFont,
+			TextSize = 14,
 			TextColor3 = Theme.Muted,
+			TextStrokeTransparency = 1,
 			TextXAlignment = Enum.TextXAlignment.Left,
-		}, row)
-		Theme.new("TextLabel", {
+		})
+		Chrome.label(row, {
 			Name = "Price",
 			AnchorPoint = Vector2.new(1, 0.5),
-			Position = UDim2.new(1, -10, 0.5, 0),
+			Position = UDim2.new(1, -12, 0.5, 0),
 			Size = UDim2.fromOffset(80, 24),
-			BackgroundTransparency = 1,
 			Text = "— з.",
-			Font = Enum.Font.GothamBold,
 			TextSize = 15,
 			TextColor3 = Theme.Coin,
 			TextXAlignment = Enum.TextXAlignment.Right,
-		}, row)
+		})
 	end
 
 	return window
