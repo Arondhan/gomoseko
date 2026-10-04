@@ -9,11 +9,14 @@
 
 local CollectionService = game:GetService("CollectionService")
 local InsertService = game:GetService("InsertService")
-local Lighting = game:GetService("Lighting")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Workspace = game:GetService("Workspace")
 
 local Config = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("Config"))
+local Fonts = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("Fonts"))
+local Hub = script.Parent:WaitForChild("Hub")
+local Atmosphere = require(Hub:WaitForChild("Atmosphere"))
+local Decor = require(Hub:WaitForChild("Decor"))
 
 local PI, TAU = math.pi, math.pi * 2
 local H = Config.HALF
@@ -324,26 +327,35 @@ do
 	end
 end
 
--- жаровня: каменная тумба + Neon-блок + свет + искры
+-- жаровня: каменная тумба + настоящее пламя (Fire) + тёплый мерцающий свет + искры
 local function brazier(pos)
 	local m = Instance.new("Model")
 	m.Name = "Brazier"
 	mk(m, "Base", Vector3.new(3.2, 1, 3.2), CFrame.new(pos + Vector3.new(0, 0.5, 0)), C.StoneBrown, M.Cobblestone)
 	mk(m, "Pillar", Vector3.new(2.2, 3.5, 2.2), CFrame.new(pos + Vector3.new(0, 2.75, 0)), C.StoneLight, M.Concrete)
 	mk(m, "Bowl", Vector3.new(3, 0.8, 3), CFrame.new(pos + Vector3.new(0, 4.9, 0)), C.StoneDark, M.Slate)
-	local fire = mk(m, "Fire", Vector3.new(1.8, 1.2, 1.8), CFrame.new(pos + Vector3.new(0, 5.9, 0)), C.Fire, M.Neon)
-	addLight(fire, Color3.fromRGB(255, 150, 60), 2, 22)
+	-- угли в чаше: тёмный камень, без сплошного светящегося блока
+	mk(m, "Embers", Vector3.new(2.2, 0.4, 2.2), CFrame.new(pos + Vector3.new(0, 5.4, 0)), Color3.fromRGB(120, 40, 14), M.Slate)
+	local flame = ghost(m, "Flame", pos + Vector3.new(0, 6.4, 0))
+	local fire = Instance.new("Fire")
+	fire.Size = 4
+	fire.Heat = 9
+	fire.Color = Color3.fromRGB(255, 170, 70)
+	fire.SecondaryColor = Color3.fromRGB(200, 50, 10)
+	fire.Parent = flame
+	local torch = Config.Lighting.Torch
+	Atmosphere.torchLight(flame, torch.Color, torch.Brightness, torch.Range)
 	local pe = Instance.new("ParticleEmitter")
-	pe.Rate = 22
-	pe.Lifetime = NumberRange.new(0.6, 1.3)
+	pe.Rate = 8
+	pe.Lifetime = NumberRange.new(0.8, 1.6)
 	pe.Speed = NumberRange.new(3, 6)
 	pe.SpreadAngle = Vector2.new(25, 25)
 	pe.Acceleration = Vector3.new(0, 5, 0)
 	pe.LightEmission = 1
 	pe.Color = ColorSequence.new(Color3.fromRGB(255, 200, 80), Color3.fromRGB(255, 80, 20))
-	pe.Size = NumberSequence.new({ NumberSequenceKeypoint.new(0, 0.55), NumberSequenceKeypoint.new(1, 0) })
+	pe.Size = NumberSequence.new({ NumberSequenceKeypoint.new(0, 0.3), NumberSequenceKeypoint.new(1, 0) })
 	pe.Transparency = NumberSequence.new({ NumberSequenceKeypoint.new(0, 0), NumberSequenceKeypoint.new(1, 1) })
-	pe.Parent = fire
+	pe.Parent = flame
 	m.Parent = fBraziers
 end
 
@@ -387,12 +399,12 @@ local function prepareStallTemplate()
 		return InsertService:LoadAsset(Config.StallAssetId)
 	end)
 	if not ok or not result then
-		warn("[BuildHub] LoadAsset палатки не удался, используем процедурные палатки: " .. tostring(result))
+		warn("[BuildHub] Stall LoadAsset failed, using procedural stalls: " .. tostring(result))
 		return nil
 	end
 	local picked = pickStall(result)
 	if not picked then
-		warn("[BuildHub] в загруженной модели не найдена палатка, используем процедурные")
+		warn("[BuildHub] no stall found in the loaded model, using procedural stalls")
 		result:Destroy()
 		return nil
 	end
@@ -507,7 +519,7 @@ local function building(pos, w, d, h)
 			"Window",
 			Vector3.new(2.6, 4, 0.5),
 			Vector3.new(s * (w / 2 - 5), 2 + h * 0.62, fz),
-			Color3.fromRGB(255, 190, 90),
+			Color3.fromRGB(190, 140, 70), -- тусклее: окна не должны пересвечивать bloom
 			M.Neon
 		)
 		L(
@@ -603,7 +615,7 @@ do
 		end
 	end
 	mk(fTemple, "Architrave", Vector3.new(140, 4, 7), CFrame.new(0, 46, -112), C.StoneBrown, M.Cobblestone)
-	mk(fTemple, "ArchitraveTrim", Vector3.new(140, 0.6, 0.4), CFrame.new(0, 46, -108.3), C.Fire, M.Neon)
+	mk(fTemple, "ArchitraveTrim", Vector3.new(140, 0.6, 0.4), CFrame.new(0, 46, -108.3), C.Gold, M.Metal)
 	mk(fTemple, "PorticoRoof", Vector3.new(144, 2.5, 24), CFrame.new(0, 49.25, -118), C.StoneLight, M.Concrete)
 	mk(fTemple, "PorticoCornice", Vector3.new(148, 1.2, 3), CFrame.new(0, 48.4, -106.5), C.StoneBrown, M.Cobblestone)
 
@@ -627,9 +639,9 @@ do
 	local tl = Instance.new("TextLabel")
 	tl.Size = UDim2.fromScale(1, 1)
 	tl.BackgroundTransparency = 1
-	tl.Text = "Комната порталов"
+	tl.Text = "Portal Room"
 	tl.TextScaled = true
-	tl.Font = Enum.Font.GothamBold
+	tl.FontFace = Fonts.Banner
 	tl.TextColor3 = Color3.fromRGB(255, 214, 140)
 	tl.TextStrokeColor3 = Color3.fromRGB(40, 20, 8)
 	tl.TextStrokeTransparency = 0.4
@@ -743,7 +755,7 @@ do
 				"Cliff",
 				Vector3.new(w, hgt, th),
 				cf,
-				Color3.fromRGB(52 + shade, 52 + shade, 58 + shade),
+				Color3.fromRGB(46 + shade, 50 + shade, 64 + shade), -- холодный сине-серый камень
 				M.Slate
 			)
 		end
@@ -760,7 +772,15 @@ do
 	end
 
 	-- свод
-	mk(fCave, "Ceiling", Vector3.new(440, 12, 440), CFrame.new(0, CEIL_Y + 6, 0), C.RockDark, M.Slate)
+	-- в центре — квадратный проём над ямой: через него падает лунный свет (см. Hub/Atmosphere)
+	local hole = Config.Lighting.Moon.HoleHalf
+	local ceilY = CEIL_Y + 6
+	local span = 220 -- половина стороны свода
+	local strip = span - hole
+	mk(fCave, "Ceiling", Vector3.new(span * 2, 12, strip), CFrame.new(0, ceilY, -(hole + span) / 2), C.RockDark, M.Slate)
+	mk(fCave, "Ceiling", Vector3.new(span * 2, 12, strip), CFrame.new(0, ceilY, (hole + span) / 2), C.RockDark, M.Slate)
+	mk(fCave, "Ceiling", Vector3.new(strip, 12, hole * 2), CFrame.new(-(hole + span) / 2, ceilY, 0), C.RockDark, M.Slate)
+	mk(fCave, "Ceiling", Vector3.new(strip, 12, hole * 2), CFrame.new((hole + span) / 2, ceilY, 0), C.RockDark, M.Slate)
 
 	-- сталактиты: ступенчатые перевёрнутые конусы
 	local function stalactite(x, z, len, base)
@@ -776,7 +796,7 @@ do
 				z,
 				seg + 0.2,
 				dia,
-				Color3.fromRGB(62, 60, 66),
+				C.CaveStone,
 				M.Slate
 			)
 		end
@@ -785,13 +805,17 @@ do
 			"StalactiteTip",
 			Vector3.new(base * 0.3, base * 0.3, base * 0.3),
 			CFrame.new(x, CEIL_Y - len, z),
-			Color3.fromRGB(62, 60, 66),
+			C.CaveStone,
 			M.Slate,
 			Enum.PartType.Ball
 		)
 	end
 	for _ = 1, 70 do
-		stalactite(rng:NextNumber(-170, 170), rng:NextNumber(-170, 170), rng:NextNumber(8, 30), rng:NextNumber(3, 8))
+		local sx, sz = rng:NextNumber(-170, 170), rng:NextNumber(-170, 170)
+		local len, base = rng:NextNumber(8, 30), rng:NextNumber(3, 8)
+		if math.abs(sx) > hole + base or math.abs(sz) > hole + base then -- не перекрываем проём
+			stalactite(sx, sz, len, base)
+		end
 	end
 
 	-- скрытые тёплые источники света под сводом
@@ -804,7 +828,7 @@ do
 		Vector3.new(-90, 50, -90),
 		Vector3.new(90, 50, -90),
 	} do
-		addLight(ghost(fLights, "CaveLight", p), C.Warm, 0.8, 60)
+		addLight(ghost(fLights, "CaveLight", p), Color3.fromRGB(110, 140, 220), 0.5, 60) -- холодный подсвет свода
 	end
 
 	-- подсветка скал: 28 ламп вдоль четырёх стен, тёплые и холодные вперемешку
@@ -815,7 +839,9 @@ do
 		for i = -3, 3 do
 			local y = (i % 2 == 0) and 14 or 38
 			local p = ghost(fLights, "CliffLight", dir * 138 + tan * (i * 48) + Vector3.new(0, y, 0))
-			addLight(p, (i % 2 == 0) and C.Warm or C.Cool, 1.4, 55)
+			-- холодные синие тени по скалам; тёплый акцент только по центру трёх сторон (храм на севере светит сам)
+			local warm = i == 0 and side ~= 3
+			addLight(p, warm and C.Warm or C.Cool, warm and 1 or 0.9, 55)
 		end
 	end
 end
@@ -852,7 +878,7 @@ local function buildDummy(index, cf)
 	local hum = Instance.new("Humanoid")
 	hum.MaxHealth = Config.Dummies.MaxHealth
 	hum.Health = Config.Dummies.MaxHealth
-	hum.DisplayName = "Манекен"
+	hum.DisplayName = "Training Dummy"
 	hum.DisplayDistanceType = Enum.HumanoidDisplayDistanceType.None
 	hum.HealthDisplayType = Enum.HumanoidHealthDisplayType.AlwaysOff
 	hum.BreakJointsOnDeath = false
@@ -873,11 +899,11 @@ local function buildDummy(index, cf)
 	label.Name = "Label"
 	label.Size = UDim2.new(1, 0, 0, 16)
 	label.BackgroundTransparency = 1
-	label.Font = Enum.Font.GothamBold
+	label.FontFace = Fonts.Title
 	label.TextSize = 14
 	label.TextColor3 = Color3.new(1, 1, 1)
 	label.TextStrokeTransparency = 0.4
-	label.Text = "Манекен 100/100"
+	label.Text = "Training Dummy 100/100"
 	label.Parent = gui
 	local back = Instance.new("Frame")
 	back.Name = "Back"
@@ -925,52 +951,21 @@ do
 end
 
 -------------------------------------------------------------------------------
--- 5. Освещение и атмосфера
+-- 5. Освещение, атмосфера и декор (Hub/Atmosphere, Hub/Decor; числа — Config.Lighting)
 -------------------------------------------------------------------------------
-Lighting.TimeOfDay = "00:00:00"
-Lighting.ClockTime = 0
-Lighting.Ambient = Color3.fromRGB(105, 82, 66)
-Lighting.OutdoorAmbient = Color3.fromRGB(118, 94, 76)
-Lighting.Brightness = 1
-Lighting.ExposureCompensation = 0.35
-Lighting.GlobalShadows = true
-Lighting.EnvironmentDiffuseScale = 0.3
-Lighting.EnvironmentSpecularScale = 0.2
-Lighting.FogColor = Color3.fromRGB(24, 18, 15)
-Lighting.FogStart = 120
-Lighting.FogEnd = 420
-
--- убираем всё из шаблона (Sky, SunRays, второй Bloom, DepthOfField и т.д.)
-for _, child in Lighting:GetChildren() do
-	if child:IsA("PostEffect") or child:IsA("Sky") or child:IsA("Atmosphere") or child:IsA("Clouds") then
-		child:Destroy()
-	end
-end
-
-local atmo = Instance.new("Atmosphere")
-atmo.Density = 0.22
-atmo.Offset = 0.25
-atmo.Color = Color3.fromRGB(95, 78, 70)
-atmo.Decay = Color3.fromRGB(35, 25, 18)
-atmo.Glare = 0
-atmo.Haze = 0.8
-atmo.Parent = Lighting
-
-local bloom = Instance.new("BloomEffect")
-bloom.Name = "HubBloom"
-bloom.Intensity = 0.25
-bloom.Size = 24
-bloom.Threshold = 2
-bloom.Parent = Lighting
-
-local cc = Instance.new("ColorCorrectionEffect")
-cc.Name = "HubColor"
-cc.TintColor = Color3.fromRGB(255, 232, 210)
-cc.Saturation = 0.1
-cc.Contrast = 0.05
-cc.Parent = Lighting
+Atmosphere.apply(Config.Lighting, hub)
+Decor.build({
+	hub = hub,
+	Config = Config,
+	mk = mk,
+	ghost = ghost,
+	radial = radial,
+	faceCenter = faceCenter,
+	inGap = inGap,
+	folder = folder,
+})
 
 -------------------------------------------------------------------------------
 hub.Parent = Workspace
 Workspace:SetAttribute("HubReady", true) -- Dummies дожидается этого флага
-print(string.format("[BuildHub] Workspace.MainHub создан: %d деталей.", partCount))
+print(string.format("[BuildHub] Workspace.MainHub built: %d parts.", partCount))

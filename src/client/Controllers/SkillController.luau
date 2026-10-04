@@ -67,16 +67,16 @@ function SkillController.castSlot(slot: number)
 	end
 
 	if os.clock() < castEndsAt then
-		onError("Вы уже колдуете")
+		onError("You are already casting")
 		return
 	end
 	if SkillController.getCooldown(skill.Id) > 0 then
-		onError("Перезарядка")
+		onError("On cooldown")
 		return
 	end
 	local mana = localPlayer:GetAttribute("Mana")
 	if type(mana) == "number" and mana < skill.ManaCost then
-		onError("Не хватает маны")
+		onError("Not enough mana")
 		return
 	end
 
@@ -85,7 +85,7 @@ function SkillController.castSlot(slot: number)
 		local root, targetRoot = myRoot(), target:FindFirstChild("HumanoidRootPart")
 		if root and targetRoot and targetRoot:IsA("BasePart") then
 			if (targetRoot.Position - root.Position).Magnitude > skill.CastRange then
-				onError("Цель слишком далеко")
+				onError("Target is too far")
 				return
 			end
 		end
@@ -114,7 +114,7 @@ function SkillController.castSlot(slot: number)
 				end)
 			end
 		else
-			onError(if response and response.reason then response.reason else "Не удалось применить")
+			onError(if response and response.reason then response.reason else "Could not cast")
 		end
 	end)
 end

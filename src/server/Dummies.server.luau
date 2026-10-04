@@ -32,7 +32,7 @@ local function bind(model: Model, template: Model)
 		local frac = math.clamp(hum.Health / hum.MaxHealth, 0, 1)
 		fill.Size = UDim2.fromScale(frac, 1)
 		fill.BackgroundColor3 = Color3.fromHSV(frac * 0.33, 0.8, 0.9)
-		label.Text = "Манекен " .. math.ceil(hum.Health) .. "/" .. hum.MaxHealth
+		label.Text = "Training Dummy " .. math.ceil(hum.Health) .. "/" .. hum.MaxHealth
 	end
 	hum.HealthChanged:Connect(refresh)
 
@@ -69,7 +69,7 @@ local function bind(model: Model, template: Model)
 				d.Transparency = 0.75
 			end
 		end
-		label.Text = "Респавн..."
+		label.Text = "Respawning..."
 		task.delay(settings.RespawnTime, function()
 			local fresh = template:Clone()
 			model:Destroy()

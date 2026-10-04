@@ -17,7 +17,7 @@ function Notice.build(parent: Instance)
 		Size = UDim2.fromOffset(500, 32),
 		BackgroundTransparency = 1,
 		Text = "",
-		Font = Theme.TitleFont,
+		FontFace = Theme.Fonts.Banner,
 		TextSize = 24,
 		TextColor3 = Theme.Danger,
 		TextStrokeTransparency = 0.2,

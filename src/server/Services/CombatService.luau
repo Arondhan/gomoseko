@@ -143,25 +143,25 @@ end
 
 local function cast(player: Player, skillId: any, target: any): Types.CastResult
 	if type(skillId) ~= "string" then
-		return fail("Неверный запрос")
+		return fail("Invalid request")
 	end
 	local config = SKILLS[skillId]
 	if not config then
-		return fail("Неизвестный скилл")
+		return fail("Unknown skill")
 	end
 	if not InventoryService.isSkillEquipped(player, skillId) then
-		return fail("Кольцо не надето")
+		return fail("Ring not equipped")
 	end
 
 	if casting[player] then
-		return fail("Вы уже колдуете")
+		return fail("You are already casting")
 	end
 
 	-- кастер жив
 	local character = player.Character
 	local casterRoot = character and getRoot(character)
 	if not (character and casterRoot and getAliveHumanoid(character)) then
-		return fail("Вы не можете сейчас колдовать")
+		return fail("You cannot cast right now")
 	end
 
 	-- кулдаун
@@ -172,34 +172,34 @@ local function cast(player: Player, skillId: any, target: any): Types.CastResult
 		cooldowns[player] = playerCooldowns
 	end
 	if (playerCooldowns[skillId] or 0) > now then
-		return fail("Перезарядка")
+		return fail("On cooldown")
 	end
 
 	-- первичная цель: указанная клиентом (с проверкой дистанции) или ближайший враг в радиусе каста
 	local primary: Model
 	if target ~= nil then
 		if not isValidTarget(target, player) then
-			return fail("Неверная цель")
+			return fail("Invalid target")
 		end
 		local targetRoot = getRoot(target :: Model)
 		if not targetRoot then
-			return fail("Неверная цель")
+			return fail("Invalid target")
 		end
 		if (targetRoot.Position - casterRoot.Position).Magnitude > config.CastRange + CombatConfig.RangeTolerance then
-			return fail("Цель слишком далеко")
+			return fail("Target is too far")
 		end
 		primary = target :: Model
 	else
 		local nearest = ChainSearch.findNext(collectCandidates(player), casterRoot.Position, config.CastRange, {})
 		if not nearest then
-			return fail("Нет цели")
+			return fail("No target")
 		end
 		primary = nearest.id
 	end
 
 	-- мана списывается последней: только за каст, который точно состоится
 	if not PlayerStatsService.trySpend(player, config.ManaCost) then
-		return fail("Не хватает маны")
+		return fail("Not enough mana")
 	end
 	playerCooldowns[skillId] = now + config.Cooldown
 
@@ -218,11 +218,11 @@ local function cast(player: Player, skillId: any, target: any): Types.CastResult
 		local primaryRoot = getRoot(primary)
 		local reason: string? = nil
 		if not (currentCharacter and root and getAliveHumanoid(currentCharacter)) then
-			reason = "Каст прерван"
+			reason = "Cast interrupted"
 		elseif not (isValidTarget(primary, player) and primaryRoot) then
-			reason = "Цель потеряна"
+			reason = "Target lost"
 		elseif (primaryRoot.Position - root.Position).Magnitude > config.CastRange + CombatConfig.RangeTolerance then
-			reason = "Цель слишком далеко"
+			reason = "Target is too far"
 		end
 		if reason then
 			PlayerStatsService.refund(player, config.ManaCost)

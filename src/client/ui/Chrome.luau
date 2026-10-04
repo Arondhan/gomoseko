@@ -150,7 +150,7 @@ end
 function Chrome.label(parent: Instance, props: { [string]: any }): TextLabel
 	local merged: { [string]: any } = {
 		BackgroundTransparency = 1,
-		Font = Theme.BoldFont,
+		FontFace = Theme.Fonts.Numbers,
 		TextSize = 13,
 		TextColor3 = Theme.Text,
 		TextStrokeColor3 = Color3.new(0, 0, 0),

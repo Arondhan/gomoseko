@@ -29,7 +29,7 @@ function XpBar.build(parent: Instance)
 	local function refresh()
 		local xp, needed = number("XP", 0), number("XPToNext", 100)
 		bar.setValue(xp, needed)
-		bar.setText(string.format("Ур. %d  ·  %d / %d", number("Level", 1), xp, needed))
+		bar.setText(string.format("Lv. %d  ·  %d / %d", number("Level", 1), xp, needed))
 	end
 	for _, name in { "XP", "XPToNext", "Level" } do
 		player:GetAttributeChangedSignal(name):Connect(refresh)

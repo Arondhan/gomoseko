@@ -7,12 +7,16 @@ local RunService = game:GetService("RunService")
 local StarterGui = game:GetService("StarterGui")
 local UserInputService = game:GetService("UserInputService")
 
+local Fonts = require(game:GetService("ReplicatedStorage"):WaitForChild("Shared"):WaitForChild("Fonts"))
+task.spawn(Fonts.preload) -- прогрев шрифтов, чтобы текст не «мигал» при первом показе
+
 local Controllers = script.Parent:WaitForChild("Controllers")
 local InventoryController = require(Controllers:WaitForChild("InventoryController"))
 local TargetController = require(Controllers:WaitForChild("TargetController"))
 local SkillController = require(Controllers:WaitForChild("SkillController"))
 local LightningRenderer = require(script.Parent:WaitForChild("VFX"):WaitForChild("LightningRenderer"))
 local DamageNumbers = require(script.Parent:WaitForChild("VFX"):WaitForChild("DamageNumbers"))
+local TorchFlicker = require(script.Parent:WaitForChild("VFX"):WaitForChild("TorchFlicker"))
 
 local ui = script.Parent:WaitForChild("ui")
 local Theme = require(ui:WaitForChild("Theme"))
@@ -121,7 +125,7 @@ local lastLevel = localPlayer:GetAttribute("Level")
 localPlayer:GetAttributeChangedSignal("Level"):Connect(function()
 	local level = localPlayer:GetAttribute("Level")
 	if type(level) == "number" and type(lastLevel) == "number" and level > lastLevel then
-		notice.show("Новый уровень: " .. level .. "!", Theme.GoldLight)
+		notice.show("Level Up: " .. level .. "!", Theme.GoldLight)
 	end
 	lastLevel = level
 end)
@@ -132,6 +136,7 @@ TargetController.start(notice.show)
 SkillController.start(notice.show, ringBar.press)
 LightningRenderer.start()
 DamageNumbers.start()
+TorchFlicker.start()
 
 local slotKeys = { Enum.KeyCode.One, Enum.KeyCode.Two, Enum.KeyCode.Three, Enum.KeyCode.Four }
 

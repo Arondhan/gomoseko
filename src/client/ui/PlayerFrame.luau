@@ -50,7 +50,7 @@ function PlayerFrame.build(parent: Instance)
 		Position = UDim2.fromOffset(46, 4),
 		Size = UDim2.new(1, -56, 0, 20),
 		Text = player.DisplayName,
-		Font = Theme.TitleFont,
+		FontFace = Theme.Fonts.Title,
 		TextSize = 17,
 		TextColor3 = Theme.GoldLight,
 		TextXAlignment = Enum.TextXAlignment.Left,
