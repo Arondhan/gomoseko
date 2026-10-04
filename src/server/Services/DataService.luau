@@ -34,6 +34,7 @@ export type Profile = {
 	Gacha: { Rolls: number, LastFreeRoll: number, Recent: { { ringId: string, t: number } } },
 	Boosts: { LuckPercent: number, LuckUntil: number },
 	Receipts: { [string]: boolean },
+	Rift: { BestWave: number, WeekId: number, WeekBest: number, LastWeekClaimed: number }, -- лучшая волна Rift
 	Index: { Claimed: { [string]: boolean } }, -- полученные награды Index (ключ — процент вехи строкой)
 	Onboarding: { Step: number, Done: boolean },
 	Dps: {
@@ -91,6 +92,7 @@ local function defaults(): Profile
 		Boosts = { LuckPercent = 0, LuckUntil = 0 },
 		Receipts = {},
 		Index = { Claimed = {} },
+		Rift = { BestWave = 0, WeekId = 0, WeekBest = 0, LastWeekClaimed = 0 },
 		Onboarding = { Step = 1, Done = false },
 		Dps = { Best = 0, DayId = 0, DayBest = 0, WeekId = 0, WeekBest = 0, LastRewardDay = 0, LastWeekClaimed = 0 },
 		Settings = { SfxVolume = 1, LowQuality = nil },

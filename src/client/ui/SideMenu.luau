@@ -24,7 +24,7 @@ function SideMenu.build(parent: Instance, tooltip: any)
 		Name = "SideMenu",
 		AnchorPoint = Vector2.new(0, 0),
 		Position = UDim2.fromOffset(16, 172),
-		Size = UDim2.fromOffset(CELL_W * 2 + 8, CELL_H * 4 + 24),
+		Size = UDim2.fromOffset(CELL_W * 2 + 8, CELL_H * 5 + 24),
 		BackgroundTransparency = 1,
 	}, parent)
 	Theme.new("UIGridLayout", {
@@ -141,13 +141,14 @@ function SideMenu.build(parent: Instance, tooltip: any)
 	local buttons = {
 		frame = menu,
 		summon = addButton("SummonButton", 1, "Summon", "🔮", T.Summon, "G"),
-		rings = addButton("RingsButton", 2, "Rings", "💍", T.Rings, "C / I"),
-		index = addButton("IndexButton", 3, "Index", "📖", T.Index, "N"),
-		shop = addButton("ShopButton", 4, "Shop", "🛒", T.Shop, "B"),
-		boost = addButton("BoostButton", 5, "Boost", "🍀", T.Boost, "V"),
-		ranks = addButton("RanksButton", 6, "Ranks", "🏆", T.Ranks, "L"),
-		settings = addButton("SettingsButton", 7, "Settings", "⚙️", T.Settings, "O"),
-		admin = addButton("AdminButton", 8, "Admin", "🛠️", T.Admin, "F2"),
+		rift = addButton("RiftButton", 2, "Rift", "🌀", T.Rift, "T"),
+		rings = addButton("RingsButton", 3, "Rings", "💍", T.Rings, "C / I"),
+		index = addButton("IndexButton", 4, "Index", "📖", T.Index, "N"),
+		shop = addButton("ShopButton", 5, "Shop", "🛒", T.Shop, "B"),
+		boost = addButton("BoostButton", 6, "Boost", "🍀", T.Boost, "V"),
+		ranks = addButton("RanksButton", 7, "Ranks", "🏆", T.Ranks, "L"),
+		settings = addButton("SettingsButton", 8, "Settings", "⚙️", T.Settings, "O"),
+		admin = addButton("AdminButton", 9, "Admin", "🛠️", T.Admin, "F2"),
 	}
 	buttons.admin.frame.Visible = false -- плитка Admin появляется только у админов (Main после AdminGet)
 	return buttons

@@ -219,6 +219,15 @@ function AdminWindow.build(parent: Instance, deps: any)
 		{ text = "Mover x5", action = "Spawn", a = "Mover", b = 5 },
 	})
 
+	heading("Rift")
+	grid({
+		{ text = "Rift: wave 1", action = "RiftJump", a = 1 },
+		{ text = "Rift: wave 10 (boss)", action = "RiftJump", a = 10 },
+		{ text = "Rift: wave 30", action = "RiftJump", a = 30 },
+		{ text = "Kill Rift enemies", action = "RiftKillAll" },
+		{ text = "Leave Rift", action = "RiftLeave" },
+	})
+
 	heading("Luck and events")
 	grid({
 		{ text = "Lucky Hour 5 min", action = "LuckyHour", a = 300 },

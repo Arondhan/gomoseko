@@ -197,6 +197,37 @@ export type GachaAnnounce = {
 	oneIn: number,
 }
 
+-- Rift (бесконечные волны). phase: "Idle" | "Lobby" | "Wave" | "Intermission" | "Ending"
+export type RiftState = {
+	phase: string,
+	wave: number,
+	enemiesLeft: number,
+	enemiesTotal: number,
+	countdown: number, -- секунд до конца лобби/перерыва/паузы после поражения
+	players: number,
+	enraged: boolean,
+	chestWave: boolean, -- текущая волна — сундучная
+	bossWave: boolean,
+}
+
+export type RiftInfo = {
+	state: RiftState,
+	inArena: boolean,
+	best: number, -- личный рекорд (лучшая волна)
+	weekBest: number,
+}
+
+export type RiftWaveReward = { wave: number, crystals: number, essence: number, chest: boolean }
+
+export type RiftResult = {
+	wave: number, -- последняя достигнутая волна
+	kills: number,
+	crystals: number,
+	essence: number,
+	best: number,
+	newBest: boolean,
+}
+
 -- Магазин (Robux): строка продукта или геймпасса
 export type StoreItem = {
 	key: string,

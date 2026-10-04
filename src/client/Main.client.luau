@@ -26,6 +26,7 @@ local GachaController = require(Controllers:WaitForChild("GachaController"))
 local SettingsController = require(Controllers:WaitForChild("SettingsController"))
 local DpsController = require(Controllers:WaitForChild("DpsController"))
 local LuckController = require(Controllers:WaitForChild("LuckController"))
+local RiftController = require(Controllers:WaitForChild("RiftController"))
 local IndexController = require(Controllers:WaitForChild("IndexController"))
 local GachaConfig = require(
 	game:GetService("ReplicatedStorage"):WaitForChild("Shared"):WaitForChild("Configs"):WaitForChild("GachaConfig")
@@ -43,6 +44,8 @@ local Theme = require(ui:WaitForChild("Theme"))
 local RingsWindow = require(ui:WaitForChild("RingsWindow"))
 local SkillPad = require(ui:WaitForChild("SkillPad"))
 local AdminWindow = require(ui:WaitForChild("AdminWindow"))
+local RiftHud = require(ui:WaitForChild("RiftHud"))
+local RiftWindow = require(ui:WaitForChild("RiftWindow"))
 local SideMenu = require(ui:WaitForChild("SideMenu"))
 local BoostWindow = require(ui:WaitForChild("BoostWindow"))
 local Drag = require(ui:WaitForChild("Drag"))
@@ -207,6 +210,11 @@ local windows = {
 		key = Enum.KeyCode.O,
 	},
 	{ window = shopWindow, button = menu.shop, key = Enum.KeyCode.B },
+	{
+		window = RiftWindow.build(gui, { rift = RiftController, notify = notice.show }),
+		button = menu.rift,
+		key = Enum.KeyCode.T,
+	},
 	{ window = boostWindow, button = menu.boost, key = Enum.KeyCode.V },
 }
 
@@ -328,6 +336,15 @@ SettingsController.start()
 InventoryController.start()
 GachaController.start()
 LuckController.start()
+RiftController.start()
+RiftHud.build(gui, { rift = RiftController, notify = notice.show })
+-- вход в Rift через портал: отказ сервера (нет кольца со скиллом и т.п.) приходит атрибутом
+localPlayer:GetAttributeChangedSignal("RiftMessage"):Connect(function()
+	local value = localPlayer:GetAttribute("RiftMessage")
+	if type(value) == "string" then
+		notice.show((string.split(value, "|"))[1], Theme.Danger)
+	end
+end)
 IndexController.start()
 TargetController.start()
 SkillController.start(notice.show, pressSlot)

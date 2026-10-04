@@ -22,6 +22,7 @@ local InventoryService = require(Services:WaitForChild("InventoryService"))
 local LuckEventService = require(Services:WaitForChild("LuckEventService"))
 local PlayerStatsService = require(Services:WaitForChild("PlayerStatsService"))
 local PlaytimeLuckService = require(Services:WaitForChild("PlaytimeLuckService"))
+local RiftService = require(Services:WaitForChild("RiftService"))
 local TestEnemy = require(script.Parent.Parent:WaitForChild("Hub"):WaitForChild("TestEnemy"))
 
 local AdminService = {}
@@ -176,6 +177,22 @@ ACTIONS.AfkLuck = function(player, seconds)
 	end
 	PlaytimeLuckService.addOffset(player, seconds)
 	return true, string.format("AFK time +%d min", math.floor(seconds / 60))
+end
+
+ACTIONS.RiftJump = function(player: Player, wave: any)
+	if type(wave) ~= "number" or wave ~= wave or wave < 1 or wave > 200 then
+		return false, "Invalid wave"
+	end
+	return RiftService.adminJump(player, math.floor(wave))
+end
+
+ACTIONS.RiftKillAll = function()
+	RiftService.killAll()
+	return true, "Rift enemies removed"
+end
+
+ACTIONS.RiftLeave = function(player: Player)
+	return RiftService.leave(player)
 end
 
 local function act(player: Player, action: any, a: any, b: any): (boolean, string)

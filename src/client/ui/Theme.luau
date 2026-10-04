@@ -39,6 +39,7 @@ local Theme = {
 		Ranks = Color3.fromRGB(60, 200, 90),
 		Settings = Color3.fromRGB(140, 150, 175),
 		Admin = Color3.fromRGB(90, 100, 130),
+		Rift = Color3.fromRGB(215, 70, 120),
 	} :: { [string]: Color3 },
 
 	-- Фон панелей: вертикальный градиент сверху вниз
