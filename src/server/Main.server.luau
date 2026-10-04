@@ -22,5 +22,6 @@ require(Services:WaitForChild("IndexService")).start() -- книга колец
 require(Services:WaitForChild("OverheadTitleService")).start() -- титул над головой
 require(Services:WaitForChild("DpsService")).start() -- DPS-арена и лидерборды
 require(Services:WaitForChild("CombatService")).start()
+require(Services:WaitForChild("RiftBoardService")).start() -- недельный лидерборд Rift
 require(Services:WaitForChild("RiftService")).start() -- Rift: волны врагов в отдельной арене
 require(Services:WaitForChild("AdminService")).start() -- админ-меню (только для админов, проверка на сервере)

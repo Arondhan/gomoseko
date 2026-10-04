@@ -40,6 +40,9 @@ local DEFINITIONS: { [string]: string } = {
 	RiftGet = "RemoteFunction", -- клиент -> сервер: () -> RiftInfo (состояние забега и личный рекорд)
 	RiftAction = "RemoteFunction", -- клиент -> сервер: (action: "Enter" | "Leave") -> (ok: boolean, message: string)
 	RiftResult = "RemoteEvent", -- сервер -> игрок: RiftResult (итоги забега)
+	RiftChest = "RemoteEvent", -- сервер -> игрок: RiftChest (результат открытия сундука)
+	RiftWeekly = "RemoteEvent", -- сервер -> игрок: RiftWeekly (недельная награда по месту)
+	RiftTelegraph = "RemoteEvent", -- сервер -> игроки арены: RiftTelegraph (красный круг удара босса)
 	RiftWaveReward = "RemoteEvent", -- сервер -> игрок: RiftWaveReward (награда за зачищенную волну)
 	CastCancelled = "RemoteEvent", -- сервер -> клиент кастера: (skillId: string, reason: string) — каст сорван
 }

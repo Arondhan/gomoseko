@@ -20,7 +20,7 @@ function RiftHud.build(parent: Instance, deps: any)
 		Name = "RiftHud",
 		AnchorPoint = Vector2.new(0.5, 0),
 		Position = UDim2.new(0.5, 0, 0, 56),
-		Size = UDim2.fromOffset(520, 130),
+		Size = UDim2.fromOffset(520, 170),
 		BackgroundTransparency = 1,
 		Visible = false,
 	}, parent)
@@ -48,6 +48,33 @@ function RiftHud.build(parent: Instance, deps: any)
 		TextColor3 = Theme.Danger,
 	})
 
+	-- полоса HP босса
+	local bossBar = Theme.new("Frame", {
+		AnchorPoint = Vector2.new(0.5, 0),
+		Position = UDim2.new(0.5, 0, 0, 118),
+		Size = UDim2.fromOffset(380, 26),
+		BackgroundColor3 = Color3.fromRGB(20, 12, 28),
+		BorderSizePixel = 0,
+		Visible = false,
+	}, root)
+	Theme.corner(bossBar, 8)
+	Chrome.bevel(bossBar, 2, 8, true)
+	local bossFill = Theme.new("Frame", {
+		Size = UDim2.fromScale(1, 1),
+		BackgroundColor3 = Color3.fromRGB(200, 40, 70),
+		BorderSizePixel = 0,
+		ZIndex = 2,
+	}, bossBar)
+	Theme.corner(bossFill, 8)
+	Theme.gradient(bossFill, 90, Color3.fromRGB(255, 110, 130), Color3.fromRGB(150, 20, 50))
+	local bossText = Chrome.label(bossBar, {
+		Size = UDim2.fromScale(1, 1),
+		Text = "",
+		FontFace = Theme.Fonts.Title,
+		TextSize = Theme.TextSize.Small,
+		ZIndex = 3,
+	})
+
 	local function refresh()
 		local state = rift.getState()
 		if not (state and rift.isInArena() and state.phase ~= "Idle") then
@@ -55,6 +82,13 @@ function RiftHud.build(parent: Instance, deps: any)
 			return
 		end
 		root.Visible = true
+		if state.phase == "Wave" and state.bossMax > 0 then
+			bossBar.Visible = true
+			bossFill.Size = UDim2.fromScale(math.clamp(state.bossHealth / state.bossMax, 0, 1), 1)
+			bossText.Text = string.format("Rift Titan  %d / %d", state.bossHealth, state.bossMax)
+		else
+			bossBar.Visible = false
+		end
 		local countdown = math.ceil(rift.countdown())
 		tag.Text = ""
 		if state.phase == "Lobby" then
@@ -100,6 +134,65 @@ function RiftHud.build(parent: Instance, deps: any)
 			string.format("Wave %d cleared!  +%d Crystals  +%d Essence", reward.wave, reward.crystals, reward.essence),
 			Theme.GoldLight
 		)
+	end)
+
+	-- сундук: карточка по центру на несколько секунд
+	local chest = Chrome.panel(parent, {
+		Name = "RiftChest",
+		AnchorPoint = Vector2.new(0.5, 0.5),
+		Position = UDim2.fromScale(0.5, 0.32),
+		Size = UDim2.fromOffset(440, 170),
+		Visible = false,
+		ZIndex = 118,
+	}, 16)
+	local chestTitle = Chrome.label(chest, {
+		Position = UDim2.fromOffset(0, 12),
+		Size = UDim2.new(1, 0, 0, 40),
+		Text = "",
+		FontFace = Theme.Fonts.Banner,
+		TextSize = 34,
+		TextColor3 = Theme.GoldLight,
+		ZIndex = 119,
+	})
+	local chestBody = Chrome.label(chest, {
+		Position = UDim2.fromOffset(16, 58),
+		Size = UDim2.new(1, -32, 0, 100),
+		Text = "",
+		FontFace = Theme.Fonts.Title,
+		TextSize = Theme.TextSize.Title,
+		TextColor3 = Color3.new(1, 1, 1),
+		TextWrapped = true,
+		ZIndex = 119,
+	})
+	local chestToken = 0
+	rift.chest.Event:Connect(function(result: Types.RiftChest)
+		chestToken += 1
+		local mine = chestToken
+		chestTitle.Text = result.title .. "!"
+		local lines = { result.label }
+		if result.ringName then
+			table.insert(
+				lines,
+				string.format("%s%s", result.ringName, if result.ringIsNew then "  NEW!" else "  (duplicate)")
+			)
+		end
+		local rewards: { string } = {}
+		if result.crystals > 0 then
+			table.insert(rewards, string.format("+%d Crystals", result.crystals))
+		end
+		if result.essence > 0 then
+			table.insert(rewards, string.format("+%d Essence", result.essence))
+		end
+		if #rewards > 0 then
+			table.insert(lines, table.concat(rewards, "   "))
+		end
+		chestBody.Text = table.concat(lines, "\n")
+		chest.Visible = true
+		task.delay(4.5, function()
+			if chestToken == mine then
+				chest.Visible = false
+			end
+		end)
 	end)
 
 	-- итоги забега
