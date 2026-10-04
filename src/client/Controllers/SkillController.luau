@@ -33,6 +33,7 @@ local SKILLS: { [string]: Types.SkillConfig } = {
 
 local localPlayer = Players.LocalPlayer
 local cooldownEnds: { [string]: number } = {} -- skillId -> os.clock() окончания кулдауна
+local cooldownTotals: { [string]: number } = {} -- skillId -> фактическая длительность (с бонусами колец)
 local pending = false -- запрос на сервер в полёте
 local castEndsAt = 0 -- до какого момента идёт каст (os.clock)
 local castToken = 0 -- номер каста: устаревшие таймеры игнорируются
@@ -46,7 +47,7 @@ end
 function SkillController.getCooldown(skillId: string): (number, number)
 	local skill = SKILLS[skillId]
 	local remaining = math.max(0, (cooldownEnds[skillId] or 0) - os.clock())
-	return remaining, if skill then skill.Cooldown else 0
+	return remaining, cooldownTotals[skillId] or (if skill then skill.Cooldown else 0)
 end
 
 local function myRoot(): BasePart?
@@ -61,8 +62,12 @@ function SkillController.castSlot(slot: number)
 	if not ring then
 		return
 	end
-	local skill = SKILLS[ring.SkillId]
-	if not skill or pending then
+	local skill = if ring.SkillId then SKILLS[ring.SkillId] else nil
+	if not skill then
+		onError("This ring is passive")
+		return
+	end
+	if pending then
 		return
 	end
 
@@ -84,7 +89,9 @@ function SkillController.castSlot(slot: number)
 	if target then
 		local root, targetRoot = myRoot(), target:FindFirstChild("HumanoidRootPart")
 		if root and targetRoot and targetRoot:IsA("BasePart") then
-			if (targetRoot.Position - root.Position).Magnitude > skill.CastRange then
+			local bonusRange = localPlayer:GetAttribute("Bonus_CastRange")
+			local castRange = skill.CastRange + (if type(bonusRange) == "number" then bonusRange else 0)
+			if (targetRoot.Position - root.Position).Magnitude > castRange then
 				onError("Target is too far")
 				return
 			end
@@ -100,7 +107,9 @@ function SkillController.castSlot(slot: number)
 		pending = false
 		local response = result :: Types.CastResult?
 		if ok and response and response.ok then
-			cooldownEnds[skill.Id] = os.clock() + skill.Cooldown
+			local cooldown = response.cooldown or skill.Cooldown
+			cooldownTotals[skill.Id] = cooldown
+			cooldownEnds[skill.Id] = os.clock() + cooldown
 			local castTime = response.castTime or 0
 			if castTime > 0 then
 				castToken += 1

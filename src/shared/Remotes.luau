@@ -18,6 +18,12 @@ local DEFINITIONS: { [string]: string } = {
 	InventoryUnequip = "RemoteFunction", -- клиент -> сервер: (slot: number) -> boolean
 	InventoryChanged = "RemoteEvent", -- сервер -> клиент: InventoryState
 	DamageDealt = "RemoteEvent", -- сервер -> клиент нанёсшего урон: DamageEvent
+	GachaGetState = "RemoteFunction", -- клиент -> сервер: () -> GachaState
+	GachaRoll = "RemoteFunction", -- клиент -> сервер: (count: number, free: boolean) -> GachaRollResponse
+	GachaAnnounce = "RemoteEvent", -- сервер -> все клиенты: GachaAnnounce (редкая находка)
+	StoreGetState = "RemoteFunction", -- клиент -> сервер: () -> StoreState
+	StoreBuy = "RemoteFunction", -- клиент -> сервер: (key: string) -> (ok: boolean, reason: string?)
+	StudioGrant = "RemoteFunction", -- клиент -> сервер: (key: string) -> boolean; работает только в Studio (тест без Robux)
 	CastCancelled = "RemoteEvent", -- сервер -> клиент кастера: (skillId: string, reason: string) — каст сорван
 }
 

@@ -18,6 +18,8 @@ local ArcLightningConfig = require(Configs:WaitForChild("Skills"):WaitForChild("
 local Services = script.Parent
 local InventoryService = require(Services:WaitForChild("InventoryService"))
 local PlayerStatsService = require(Services:WaitForChild("PlayerStatsService"))
+local CurrencyService = require(Services:WaitForChild("CurrencyService"))
+local StatsService = require(Services:WaitForChild("StatsService"))
 
 local CombatService = {}
 
@@ -104,17 +106,20 @@ local function runChain(player: Player, config: Types.SkillConfig, primary: Mode
 
 		hopIndex += 1
 		hit[current] = true
-		humanoid:TakeDamage(config.Damage)
+		-- урон с учётом бонусов колец (DamagePct)
+		local damage = config.Damage * (1 + StatsService.get(player).DamagePct / 100)
+		humanoid:TakeDamage(damage)
 
 		-- цифра урона — только тому, кто бьёт; убийство даёт опыт
 		local damageEvent: Types.DamageEvent = {
 			skillId = config.Id,
 			position = root.Position + DAMAGE_NUMBER_OFFSET,
-			amount = config.Damage,
+			amount = damage,
 		}
 		damageRemote:FireClient(player, damageEvent)
 		if humanoid.Health <= 0 then
 			PlayerStatsService.addXp(player, CombatConfig.Progression.XpPerKill)
+			CurrencyService.rewardKill(player)
 		end
 
 		local hop: Types.LightningHop = {
@@ -149,6 +154,10 @@ local function cast(player: Player, skillId: any, target: any): Types.CastResult
 	if not config then
 		return fail("Unknown skill")
 	end
+	-- эффективные значения с учётом бонусов надетых колец
+	local bonuses = StatsService.get(player)
+	local castRange = config.CastRange + bonuses.CastRange
+	local cooldown = config.Cooldown * (1 - bonuses.CooldownReductionPct / 100)
 	if not InventoryService.isSkillEquipped(player, skillId) then
 		return fail("Ring not equipped")
 	end
@@ -185,12 +194,12 @@ local function cast(player: Player, skillId: any, target: any): Types.CastResult
 		if not targetRoot then
 			return fail("Invalid target")
 		end
-		if (targetRoot.Position - casterRoot.Position).Magnitude > config.CastRange + CombatConfig.RangeTolerance then
+		if (targetRoot.Position - casterRoot.Position).Magnitude > castRange + CombatConfig.RangeTolerance then
 			return fail("Target is too far")
 		end
 		primary = target :: Model
 	else
-		local nearest = ChainSearch.findNext(collectCandidates(player), casterRoot.Position, config.CastRange, {})
+		local nearest = ChainSearch.findNext(collectCandidates(player), casterRoot.Position, castRange, {})
 		if not nearest then
 			return fail("No target")
 		end
@@ -201,12 +210,12 @@ local function cast(player: Player, skillId: any, target: any): Types.CastResult
 	if not PlayerStatsService.trySpend(player, config.ManaCost) then
 		return fail("Not enough mana")
 	end
-	playerCooldowns[skillId] = now + config.Cooldown
+	playerCooldowns[skillId] = now + cooldown
 
 	-- мгновенный каст — сразу цепочка
 	if config.CastTime <= 0 then
 		task.spawn(runChain, player, config, primary, casterRoot.Position + CASTER_HAND_OFFSET)
-		return { ok = true, castTime = 0 }
+		return { ok = true, castTime = 0, cooldown = cooldown }
 	end
 
 	-- каст с задержкой: после CastTime цель и кастер проверяются заново, при срыве возвращаем ману и кулдаун
@@ -221,7 +230,7 @@ local function cast(player: Player, skillId: any, target: any): Types.CastResult
 			reason = "Cast interrupted"
 		elseif not (isValidTarget(primary, player) and primaryRoot) then
 			reason = "Target lost"
-		elseif (primaryRoot.Position - root.Position).Magnitude > config.CastRange + CombatConfig.RangeTolerance then
+		elseif (primaryRoot.Position - root.Position).Magnitude > castRange + CombatConfig.RangeTolerance then
 			reason = "Target is too far"
 		end
 		if reason then
@@ -234,7 +243,7 @@ local function cast(player: Player, skillId: any, target: any): Types.CastResult
 		end
 		runChain(player, config, primary, (root :: BasePart).Position + CASTER_HAND_OFFSET)
 	end)
-	return { ok = true, castTime = config.CastTime }
+	return { ok = true, castTime = config.CastTime, cooldown = cooldown }
 end
 
 function CombatService.start()
