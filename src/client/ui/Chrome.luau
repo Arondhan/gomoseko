@@ -16,8 +16,11 @@ local function goldSequence(): ColorSequence
 	})
 end
 
--- Фаска: внешняя золотая обводка с градиентом + тонкая тёмная внутренняя линия (иллюзия толщины металла)
-function Chrome.bevel(frame: GuiObject, thickness: number?, radius: number?): UIStroke
+-- Фаска: внешняя золотая обводка с градиентом + тонкая тёмная внутренняя линия (иллюзия толщины металла).
+-- simple = true — только внешняя обводка, без вложенного фрейма BevelInner. ОБЯЗАТЕЛЬНО для объектов, внутри
+-- которых лежит UIListLayout / UIGridLayout (например, Tooltip): иначе BevelInner попадает в раскладку
+-- как обычный элемент и раздувается на весь экран.
+function Chrome.bevel(frame: GuiObject, thickness: number?, radius: number?, simple: boolean?): UIStroke
 	local width = thickness or 2
 	local stroke = Theme.new("UIStroke", {
 		Name = "Bevel",
@@ -26,6 +29,9 @@ function Chrome.bevel(frame: GuiObject, thickness: number?, radius: number?): UI
 		ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
 	}, frame)
 	Theme.new("UIGradient", { Rotation = 90, Color = goldSequence() }, stroke)
+	if simple then
+		return stroke
+	end
 
 	local inner = Theme.new("Frame", {
 		Name = "BevelInner",
@@ -47,8 +53,9 @@ function Chrome.bevel(frame: GuiObject, thickness: number?, radius: number?): UI
 	return stroke
 end
 
--- Тёмная панель с вертикальным градиентом и фаской
-function Chrome.panel(parent: Instance, props: { [string]: any }, radius: number?): Frame
+-- Тёмная панель с вертикальным градиентом и фаской.
+-- Не кладите UIListLayout внутрь панели с обычной фаской — используйте simple = true (см. Chrome.bevel).
+function Chrome.panel(parent: Instance, props: { [string]: any }, radius: number?, simple: boolean?): Frame
 	local r = radius or 8
 	local merged: { [string]: any } = {
 		BackgroundColor3 = Color3.new(1, 1, 1),
@@ -60,7 +67,7 @@ function Chrome.panel(parent: Instance, props: { [string]: any }, radius: number
 	local frame = Theme.new("Frame", merged, parent)
 	Theme.corner(frame, r)
 	Theme.gradient(frame, 90, Theme.PanelTop, Theme.PanelBottom)
-	Chrome.bevel(frame, 2, r)
+	Chrome.bevel(frame, 2, r, simple)
 	return frame
 end
 

@@ -23,6 +23,7 @@ local OUTLINE_COLOR = Color3.fromRGB(255, 70, 50)
 
 local localPlayer = Players.LocalPlayer
 local target: Model? = nil
+local notify: (string) -> () = function() end -- сообщение игроку (ui/Notice), задаётся в start()
 local highlight: Highlight? = nil
 local connections: { RBXScriptConnection } = {}
 
@@ -105,10 +106,12 @@ function TargetController.select(model: Model)
 	TargetController.changed:Fire(model)
 end
 
--- Tab: ближайшая цель в радиусе TabTargetRange; если цель уже есть — следующая по удалённости
-local function cycleTarget()
+-- Tab (как в WoW): враги, видимые на экране в радиусе TabTargetRange, по возрастанию расстояния.
+-- Tab — ближайший / следующий по кругу, Shift+Tab — предыдущий. Если подходящих нет — сообщение игроку.
+local function cycleTarget(backwards: boolean)
 	local root = myRoot()
-	if not root then
+	local camera = Workspace.CurrentCamera
+	if not (root and camera) then
 		return
 	end
 	local list: { { model: Model, dist: number } } = {}
@@ -118,22 +121,34 @@ local function cycleTarget()
 			local enemyRoot = model:FindFirstChild("HumanoidRootPart") :: BasePart
 			local dist = (enemyRoot.Position - root.Position).Magnitude
 			if dist <= CombatConfig.TabTargetRange then
-				table.insert(list, { model = model, dist = dist })
+				local _, onScreen = camera:WorldToViewportPoint(enemyRoot.Position)
+				if onScreen then
+					table.insert(list, { model = model, dist = dist })
+				end
 			end
 		end
 	end
 	if #list == 0 then
+		notify("Нет целей поблизости")
 		return
 	end
 	table.sort(list, function(a, b)
 		return a.dist < b.dist
 	end)
-	local nextIndex = 1
+
+	-- позиция текущей цели в списке (0 — цели нет или она не попала в список)
+	local currentIndex = 0
 	for i, entry in list do
 		if entry.model == target then
-			nextIndex = i % #list + 1
+			currentIndex = i
 			break
 		end
+	end
+	local nextIndex
+	if backwards then
+		nextIndex = if currentIndex <= 1 then #list else currentIndex - 1
+	else
+		nextIndex = currentIndex % #list + 1
 	end
 	TargetController.select(list[nextIndex].model)
 end
@@ -162,7 +177,11 @@ local function pickUnderCursor()
 	end
 end
 
-function TargetController.start()
+-- notifyCallback получает текст сообщения («Нет целей поблизости»)
+function TargetController.start(notifyCallback: ((string) -> ())?)
+	if notifyCallback then
+		notify = notifyCallback
+	end
 	UserInputService.InputBegan:Connect(function(input, processed)
 		if processed then
 			return -- клик по UI не должен менять цель
@@ -172,10 +191,12 @@ function TargetController.start()
 		end
 	end)
 
-	-- ContextActionService, чтобы Tab не открывал стандартный список игроков
+	-- ContextActionService на высоком приоритете, чтобы Tab не открывал стандартный список игроков
 	ContextActionService:BindActionAtPriority("TargetCycle", function(_, state)
 		if state == Enum.UserInputState.Begin then
-			cycleTarget()
+			local shift = UserInputService:IsKeyDown(Enum.KeyCode.LeftShift)
+				or UserInputService:IsKeyDown(Enum.KeyCode.RightShift)
+			cycleTarget(shift)
 		end
 		return Enum.ContextActionResult.Sink
 	end, false, Enum.ContextActionPriority.High.Value, Enum.KeyCode.Tab)
