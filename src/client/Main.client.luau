@@ -23,6 +23,7 @@ local TargetController = require(Controllers:WaitForChild("TargetController"))
 local SkillController = require(Controllers:WaitForChild("SkillController"))
 local GachaController = require(Controllers:WaitForChild("GachaController"))
 local SettingsController = require(Controllers:WaitForChild("SettingsController"))
+local DpsController = require(Controllers:WaitForChild("DpsController"))
 local LightningRenderer = require(script.Parent:WaitForChild("VFX"):WaitForChild("LightningRenderer"))
 local DamageNumbers = require(script.Parent:WaitForChild("VFX"):WaitForChild("DamageNumbers"))
 local TorchFlicker = require(script.Parent:WaitForChild("VFX"):WaitForChild("TorchFlicker"))
@@ -40,6 +41,8 @@ local Shop = require(ui:WaitForChild("Shop"))
 local Summon = require(ui:WaitForChild("Summon"))
 local CurrencyBar = require(ui:WaitForChild("CurrencyBar"))
 local SettingsWindow = require(ui:WaitForChild("SettingsWindow"))
+local DpsMeter = require(ui:WaitForChild("DpsMeter"))
+local Leaderboard = require(ui:WaitForChild("Leaderboard"))
 local OnboardingTracker = require(ui:WaitForChild("OnboardingTracker"))
 local TouchButtons = require(ui:WaitForChild("TouchButtons"))
 local PlayerFrame = require(ui:WaitForChild("PlayerFrame"))
@@ -160,6 +163,7 @@ local windows = {
 		key = Enum.KeyCode.I,
 	},
 	{ window = summon.window, button = menu.summon, key = Enum.KeyCode.G },
+	{ window = Leaderboard.build(gui, { dps = DpsController }), button = menu.ranks, key = Enum.KeyCode.L },
 	{
 		window = SettingsWindow.build(gui, { settings = SettingsController }),
 		button = menu.settings,
@@ -176,6 +180,17 @@ for _, entry in windows do
 	entry.button.click.Event:Connect(entry.window.toggle)
 	entry.window.changed.Event:Connect(entry.button.setActive)
 end
+
+-- DPS-арена: панель замера и недельная награда
+DpsMeter.build(gui, DpsController)
+DpsController.status.Event:Connect(function(status)
+	if status.kind == "WeeklyReward" then
+		notice.show(
+			string.format("Weekly DPS reward: rank #%d  +%d crystals!", status.rank or 0, status.crystals or 0),
+			Theme.GoldLight
+		)
+	end
+end)
 
 -- редкая находка любого игрока -> объявление всем
 GachaController.announced.Event:Connect(function(info)
@@ -236,6 +251,7 @@ localPlayer:GetAttributeChangedSignal("Level"):Connect(function()
 end)
 
 -- запуск контроллеров (они ждут ремоуты, которые создаёт server/Main)
+DpsController.start()
 SettingsController.start()
 InventoryController.start()
 GachaController.start()

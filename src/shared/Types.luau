@@ -155,4 +155,34 @@ export type Settings = {
 	LowQuality: boolean?, -- nil = автоопределение (телефон -> true)
 }
 
+-- DPS-арена
+export type DpsEntry = { rank: number, userId: number, name: string, score: number } -- score = DPS × 10
+
+export type DpsBoards = { daily: { DpsEntry }, weekly: { DpsEntry }, allTime: { DpsEntry } }
+
+export type DpsBest = { daily: number, weekly: number, allTime: number }
+
+export type DpsBoardsResponse = {
+	boards: DpsBoards,
+	best: DpsBest, -- личные рекорды игрока (DPS × 10)
+	source: string, -- "datastore" или "memory" (если DataStore недоступен)
+	updated: number, -- unix-время последнего обновления таблиц
+	dayEndsIn: number, -- секунд до конца дня (UTC)
+	weekEndsIn: number, -- секунд до конца недели (UTC)
+}
+
+export type DpsStatus = {
+	kind: "Running" | "Finished" | "WeeklyReward",
+	elapsed: number?,
+	duration: number?,
+	total: number?,
+	dps: number?, -- DPS × 10
+	best: DpsBest?,
+	newBest: boolean?, -- новый личный рекорд за день
+	xp: number?,
+	gold: number?,
+	crystals: number?,
+	rank: number?, -- для WeeklyReward: место прошлой недели
+}
+
 return {}

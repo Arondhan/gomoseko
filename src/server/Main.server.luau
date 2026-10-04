@@ -16,4 +16,5 @@ require(Services:WaitForChild("PlayerStatsService")).start() -- мана, уро
 require(Services:WaitForChild("InventoryService")).start()
 require(Services:WaitForChild("MonetizationService")).start() -- Robux-покупки и политика регионов
 require(Services:WaitForChild("GachaService")).start()
+require(Services:WaitForChild("DpsService")).start() -- DPS-арена и лидерборды
 require(Services:WaitForChild("CombatService")).start()

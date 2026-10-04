@@ -17,6 +17,7 @@ local Fonts = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("Fon
 local Hub = script.Parent:WaitForChild("Hub")
 local Atmosphere = require(Hub:WaitForChild("Atmosphere"))
 local Decor = require(Hub:WaitForChild("Decor"))
+local DpsBoard = require(Hub:WaitForChild("DpsBoard"))
 
 local PI, TAU = math.pi, math.pi * 2
 local H = Config.HALF
@@ -888,6 +889,7 @@ local function buildDummy(index, cf)
 	-- тег "Enemy": по таким моделям бьют скиллы (CombatService); клонирование шаблона при респавне сохраняет тег.
 	-- ClickDetector убран: клик теперь выбирает цель (TargetController), а не бьёт манекен.
 	CollectionService:AddTag(m, "Enemy")
+	m:SetAttribute("Immortal", true) -- манекены не умирают: урон идёт в DPS-замер (Services/DpsService)
 
 	local gui = Instance.new("BillboardGui")
 	gui.Name = "HPBar"
@@ -964,6 +966,7 @@ Decor.build({
 	inGap = inGap,
 	folder = folder,
 })
+DpsBoard.build(hub, Vector3.new(16, 0, 72)) -- доска DPS-лидерборда справа от аллеи к яме (текст обновляет DpsService)
 
 -------------------------------------------------------------------------------
 hub.Parent = Workspace

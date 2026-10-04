@@ -15,6 +15,7 @@ OnboardingConfig.Steps = {
 		Key = "CastSpell",
 		Text = "Select a training dummy and press 1 (or Q / tap its ring slot) to cast Arc Lightning.",
 	},
+	{ Key = "DpsTest", Text = "Hit a training dummy for 30 seconds to set your DPS score and join the leaderboard." },
 	{ Key = "Summon", Text = "Open Ring Summon (G) and summon your first new ring." },
 } :: { Step }
 

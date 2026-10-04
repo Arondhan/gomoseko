@@ -338,4 +338,56 @@ function Glyphs.gear(parent: Instance)
 	Theme.corner(hole, 4)
 end
 
+-- Кубок: чаша с ручками, ножка и основание (кнопка рейтинга)
+function Glyphs.trophy(parent: Instance)
+	local z = parent:IsA("GuiObject") and parent.ZIndex + 1 or 2
+	local holder = Theme.new("Frame", {
+		Name = "Glyph",
+		AnchorPoint = Vector2.new(0.5, 0.5),
+		Position = UDim2.fromScale(0.5, 0.5),
+		Size = UDim2.fromOffset(26, 26),
+		BackgroundTransparency = 1,
+		ZIndex = z,
+	}, parent)
+	for _, side in { 0, 1 } do
+		local handle = Theme.new("Frame", {
+			AnchorPoint = Vector2.new(side, 0),
+			Position = UDim2.new(side, 0, 0, 3),
+			Size = UDim2.fromOffset(8, 9),
+			BackgroundTransparency = 1,
+			ZIndex = z,
+		}, holder)
+		Theme.corner(handle, 4)
+		Theme.new("UIStroke", { Color = Theme.GoldMid, Thickness = 2 }, handle)
+	end
+	local cup = Theme.new("Frame", {
+		AnchorPoint = Vector2.new(0.5, 0),
+		Position = UDim2.fromScale(0.5, 0),
+		Size = UDim2.fromOffset(14, 14),
+		BorderSizePixel = 0,
+		ZIndex = z + 1,
+	}, holder)
+	Theme.corner(cup, 5)
+	shaded(cup, Theme.GoldLight, Theme.GoldDark)
+	Theme.new("UIStroke", { Color = Color3.fromRGB(80, 56, 16), Thickness = 1.5 }, cup)
+	local stem = Theme.new("Frame", {
+		AnchorPoint = Vector2.new(0.5, 0),
+		Position = UDim2.new(0.5, 0, 0, 14),
+		Size = UDim2.fromOffset(4, 6),
+		BorderSizePixel = 0,
+		ZIndex = z,
+	}, holder)
+	shaded(stem, Theme.GoldMid, Theme.GoldDark)
+	local base = Theme.new("Frame", {
+		AnchorPoint = Vector2.new(0.5, 1),
+		Position = UDim2.fromScale(0.5, 1),
+		Size = UDim2.fromOffset(14, 5),
+		BorderSizePixel = 0,
+		ZIndex = z + 1,
+	}, holder)
+	Theme.corner(base, 2)
+	shaded(base, Theme.GoldMid, Theme.GoldDark)
+	Theme.new("UIStroke", { Color = Color3.fromRGB(80, 56, 16), Thickness = 1.5 }, base)
+end
+
 return Glyphs
