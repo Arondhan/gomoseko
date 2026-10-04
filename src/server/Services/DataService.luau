@@ -35,6 +35,15 @@ export type Profile = {
 	Boosts: { LuckPercent: number, LuckUntil: number },
 	Receipts: { [string]: boolean },
 	Onboarding: { Step: number, Done: boolean },
+	Dps: {
+		Best: number, -- личный рекорд всех времён (DPS × 10)
+		DayId: number,
+		DayBest: number,
+		WeekId: number,
+		WeekBest: number,
+		LastRewardDay: number, -- день, за который уже выдан бонус первого замера
+		LastWeekClaimed: number, -- последняя неделя, за которую выдана награда по месту
+	},
 	Settings: { SfxVolume: number, LowQuality: boolean? },
 	Session: { JobId: string, Time: number }?,
 }
@@ -74,6 +83,7 @@ local function defaults(): Profile
 		Boosts = { LuckPercent = 0, LuckUntil = 0 },
 		Receipts = {},
 		Onboarding = { Step = 1, Done = false },
+		Dps = { Best = 0, DayId = 0, DayBest = 0, WeekId = 0, WeekBest = 0, LastRewardDay = 0, LastWeekClaimed = 0 },
 		Settings = { SfxVolume = 1, LowQuality = nil },
 		Session = nil,
 	}

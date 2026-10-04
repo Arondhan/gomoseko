@@ -19,6 +19,7 @@ local Services = script.Parent
 local InventoryService = require(Services:WaitForChild("InventoryService"))
 local PlayerStatsService = require(Services:WaitForChild("PlayerStatsService"))
 local CurrencyService = require(Services:WaitForChild("CurrencyService"))
+local DpsService = require(Services:WaitForChild("DpsService"))
 local OnboardingService = require(Services:WaitForChild("OnboardingService"))
 local StatsService = require(Services:WaitForChild("StatsService"))
 
@@ -109,7 +110,12 @@ local function runChain(player: Player, config: Types.SkillConfig, primary: Mode
 		hit[current] = true
 		-- урон с учётом бонусов колец (DamagePct)
 		local damage = config.Damage * (1 + StatsService.get(player).DamagePct / 100)
-		humanoid:TakeDamage(damage)
+		if current:GetAttribute("Immortal") == true then
+			-- тренировочный манекен: не умирает, урон идёт в DPS-замер игрока
+			DpsService.recordHit(player, damage)
+		else
+			humanoid:TakeDamage(damage)
+		end
 
 		-- цифра урона — только тому, кто бьёт; убийство даёт опыт
 		local damageEvent: Types.DamageEvent = {

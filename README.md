@@ -31,9 +31,11 @@ src/
     Combat/Progression.luau  # levels and XP (pure math)
     Combat/CooldownMath.luau # radial cooldown geometry (pure math)
     Gacha/GachaMath.luau     # exact summon probabilities, rolling and odds formatting (pure math)
+    Dps/DpsMath.luau         # DPS score, day/week ids (UTC), weekly reward tiers (pure math)
   server/
     BuildHub.server.luau     # map generator, SpawnLocation, dummies (Enemy tag)
     Hub/Atmosphere.luau      # lighting, sky, post effects, moonlight shaft (values: Config.Lighting)
+    Hub/DpsBoard.luau        # physical DPS leaderboard board in the hub (SurfaceGui)
     Hub/Decor.luau           # inlay, wood trim, banners, lamps, crates/barrels, moss, crystals, fireflies
     Dummies.server.luau      # damage to dummies (Tool touch), HP bar, respawn after 4 s
     Main.server.luau         # bootstrap: creates remotes and starts the services
@@ -43,6 +45,7 @@ src/
       StatsService.luau        # passive bonuses of equipped rings (Bonus_* attributes)
       PlayerStatsService.luau  # player mana and XP (attributes Mana/MaxMana, Level/XP/XPToNext)
       InventoryService.luau    # ring inventory and equipped slots (server is the source of truth)
+      DpsService.luau          # DPS arena: 30 s tests, rewards, daily/weekly/all-time leaderboards
       OnboardingService.luau   # tutorial progress (profile), funnel analytics, reward
       SettingsService.luau     # player settings (SFX volume, low graphics) in the profile
       GachaService.luau        # ring summon: rolls, luck, free roll, announcements
@@ -99,6 +102,8 @@ rojo build default.project.json -o build/gomoseko.rbxl
 | `C`                       | Character window: model, 4 ring slots, stats (drag rings in, swap, drag out)  |
 | `I`                       | Inventory: right-click a ring to equip/unequip, or drag it onto a ring slot   |
 | Right click on a slot     | unequip the ring                                                              |
+| `L`                       | DPS Leaderboard window (daily / weekly / all-time)                            |
+| `O`                       | Settings: effects volume, Low graphics                                        |
 | `G`                       | Ring Summon window (Gacha): summon ×1 / ×10, free roll, odds, auto roll       |
 | `B`                       | Store window (Robux: Summon Crystals, luck potions, passes)                   |
 | `Esc`                     | close open windows and clear the target                                       |
@@ -119,6 +124,18 @@ floating damage numbers and a level-up for killing enemies. Colours and sizes li
 
 Inventory, mana and XP are currently kept in server memory (no DataStore): `InventoryService.serialize/load` is the
 hook point for saving. Dummies take damage from `Tool` touches and respawn after 4 seconds.
+
+## DPS arena and leaderboards
+
+The training dummies in the pit **never die**: every hit counts towards a 30-second **DPS test** that starts with your
+first hit (live DPS and a countdown at the top of the screen). The result is `total damage / 30`, calculated only on
+the server (`DpsService`; the client just shows progress). Each finished test gives XP, gold and a few crystals, plus a
+bonus for the first test of the (UTC) day. Best scores go to three `OrderedDataStore` boards shared by all servers —
+**Daily**, **Weekly**, **All time** — shown on the board in the hub (it cycles every 8 seconds), in the Leaderboard
+window (`L`) and refreshed every minute. When a week ends, the top 50 get Summon Crystals automatically on their next
+login (`DpsConfig.WeeklyRewards`). Without DataStore access (Studio with API Services off) the boards show only the
+current server. All numbers live in `Configs/DpsConfig.luau`; the pure math is checked by
+`tools/tests/dps_math_test.luau`.
 
 ## Mobile, onboarding and analytics
 
