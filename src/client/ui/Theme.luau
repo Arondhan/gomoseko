@@ -4,6 +4,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local TweenService = game:GetService("TweenService")
 
 local Fonts = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("Fonts"))
+local Rarity = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("Gacha"):WaitForChild("Rarity"))
 
 local Theme = {
 	Bg = Color3.fromRGB(14, 16, 22),
@@ -43,15 +44,7 @@ local Theme = {
 	Fonts = Fonts,
 
 	-- Качество предметов (как в WoW): серый, зелёный, синий, фиолетовый, оранжевый
-	Quality = {
-		Common = Color3.fromRGB(157, 157, 157),
-		Uncommon = Color3.fromRGB(30, 255, 0),
-		Rare = Color3.fromRGB(0, 112, 221),
-		Epic = Color3.fromRGB(163, 53, 238),
-		Legendary = Color3.fromRGB(255, 128, 0),
-		Mythic = Color3.fromRGB(255, 64, 128),
-		Divine = Color3.fromRGB(255, 232, 150),
-	} :: { [string]: Color3 },
+	Quality = Rarity.Colors,
 	QualityNames = {
 		Common = "Common",
 		Uncommon = "Uncommon",

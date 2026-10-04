@@ -119,6 +119,27 @@ export type GachaState = {
 	rolls: number,
 }
 
+-- AFK Playtime Luck (сервер -> клиент). Времена — относительные секунды на момент отправки.
+export type PlaytimeLuck = {
+	steps: number,
+	percent: number, -- бонус к удаче в процентах
+	bonus: number, -- в «иксах»: 0.2 = +0.2x
+	maxBonus: number, -- максимум (1.0 = +1.0x)
+	stepBonus: number, -- сколько даёт один шаг (0.1)
+	nextIn: number?, -- секунд до следующего шага (nil — максимум)
+}
+
+-- Lucky Hour (сервер -> клиент)
+export type LuckEventStatus = {
+	name: string,
+	active: boolean,
+	endsIn: number, -- секунд до конца (если активно)
+	startsIn: number, -- секунд до начала следующего (если не активно)
+	percent: number, -- бонус к удаче в процентах
+}
+
+export type LuckBoosts = { playtime: PlaytimeLuck, event: LuckEventStatus }
+
 export type GachaRollResponse = {
 	ok: boolean,
 	reason: string?,
