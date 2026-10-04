@@ -1,9 +1,8 @@
 --!strict
--- Серверный инвентарь колец: список предметов + надетые кольца по слотам 1..N.
+-- Серверный инвентарь колец: список колец + надетые кольца по слотам 1..N — всё хранится в профиле (DataService).
 -- Клиент только просит (equip/unequip), сервер проверяет и рассылает актуальное состояние.
--- Сохранение пока не подключено: serialize()/load() — точка для будущего DataStore.
+-- Каждое изменение экипировки пересчитывает бонусы колец (StatsService).
 
-local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Shared = ReplicatedStorage:WaitForChild("Shared")
@@ -12,40 +11,38 @@ local Remotes = require(Shared:WaitForChild("Remotes"))
 local CombatConfig = require(Shared:WaitForChild("Configs"):WaitForChild("CombatConfig"))
 local RingsConfig = require(Shared:WaitForChild("Configs"):WaitForChild("Rings"):WaitForChild("RingsConfig"))
 
+local Services = script.Parent
+local DataService = require(Services:WaitForChild("DataService"))
+local StatsService = require(Services:WaitForChild("StatsService"))
+
 local InventoryService = {}
 
-local states: { [Player]: Types.InventoryState } = {}
+local EMPTY = "" -- маркер пустого слота
 local changedRemote: RemoteEvent
 
-local EMPTY = "" -- маркер пустого слота
-
-local function emptySlots(): { string }
-	local slots = {}
-	for i = 1, CombatConfig.RingSlotCount do
-		slots[i] = EMPTY
-	end
-	return slots
-end
-
-local function newState(): Types.InventoryState
-	return { items = table.clone(RingsConfig.StartingItems), equipped = emptySlots() }
-end
-
 -- копия состояния для отправки клиенту (клиент не получает ссылку на серверную таблицу)
-local function snapshot(state: Types.InventoryState): Types.InventoryState
-	return { items = table.clone(state.items), equipped = table.clone(state.equipped) }
+local function snapshot(profile: DataService.Profile): Types.InventoryState
+	return { items = table.clone(profile.Rings), equipped = table.clone(profile.Equipped) }
+end
+
+local function emptyState(): Types.InventoryState
+	local equipped = {}
+	for i = 1, CombatConfig.RingSlotCount do
+		equipped[i] = EMPTY
+	end
+	return { items = {}, equipped = equipped }
 end
 
 local function notify(player: Player)
-	local state = states[player]
-	if state then
-		changedRemote:FireClient(player, snapshot(state))
+	local profile = DataService.get(player)
+	if profile then
+		changedRemote:FireClient(player, snapshot(profile))
 	end
 end
 
-local function slotIndexOf(state: Types.InventoryState, itemId: string): number?
+local function slotIndexOf(profile: DataService.Profile, itemId: string): number?
 	for slot = 1, CombatConfig.RingSlotCount do
-		if state.equipped[slot] == itemId then
+		if profile.Equipped[slot] == itemId then
 			return slot
 		end
 	end
@@ -58,12 +55,12 @@ end
 
 -- Есть ли у игрока надетое кольцо, дающее этот скилл
 function InventoryService.isSkillEquipped(player: Player, skillId: string): boolean
-	local state = states[player]
-	if not state then
+	local profile = DataService.get(player)
+	if not profile then
 		return false
 	end
 	for slot = 1, CombatConfig.RingSlotCount do
-		local ring = RingsConfig.Rings[state.equipped[slot]]
+		local ring = RingsConfig.Rings[profile.Equipped[slot]]
 		if ring and ring.SkillId == skillId then
 			return true
 		end
@@ -71,44 +68,55 @@ function InventoryService.isSkillEquipped(player: Player, skillId: string): bool
 	return false
 end
 
--- Точка расширения: сохранение/загрузка (DataStore)
-function InventoryService.serialize(player: Player): Types.InventoryState?
-	local state = states[player]
-	return state and snapshot(state)
+-- Есть ли кольцо в инвентаре
+function InventoryService.has(player: Player, ringId: string): boolean
+	local profile = DataService.get(player)
+	return profile ~= nil and table.find(profile.Rings, ringId) ~= nil
 end
 
-function InventoryService.load(player: Player, saved: Types.InventoryState)
-	states[player] = snapshot(saved)
+-- Выдаёт кольцо. true — кольцо новое; false — уже было (дубликат: решает вызывающий, например, Essence)
+function InventoryService.grantRing(player: Player, ringId: string): boolean
+	local profile = DataService.get(player)
+	if not profile or not RingsConfig.Rings[ringId] then
+		return false
+	end
+	if table.find(profile.Rings, ringId) then
+		return false
+	end
+	table.insert(profile.Rings, ringId)
 	notify(player)
+	return true
 end
 
 local function equip(player: Player, itemId: any, slot: any): boolean
-	local state = states[player]
-	if not state or type(itemId) ~= "string" or not isValidSlot(slot) then
+	local profile = DataService.get(player)
+	if not profile or type(itemId) ~= "string" or not isValidSlot(slot) then
 		return false
 	end
-	if not table.find(state.items, itemId) or not RingsConfig.Rings[itemId] then
+	if not table.find(profile.Rings, itemId) or not RingsConfig.Rings[itemId] then
 		return false
 	end
-	-- кольцо не может быть надето в двух слотах сразу: переносим
-	-- если целевой слот занят, а кольцо уже надето в другом слоте — меняем их местами
+	-- кольцо не может быть надето в двух слотах сразу; если целевой слот занят, а кольцо уже надето
+	-- в другом слоте — меняем их местами, иначе прежнее кольцо слота просто возвращается в инвентарь
 	local target = slot :: number
-	local old = slotIndexOf(state, itemId)
-	local displaced = state.equipped[target]
+	local old = slotIndexOf(profile, itemId)
+	local displaced = profile.Equipped[target]
 	if old then
-		state.equipped[old] = if old ~= target and displaced ~= EMPTY then displaced else EMPTY
+		profile.Equipped[old] = if old ~= target and displaced ~= EMPTY then displaced else EMPTY
 	end
-	state.equipped[target] = itemId
+	profile.Equipped[target] = itemId
+	StatsService.recalculate(player)
 	notify(player)
 	return true
 end
 
 local function unequip(player: Player, slot: any): boolean
-	local state = states[player]
-	if not state or not isValidSlot(slot) or state.equipped[slot :: number] == EMPTY then
+	local profile = DataService.get(player)
+	if not profile or not isValidSlot(slot) or profile.Equipped[slot :: number] == EMPTY then
 		return false
 	end
-	state.equipped[slot :: number] = EMPTY
+	profile.Equipped[slot :: number] = EMPTY
+	StatsService.recalculate(player)
 	notify(player)
 	return true
 end
@@ -119,22 +127,13 @@ function InventoryService.start()
 	local equipRemote = Remotes.get("InventoryEquip") :: RemoteFunction
 	local unequipRemote = Remotes.get("InventoryUnequip") :: RemoteFunction
 
-	local function onPlayerAdded(player: Player)
-		if not states[player] then
-			states[player] = newState()
-		end
-	end
-	Players.PlayerAdded:Connect(onPlayerAdded)
-	for _, player in Players:GetPlayers() do
-		onPlayerAdded(player)
-	end
-	Players.PlayerRemoving:Connect(function(player)
-		states[player] = nil
+	DataService.onLoaded(function(player)
+		notify(player) -- первое состояние сразу после загрузки профиля
 	end)
 
 	getRemote.OnServerInvoke = function(player: Player)
-		local state = states[player]
-		return state and snapshot(state) or { items = {}, equipped = emptySlots() }
+		local profile = DataService.waitForProfile(player, 30)
+		return if profile then snapshot(profile) else emptyState()
 	end
 	equipRemote.OnServerInvoke = equip
 	unequipRemote.OnServerInvoke = unequip

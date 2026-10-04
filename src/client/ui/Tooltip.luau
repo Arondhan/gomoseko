@@ -156,14 +156,42 @@ function Tooltip.build(parent: Instance, getSkill: (skillId: string) -> Types.Sk
 		open()
 	end
 
-	-- подсказка кольца: название цвета качества, тип, статы скилла в два столбца, жёлтое описание
+	-- подсказка кольца: название цвета качества, пассивные бонусы (зелёным, как в WoW), статы скилла и описание
 	function tooltip.showRing(ring: Types.RingDef)
 		clear()
 		local quality = Theme.Quality[ring.Quality] or Theme.Quality.Common
 		addLine(ring.Name, quality, 17, Theme.Fonts.Title)
 		addRow("Ring", Theme.QualityNames[ring.Quality] or "", Color3.new(1, 1, 1), quality)
 
-		local skill = getSkill(ring.SkillId)
+		-- пассивные бонусы
+		local stats = ring.Stats
+		local bonuses: { string } = {}
+		if stats.DamagePct then
+			table.insert(bonuses, string.format("+%g%% Damage", stats.DamagePct))
+		end
+		if stats.MaxMana then
+			table.insert(bonuses, string.format("+%g Max Mana", stats.MaxMana))
+		end
+		if stats.ManaRegen then
+			table.insert(bonuses, string.format("+%g Mana regen / s", stats.ManaRegen))
+		end
+		if stats.CooldownReductionPct then
+			table.insert(bonuses, string.format("-%g%% Cooldown", stats.CooldownReductionPct))
+		end
+		if stats.CastRange then
+			table.insert(bonuses, string.format("+%g Cast range", stats.CastRange))
+		end
+		if stats.LuckPct then
+			table.insert(bonuses, string.format("+%g%% Summon luck", stats.LuckPct))
+		end
+		if #bonuses > 0 then
+			addSeparator()
+			for _, text in bonuses do
+				addLine(text, Theme.Good, 14)
+			end
+		end
+
+		local skill = if ring.SkillId then getSkill(ring.SkillId) else nil
 		if skill then
 			addSeparator()
 			addRow(
@@ -193,6 +221,7 @@ function Tooltip.build(parent: Instance, getSkill: (skillId: string) -> Types.Sk
 		else
 			addLine(ring.Description, Theme.Warn, 14, Theme.Fonts.Serif)
 		end
+		addLine(string.format("Base rarity: 1 in %s", tostring(ring.OneIn)), Theme.Muted, 12)
 		open()
 	end
 

@@ -24,15 +24,27 @@ export type SkillConfig = {
 	SoundVolume: number,
 }
 
-export type Quality = "Common" | "Uncommon" | "Rare" | "Epic" | "Legendary"
+export type Quality = "Common" | "Uncommon" | "Rare" | "Epic" | "Legendary" | "Mythic" | "Divine"
+
+-- Пассивные бонусы кольца (суммируются по надетым кольцам, см. server/Services/StatsService)
+export type RingStats = {
+	DamagePct: number?, -- +% к урону скиллов
+	MaxMana: number?,
+	ManaRegen: number?, -- +ед. маны в секунду
+	CooldownReductionPct: number?, -- -% к перезарядке скиллов
+	CastRange: number?, -- +studs к дальности каста
+	LuckPct: number?, -- +% к удаче призыва
+}
 
 export type RingDef = {
 	Id: string,
 	Name: string,
 	Description: string,
-	SkillId: string,
+	SkillId: string?, -- скилл, который даёт кольцо (nil — кольцо только с пассивными бонусами)
 	Color: Color3,
 	Quality: Quality,
+	OneIn: number, -- базовый шанс выпадения в Gacha: «1 из N» (при удаче ×1)
+	Stats: RingStats,
 	Image: string?, -- необязательно: "rbxassetid://..." заменяет процедурную иконку
 }
 
@@ -57,6 +69,7 @@ export type CastResult = {
 	ok: boolean,
 	reason: string?,
 	castTime: number?,
+	cooldown: number?, -- фактическая перезарядка с учётом бонусов колец (для таймера на клиенте)
 }
 
 -- Нанесённый урон (сервер -> клиент кастера, для плавающих цифр)
@@ -64,6 +77,76 @@ export type DamageEvent = {
 	skillId: string,
 	position: Vector3,
 	amount: number,
+}
+
+-- Gacha: результат одного призыва
+export type RollResult = {
+	ringId: string,
+	quality: Quality,
+	oneIn: number,
+	isNew: boolean, -- кольца не было в инвентаре
+	essence: number, -- Ring Essence за дубликат (0, если кольцо новое)
+}
+
+-- Строка таблицы шансов (проценты в виде строк: сумма всех исходов ровно 100 %)
+export type OddsRing = {
+	ringId: string,
+	name: string,
+	oneIn: number, -- базовая редкость кольца (при удаче ×1)
+	percent: string, -- фактический шанс в процентах при текущей удаче, «0.000002»
+	effective: string, -- он же в виде «1 in 50,000,000»
+}
+
+export type OddsGroup = {
+	quality: Quality,
+	percent: string,
+	rings: { OddsRing },
+}
+
+export type LuckSource = { name: string, percent: number }
+
+export type GachaState = {
+	crystals: number,
+	essence: number,
+	rollCost: number,
+	multiCount: number,
+	luck: number, -- итоговый множитель удачи
+	luckSources: { LuckSource },
+	odds: { OddsGroup },
+	freeRollIn: number, -- секунд до бесплатного ролла (0 — доступен)
+	paidRestricted: boolean, -- платные призывы недоступны в регионе игрока (политика Roblox)
+	passes: { [string]: boolean },
+	rolls: number,
+}
+
+export type GachaRollResponse = {
+	ok: boolean,
+	reason: string?,
+	results: { RollResult }?,
+	state: GachaState?,
+}
+
+export type GachaAnnounce = {
+	playerName: string,
+	ringId: string,
+	oneIn: number,
+}
+
+-- Магазин (Robux): строка продукта или геймпасса
+export type StoreItem = {
+	key: string,
+	id: number, -- 0 = не настроен в Creator Hub
+	name: string,
+	description: string,
+	kind: "Crystals" | "LuckPotion" | "Pass",
+	isPass: boolean,
+	owned: boolean, -- для геймпассов
+}
+
+export type StoreState = {
+	items: { StoreItem },
+	restricted: boolean, -- платные случайные предметы запрещены в регионе игрока: платные товары скрыты
+	studio: boolean, -- Studio: доступны тестовые гранты без Robux
 }
 
 return {}

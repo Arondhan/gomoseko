@@ -46,6 +46,8 @@ local Theme = {
 		Rare = Color3.fromRGB(0, 112, 221),
 		Epic = Color3.fromRGB(163, 53, 238),
 		Legendary = Color3.fromRGB(255, 128, 0),
+		Mythic = Color3.fromRGB(255, 64, 128),
+		Divine = Color3.fromRGB(255, 232, 150),
 	} :: { [string]: Color3 },
 	QualityNames = {
 		Common = "Common",
@@ -53,6 +55,8 @@ local Theme = {
 		Rare = "Rare",
 		Epic = "Epic",
 		Legendary = "Legendary",
+		Mythic = "Mythic",
+		Divine = "Divine",
 	} :: { [string]: string },
 }
 

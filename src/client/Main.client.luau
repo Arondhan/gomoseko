@@ -7,6 +7,13 @@ local RunService = game:GetService("RunService")
 local StarterGui = game:GetService("StarterGui")
 local UserInputService = game:GetService("UserInputService")
 
+local RingsConfig = require(
+	game:GetService("ReplicatedStorage")
+		:WaitForChild("Shared")
+		:WaitForChild("Configs")
+		:WaitForChild("Rings")
+		:WaitForChild("RingsConfig")
+)
 local Fonts = require(game:GetService("ReplicatedStorage"):WaitForChild("Shared"):WaitForChild("Fonts"))
 task.spawn(Fonts.preload) -- прогрев шрифтов, чтобы текст не «мигал» при первом показе
 
@@ -14,6 +21,7 @@ local Controllers = script.Parent:WaitForChild("Controllers")
 local InventoryController = require(Controllers:WaitForChild("InventoryController"))
 local TargetController = require(Controllers:WaitForChild("TargetController"))
 local SkillController = require(Controllers:WaitForChild("SkillController"))
+local GachaController = require(Controllers:WaitForChild("GachaController"))
 local LightningRenderer = require(script.Parent:WaitForChild("VFX"):WaitForChild("LightningRenderer"))
 local DamageNumbers = require(script.Parent:WaitForChild("VFX"):WaitForChild("DamageNumbers"))
 local TorchFlicker = require(script.Parent:WaitForChild("VFX"):WaitForChild("TorchFlicker"))
@@ -28,6 +36,8 @@ local Inventory = require(ui:WaitForChild("Inventory"))
 local Character = require(ui:WaitForChild("Character"))
 local Drag = require(ui:WaitForChild("Drag"))
 local Shop = require(ui:WaitForChild("Shop"))
+local Summon = require(ui:WaitForChild("Summon"))
+local CurrencyBar = require(ui:WaitForChild("CurrencyBar"))
 local PlayerFrame = require(ui:WaitForChild("PlayerFrame"))
 local TargetFrame = require(ui:WaitForChild("TargetFrame"))
 local Tooltip = require(ui:WaitForChild("Tooltip"))
@@ -93,7 +103,8 @@ local ringBar = RingBar.build(gui, {
 		end
 	end,
 })
-local menu = MicroMenu.build(gui, tooltip, { summon = false }) -- Summon появится вместе с Gacha
+local menu = MicroMenu.build(gui, tooltip)
+CurrencyBar.build(gui, tooltip)
 
 local character = Character.build(gui, {
 	controller = InventoryController,
@@ -105,6 +116,8 @@ local character = Character.build(gui, {
 Drag.registerTarget({ getSlotAtPosition = ringBar.getSlotAtPosition, highlight = ringBar.highlightSlot })
 Drag.registerTarget({ getSlotAtPosition = character.getSlotAtPosition, highlight = character.highlightSlot })
 
+local summon = Summon.build(gui, { gacha = GachaController, tooltip = tooltip, notify = notice.show })
+
 -- окна и привязка к кнопкам меню
 local windows = {
 	{ window = character.window, button = menu.character, key = Enum.KeyCode.C },
@@ -113,13 +126,29 @@ local windows = {
 		button = menu.inventory,
 		key = Enum.KeyCode.I,
 	},
-	{ window = Shop.build(gui), button = menu.shop, key = Enum.KeyCode.B },
+	{ window = summon.window, button = menu.summon, key = Enum.KeyCode.G },
+	{
+		window = Shop.build(gui, { notify = notice.show, openOdds = summon.openOdds, gacha = GachaController }),
+		button = menu.shop,
+		key = Enum.KeyCode.B,
+	},
 }
 
 for _, entry in windows do
 	entry.button.click.Event:Connect(entry.window.toggle)
 	entry.window.changed.Event:Connect(entry.button.setActive)
 end
+
+-- редкая находка любого игрока -> объявление всем
+GachaController.announced.Event:Connect(function(info)
+	local ring = RingsConfig.Rings[info.ringId]
+	if ring then
+		notice.show(
+			string.format("%s found the %s (1 in %s)!", info.playerName, ring.Name, tostring(info.oneIn)),
+			Theme.Quality[ring.Quality]
+		)
+	end
+end)
 
 -- кольца из состояния сервера -> иконки в слотах RingBar
 InventoryController.changed.Event:Connect(function()
@@ -170,6 +199,7 @@ end)
 
 -- запуск контроллеров (они ждут ремоуты, которые создаёт server/Main)
 InventoryController.start()
+GachaController.start()
 TargetController.start(notice.show)
 SkillController.start(notice.show, ringBar.press)
 LightningRenderer.start()
