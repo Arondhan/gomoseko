@@ -103,9 +103,10 @@ rojo build default.project.json -o build/gomoseko.rbxl
 | `I`                       | Inventory: right-click a ring to equip/unequip, or drag it onto a ring slot   |
 | Right click on a slot     | unequip the ring                                                              |
 | `L`                       | DPS Leaderboard window (daily / weekly / all-time)                            |
-| `O`                       | Settings: effects volume, Low graphics                                        |
+| `O`                       | Settings: volume, Low graphics, summon effects (cinematic, shake, quick roll) |
 | `G`                       | Ring Summon window (Gacha): summon ×1 / ×10, free roll, odds, auto roll       |
 | `B`                       | Store window (Robux: Summon Crystals, luck potions, passes)                   |
+| `N`                       | Ring Index: collection book with rewards at 25 / 50 / 100 %                   |
 | `Esc`                     | close open windows and clear the target                                       |
 
 **Arc Lightning.** The lightning hits a target (the selected one or, with no target, the nearest enemy within cast
@@ -203,6 +204,14 @@ turned off and only the free roll remains. Review the current
 - **Lucky Hour** (`LuckEventService`): every 30 minutes for 5 minutes everyone gets +1.0x luck (schedule from the unix
   clock, so all servers agree). Config: `GachaConfig.LuckEvent`. Both bonuses are free luck sources: they apply to the
   free roll too and appear in the luck breakdown and the odds table, so the shown odds stay the real ones.
+
+## Ring Index
+
+`N` opens the Index: every ring in `RingsConfig` in order of rarity; found rings show their icon, name and
+`1 in N`, missing ones a dark silhouette with `???` (their rarity stays visible — nothing is hidden about the odds).
+Rewards at 25 / 50 / 100 % of the collection (`GachaConfig.Index.Milestones`) are claimed once, validated on the server
+(`IndexService`, claims stored in `profile.Index.Claimed`). "Found" is derived from the player's rings, so existing
+players get their Index automatically. Progress math is in `shared/Gacha/IndexMath.luau` (tested).
 
 ## Sounds
 

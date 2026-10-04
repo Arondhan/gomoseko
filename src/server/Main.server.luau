@@ -18,6 +18,7 @@ require(Services:WaitForChild("MonetizationService")).start() -- Robux-поку�
 require(Services:WaitForChild("PlaytimeLuckService")).start() -- AFK-удача за время на сервере
 require(Services:WaitForChild("LuckEventService")).start() -- Lucky Hour
 require(Services:WaitForChild("GachaService")).start()
+require(Services:WaitForChild("IndexService")).start() -- книга колец
 require(Services:WaitForChild("OverheadTitleService")).start() -- титул над головой
 require(Services:WaitForChild("DpsService")).start() -- DPS-арена и лидерборды
 require(Services:WaitForChild("CombatService")).start()
