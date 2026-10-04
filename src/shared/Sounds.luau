@@ -12,6 +12,8 @@ Sounds.Manual = {
 	ArcLightningZap = "",
 	ThunderBoom = "",
 	RevealTick = "",
+	FireballCast = "",
+	Explosion = "",
 }
 
 -- Имя звука -> имя файла в assets/audio (без расширения)
@@ -20,9 +22,17 @@ local FILES = {
 	ArcLightningZap = "arc_lightning_zap",
 	ThunderBoom = "thunder_boom",
 	RevealTick = "reveal_tick",
+	FireballCast = "fireball_cast",
+	Explosion = "explosion",
 }
 
-export type SoundName = "ArcLightningCharge" | "ArcLightningZap" | "ThunderBoom" | "RevealTick"
+export type SoundName =
+	"ArcLightningCharge"
+	| "ArcLightningZap"
+	| "ThunderBoom"
+	| "RevealTick"
+	| "FireballCast"
+	| "Explosion"
 
 -- Asphalt может назвать ключ по-разному (с расширением, с папкой) — ищем по вхождению имени файла
 local function lookup(file: string): string

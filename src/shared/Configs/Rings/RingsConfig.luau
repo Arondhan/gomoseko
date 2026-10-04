@@ -96,6 +96,16 @@ local rings: { Types.RingDef } = {
 		OneIn = 64,
 		Stats = { DamagePct = 12 },
 	}),
+	ring({
+		Id = "ring_ember_band",
+		Name = "Ember Band",
+		Description = "Hurls a Fireball that explodes and burns everything around the target.",
+		SkillId = "Fireball",
+		Color = Color3.fromRGB(255, 120, 30),
+		Quality = "Rare",
+		OneIn = 80,
+		Stats = { DamagePct = 4 },
+	}),
 	-- Epic
 	ring({
 		Id = "ring_arc_lightning",
@@ -152,6 +162,16 @@ local rings: { Types.RingDef } = {
 		Quality = "Legendary",
 		OneIn = 20000,
 		Stats = { LuckPct = 20, ManaRegen = 2 },
+	}),
+	ring({
+		Id = "ring_starfall",
+		Name = "Starfall Ring",
+		Description = "Marks the ground and calls a Meteor down from the sky. Enemies that stay in the circle burn.",
+		SkillId = "Meteor",
+		Color = Color3.fromRGB(255, 80, 50),
+		Quality = "Legendary",
+		OneIn = 7500,
+		Stats = { DamagePct = 10, CastRange = 6 },
 	}),
 	-- Mythic
 	ring({

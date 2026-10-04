@@ -10,8 +10,10 @@ local UserInputService = game:GetService("UserInputService")
 local Shared = ReplicatedStorage:WaitForChild("Shared")
 local Types = require(Shared:WaitForChild("Types"))
 local Remotes = require(Shared:WaitForChild("Remotes"))
-local ArcLightningConfig =
-	require(Shared:WaitForChild("Configs"):WaitForChild("Skills"):WaitForChild("ArcLightningConfig"))
+local SkillConfigs = Shared:WaitForChild("Configs"):WaitForChild("Skills")
+local ArcLightningConfig = require(SkillConfigs:WaitForChild("ArcLightningConfig"))
+local FireballConfig = require(SkillConfigs:WaitForChild("FireballConfig"))
+local MeteorConfig = require(SkillConfigs:WaitForChild("MeteorConfig"))
 
 local Controllers = script.Parent
 local InventoryController = require(Controllers:WaitForChild("InventoryController"))
@@ -29,6 +31,8 @@ local CAST_FINISH_GRACE = 0.2 -- запас на сетевую задержку
 -- Реестр скиллов на клиенте (те же конфиги, что и на сервере)
 local SKILLS: { [string]: Types.SkillConfig } = {
 	[ArcLightningConfig.Id] = ArcLightningConfig,
+	[FireballConfig.Id] = FireballConfig,
+	[MeteorConfig.Id] = MeteorConfig,
 }
 
 local localPlayer = Players.LocalPlayer

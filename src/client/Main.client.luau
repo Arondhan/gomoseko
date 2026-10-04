@@ -32,6 +32,7 @@ local GachaConfig = require(
 local LightningRenderer = require(script.Parent:WaitForChild("VFX"):WaitForChild("LightningRenderer"))
 local DamageNumbers = require(script.Parent:WaitForChild("VFX"):WaitForChild("DamageNumbers"))
 local TorchFlicker = require(script.Parent:WaitForChild("VFX"):WaitForChild("TorchFlicker"))
+local SkillEffects = require(script.Parent:WaitForChild("VFX"):WaitForChild("SkillEffects"))
 local TitleGradient = require(script.Parent:WaitForChild("VFX"):WaitForChild("TitleGradient"))
 local Sfx = require(script.Parent:WaitForChild("VFX"):WaitForChild("Sfx"))
 local Sounds = require(game:GetService("ReplicatedStorage"):WaitForChild("Shared"):WaitForChild("Sounds"))
@@ -39,7 +40,7 @@ local Sounds = require(game:GetService("ReplicatedStorage"):WaitForChild("Shared
 local ui = script.Parent:WaitForChild("ui")
 local Theme = require(ui:WaitForChild("Theme"))
 local RingsWindow = require(ui:WaitForChild("RingsWindow"))
-local AttackButton = require(ui:WaitForChild("AttackButton"))
+local SkillPad = require(ui:WaitForChild("SkillPad"))
 local SideMenu = require(ui:WaitForChild("SideMenu"))
 local BoostWindow = require(ui:WaitForChild("BoostWindow"))
 local Drag = require(ui:WaitForChild("Drag"))
@@ -107,28 +108,34 @@ local function startSlotDrag(ring: any, fromSlot: number)
 	end)
 end
 
--- первый слот с кольцом, дающим скилл (его и кастует кнопка Attack)
-local function skillSlot(): number?
+-- слоты с кольцами, дающими скилл, по порядку: первый — большая кнопка Attack, остальные — малые кнопки
+local function skillSlots(): { number }
+	local list: { number } = {}
 	for slot = 1, 4 do
 		local ring = InventoryController.getRingInSlot(slot)
 		if ring and ring.SkillId then
-			return slot
+			table.insert(list, slot)
 		end
 	end
-	return nil
+	return list
 end
 
-local attack = AttackButton.build(gui, {
+local pad = SkillPad.build(gui, {
 	tooltip = tooltip,
-	onPress = function()
-		local slot = skillSlot()
+	onPress = function(index: number)
+		local slot = skillSlots()[index]
 		if slot then
 			SkillController.castSlot(slot)
-		else
+		elseif index == 1 then
 			notice.show("Wear a ring with a skill: open Rings", Theme.Warn)
 		end
 	end,
 })
+
+-- анимация нажатия кнопки, соответствующей слоту (каст клавишей)
+local function pressSlot(slot: number)
+	pad.press(table.find(skillSlots(), slot))
+end
 local menu = SideMenu.build(gui, tooltip)
 local currencyBar = CurrencyBar.build(gui, tooltip)
 local luckHud = LuckHud.build(gui, { luck = LuckController, tooltip = tooltip, notify = notice.show })
@@ -142,7 +149,7 @@ if isPhone then
 	luckHud.afk.AnchorPoint = Vector2.new(1, 0)
 	luckHud.afk.Position = UDim2.new(1, -8, 0, 178)
 	luckHud.afk.TextXAlignment = Enum.TextXAlignment.Right
-	attack.frame.Position = UDim2.new(1, -190, 1, -40) -- левее кнопки прыжка Roblox
+	pad.frame.Position = UDim2.new(1, -190, 1, -40) -- левее кнопки прыжка Roblox
 end
 OnboardingTracker.build(gui, function()
 	notice.show("Tutorial complete! Crystals added.", Theme.GoldLight)
@@ -254,32 +261,38 @@ GachaController.announced.Event:Connect(function(info)
 	end
 end)
 
--- кольца из состояния сервера -> слоты окна Rings и кнопка Attack
+-- кольца из состояния сервера -> слоты окна Rings и кнопки скиллов
 InventoryController.changed.Event:Connect(function()
 	task.spawn(IndexController.refresh) -- возможно, найдено новое кольцо
 	tooltip.hide()
 	for i = 1, rings.slotCount do
 		rings.setSlot(i, InventoryController.getRingInSlot(i))
 	end
-	local slot = skillSlot()
-	attack.setRing(if slot then InventoryController.getRingInSlot(slot) else nil)
+	local entries: { { ring: any, slot: number }? } = {}
+	for _, slot in skillSlots() do
+		table.insert(entries, { ring = InventoryController.getRingInSlot(slot), slot = slot })
+	end
+	pad.setSkills(entries)
 end)
 
--- кулдаун на кнопке Attack (каждый кадр, только отображение)
+-- кулдауны на кнопках скиллов (каждый кадр, только отображение)
 RunService.RenderStepped:Connect(function()
-	local slot = skillSlot()
-	local ring = if slot then InventoryController.getRingInSlot(slot) else nil
-	if ring and ring.SkillId then
-		local remaining, total = SkillController.getCooldown(ring.SkillId)
-		attack.setCooldown(remaining, total)
-	else
-		attack.setCooldown(0, 0)
+	local slots = skillSlots()
+	for index = 1, pad.count do
+		local ring = if slots[index] then InventoryController.getRingInSlot(slots[index]) else nil
+		if ring and ring.SkillId then
+			local remaining, total = SkillController.getCooldown(ring.SkillId)
+			pad.setCooldown(index, remaining, total)
+		else
+			pad.setCooldown(index, 0, 0)
+		end
 	end
 end)
 
 -- звук начала каста (заряд молнии) — только у самого кастера
-SkillController.castStarted.Event:Connect(function()
-	Sfx.play2D(Sounds.id("ArcLightningCharge"), 0.8)
+SkillController.castStarted.Event:Connect(function(skillName: string)
+	local sound = if skillName == "Arc Lightning" then "ArcLightningCharge" else "FireballCast"
+	Sfx.play2D(Sounds.id(sound), 0.8)
 end)
 
 -- «ding» при повышении уровня (атрибут Level растёт на сервере)
@@ -300,8 +313,9 @@ GachaController.start()
 LuckController.start()
 IndexController.start()
 TargetController.start()
-SkillController.start(notice.show, attack.press)
+SkillController.start(notice.show, pressSlot)
 LightningRenderer.start()
+SkillEffects.start()
 DamageNumbers.start()
 TorchFlicker.start()
 TitleGradient.start()
@@ -322,7 +336,7 @@ UserInputService.InputBegan:Connect(function(input, processed)
 	end
 	for i, key in slotKeys do
 		if input.KeyCode == key then
-			attack.press()
+			pressSlot(i)
 			SkillController.castSlot(i)
 			return
 		end

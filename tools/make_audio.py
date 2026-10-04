@@ -2,7 +2,7 @@
 """Синтез звуков Arc Lightning (без сторонних библиотек: wave + math + random, кодирование в .ogg — через ffmpeg).
 
 Запуск из корня репозитория:  python3 tools/make_audio.py
-Результат: assets/audio/*.ogg (arc_lightning_charge/zap, thunder_boom, reveal_tick)
+Результат: assets/audio/*.ogg (arc_lightning_charge/zap, thunder_boom, reveal_tick, fireball_cast, explosion)
 """
 import math
 import random
@@ -155,6 +155,31 @@ def tick():
     return fade_in(fade_out(normalize(out, 0.7), 0.02), 0.002)
 
 
+def fireball_cast():
+    """Огненный «вжух»: нарастающий шум через ФНЧ + низкий гул, ~0.5 с."""
+    random.seed(31)
+    length = 0.55
+    n = int(RATE * length)
+    out = silence(length)
+    swoosh = noise_burst(length, 10, 1.0, highpass=False)
+    add(out, [v * math.sin(math.pi * i / n) ** 1.5 for i, v in enumerate(lowpass(swoosh, 1400))])
+    add(out, sweep(length, 90, 260, 0.5, 0.35, harmonics=(1.0, 0.3)))
+    add(out, crackle(length, 40, 140, 0.35))
+    return fade_in(fade_out(normalize(out, 0.8), 0.05), 0.01)
+
+
+def explosion():
+    """Взрыв: резкий удар + низкий падающий бас + шипящий хвост, ~1.4 с."""
+    random.seed(41)
+    length = 1.4
+    out = silence(length)
+    add(out, noise_burst(0.5, 0.12, 1.0))
+    add(out, sweep(0.9, 110, 32, 1.0, 0.3, harmonics=(1.0, 0.4)))
+    add(out, [v * 0.9 for v in lowpass(noise_burst(length, 0.35, 1.0, highpass=False), 700)])
+    add(out, crackle(length, 90, 8, 0.25))
+    return fade_in(fade_out(normalize(out, 0.95), 0.25), 0.003)
+
+
 def write_wav(path, samples):
     with wave.open(str(path), "wb") as w:
         w.setnchannels(1)
@@ -170,6 +195,8 @@ def main():
         ("arc_lightning_charge", charge()),
         ("thunder_boom", thunder()),
         ("reveal_tick", tick()),
+        ("fireball_cast", fireball_cast()),
+        ("explosion", explosion()),
     ):
         wav = OUT / (name + ".wav")
         ogg = OUT / (name + ".ogg")

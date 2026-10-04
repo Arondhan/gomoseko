@@ -207,18 +207,29 @@ function Tooltip.build(parent: Instance, getSkill: (skillId: string) -> Types.Sk
 				Color3.new(1, 1, 1),
 				Color3.new(1, 1, 1)
 			)
-			addLine(
-				string.format(
-					"Use: %s Deals %d damage, hits up to %d targets, jump radius %d.",
-					ring.Description,
+			local effect: string
+			if skill.Kind == "Projectile" then
+				effect = string.format(
+					"Deals %d damage to everything within %d studs of the impact.",
 					skill.Damage,
-					skill.MaxBounces + 1,
-					skill.BounceRadius
-				),
-				Theme.Warn,
-				14,
-				Theme.Fonts.Serif
-			)
+					skill.ExplosionRadius or 0
+				)
+			elseif skill.Kind == "Meteor" then
+				effect = string.format(
+					"After %g sec a meteor deals %d damage in a %d stud circle.",
+					skill.Delay or 0,
+					skill.Damage,
+					skill.Radius or 0
+				)
+			else
+				effect = string.format(
+					"Deals %d damage, hits up to %d targets, jump radius %d.",
+					skill.Damage,
+					(skill.MaxBounces or 0) + 1,
+					skill.BounceRadius or 0
+				)
+			end
+			addLine(string.format("Use: %s %s", ring.Description, effect), Theme.Warn, 14, Theme.Fonts.Serif)
 		else
 			addLine(ring.Description, Theme.Warn, 14, Theme.Fonts.Serif)
 		end

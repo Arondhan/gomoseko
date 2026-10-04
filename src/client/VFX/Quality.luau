@@ -30,6 +30,11 @@ local function applyToMap(low: boolean)
 	end
 end
 
+-- Включён ли режим Low graphics (для эффектов: меньше частиц и света)
+function Quality.isLow(): boolean
+	return lastLow == true
+end
+
 function Quality.apply(low: boolean)
 	lastLow = low
 	Lighting.GlobalShadows = not low

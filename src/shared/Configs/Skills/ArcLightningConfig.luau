@@ -7,6 +7,7 @@ local Types = require(script.Parent.Parent.Parent.Types)
 local ArcLightningConfig: Types.SkillConfig = {
 	Id = "ArcLightning",
 	Name = "Arc Lightning",
+	Kind = "Chain",
 
 	-- Баланс
 	CastRange = 60, -- макс. дистанция от кастера до первичной цели (studs)
