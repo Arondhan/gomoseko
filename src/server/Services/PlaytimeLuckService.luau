@@ -17,13 +17,14 @@ local PlaytimeLuckService = {}
 
 local joinedAt: { [Player]: number } = {}
 local lastSteps: { [Player]: number } = {}
+local offsets: { [Player]: number } = {} -- админ/тест: добавленные секунды «времени на сервере»
 local remote: RemoteEvent
 
 local config = GachaConfig.Playtime
 
 local function info(player: Player): PlaytimeMath.Info
 	local joined = joinedAt[player]
-	return PlaytimeMath.info(if joined then os.clock() - joined else 0, config)
+	return PlaytimeMath.info((if joined then os.clock() - joined else 0) + (offsets[player] or 0), config)
 end
 
 -- Полезная нагрузка для клиента
@@ -42,6 +43,11 @@ end
 -- Бонус к удаче в процентах (для GachaService.computeLuck)
 function PlaytimeLuckService.percent(player: Player): number
 	return info(player).percent
+end
+
+-- Админ/тест: прибавить игроку seconds секунд проведённого на сервере времени
+function PlaytimeLuckService.addOffset(player: Player, seconds: number)
+	offsets[player] = (offsets[player] or 0) + seconds
 end
 
 local function track(player: Player)
@@ -63,6 +69,7 @@ function PlaytimeLuckService.start()
 	Players.PlayerRemoving:Connect(function(player)
 		joinedAt[player] = nil
 		lastSteps[player] = nil
+		offsets[player] = nil
 	end)
 
 	-- раз в секунду проверяем смену шага; сообщаем клиенту только при изменении (и атрибут для отладки/UI)

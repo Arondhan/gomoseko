@@ -246,6 +246,9 @@ local function cast(player: Player, skillId: any, target: any): Types.CastResult
 	local bonuses = StatsService.get(player)
 	local castRange = config.CastRange + bonuses.CastRange
 	local cooldown = config.Cooldown * (1 - bonuses.CooldownReductionPct / 100)
+	if player:GetAttribute("Admin_NoCooldown") == true then
+		cooldown = 0 -- тестовый режим админа
+	end
 	if not InventoryService.isSkillEquipped(player, skillId) then
 		return fail("Ring not equipped")
 	end
@@ -295,7 +298,9 @@ local function cast(player: Player, skillId: any, target: any): Types.CastResult
 	end
 
 	-- мана списывается последней: только за каст, который точно состоится
-	if not PlayerStatsService.trySpend(player, config.ManaCost) then
+	if
+		player:GetAttribute("Admin_InfiniteMana") ~= true and not PlayerStatsService.trySpend(player, config.ManaCost)
+	then
 		return fail("Not enough mana")
 	end
 	playerCooldowns[skillId] = now + cooldown
@@ -334,6 +339,13 @@ local function cast(player: Player, skillId: any, target: any): Types.CastResult
 	end)
 	OnboardingService.notify(player, "CastSpell")
 	return { ok = true, castTime = config.CastTime, cooldown = cooldown }
+end
+
+-- Админ/тест: сбросить все перезарядки игрока (клиент сбрасывает свои таймеры по атрибуту CooldownReset)
+function CombatService.resetCooldowns(player: Player)
+	cooldowns[player] = nil
+	local count = player:GetAttribute("CooldownReset")
+	player:SetAttribute("CooldownReset", (if type(count) == "number" then count else 0) + 1)
 end
 
 function CombatService.start()

@@ -38,6 +38,7 @@ local Theme = {
 		Boost = Color3.fromRGB(250, 200, 30),
 		Ranks = Color3.fromRGB(60, 200, 90),
 		Settings = Color3.fromRGB(140, 150, 175),
+		Admin = Color3.fromRGB(90, 100, 130),
 	} :: { [string]: Color3 },
 
 	-- Фон панелей: вертикальный градиент сверху вниз

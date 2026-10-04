@@ -34,6 +34,8 @@ local DEFINITIONS: { [string]: string } = {
 	LuckEvent = "RemoteEvent", -- сервер -> все клиенты: LuckEventStatus (Lucky Hour начался/закончился)
 	IndexGet = "RemoteFunction", -- клиент -> сервер: () -> IndexState
 	IndexClaim = "RemoteFunction", -- клиент -> сервер: (percent: number) -> IndexClaimResponse
+	AdminGet = "RemoteFunction", -- клиент -> сервер: () -> { admin: boolean, flags: { [string]: boolean } }
+	AdminAction = "RemoteFunction", -- клиент -> сервер: (action: string, a: any, b: any) -> (ok: boolean, message: string)
 	CastCancelled = "RemoteEvent", -- сервер -> клиент кастера: (skillId: string, reason: string) — каст сорван
 }
 

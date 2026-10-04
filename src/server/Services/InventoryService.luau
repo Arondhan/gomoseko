@@ -123,6 +123,20 @@ local function unequip(player: Player, slot: any): boolean
 	return true
 end
 
+-- Админ/тест: вернуть стартовый набор колец и снять всё (для проверки Gacha, дубликатов и Index)
+function InventoryService.resetRings(player: Player)
+	local profile = DataService.get(player)
+	if not profile then
+		return
+	end
+	profile.Rings = table.clone(RingsConfig.StartingItems)
+	for slot = 1, CombatConfig.RingSlotCount do
+		profile.Equipped[slot] = EMPTY
+	end
+	StatsService.recalculate(player)
+	notify(player)
+end
+
 function InventoryService.start()
 	changedRemote = Remotes.get("InventoryChanged") :: RemoteEvent
 	local getRemote = Remotes.get("InventoryGet") :: RemoteFunction
