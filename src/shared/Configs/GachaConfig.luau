@@ -47,6 +47,15 @@ local GachaConfig = {
 		MinOneIn = 1000,
 	},
 
+	-- Index (книга колец): награды за долю найденных колец. Percent — веха, остальное — награда за получение.
+	Index = {
+		Milestones = {
+			{ Percent = 25, Crystals = 100, Essence = 0 },
+			{ Percent = 50, Crystals = 250, Essence = 100 },
+			{ Percent = 100, Crystals = 1000, Essence = 500 },
+		} :: { { Percent: number, Crystals: number, Essence: number } },
+	},
+
 	-- Ring Essence за дубликат (по качеству)
 	Essence = {
 		Common = 1,

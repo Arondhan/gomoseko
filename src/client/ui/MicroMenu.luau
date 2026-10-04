@@ -12,7 +12,7 @@ local BUTTON_SIZE = 42
 -- tooltip — общий Tooltip (ui/Tooltip): показываем название и клавишу
 function MicroMenu.build(parent: Instance, tooltip: any, options: { summon: boolean? }?)
 	local showSummon = not options or options.summon ~= false
-	local buttonCount = if showSummon then 6 else 5
+	local buttonCount = if showSummon then 7 else 6
 	local menu = Chrome.panel(parent, {
 		Name = "MicroMenu",
 		AnchorPoint = Vector2.new(1, 1),
@@ -83,7 +83,8 @@ function MicroMenu.build(parent: Instance, tooltip: any, options: { summon: bool
 		inventory = addButton("InventoryButton", 2, "I", "Inventory", Glyphs.bag),
 		shop = addButton("ShopButton", 4, "B", "Store", Glyphs.coin),
 		ranks = addButton("RanksButton", 5, "L", "Leaderboard", Glyphs.trophy),
-		settings = addButton("SettingsButton", 6, "O", "Settings", Glyphs.gear),
+		settings = addButton("SettingsButton", 7, "O", "Settings", Glyphs.gear),
+		index = addButton("IndexButton", 6, "N", "Ring Index", Glyphs.book),
 	}
 	if showSummon then
 		result.summon = addButton("SummonButton", 3, "G", "Summon", Glyphs.summon)

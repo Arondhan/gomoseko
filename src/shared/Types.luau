@@ -140,6 +140,24 @@ export type LuckEventStatus = {
 
 export type LuckBoosts = { playtime: PlaytimeLuck, event: LuckEventStatus }
 
+-- Index (книга колец)
+export type IndexMilestone = {
+	percent: number,
+	crystals: number,
+	essence: number,
+	need: number, -- сколько колец нужно для вехи
+	reached: boolean,
+	claimed: boolean,
+}
+
+export type IndexState = {
+	discovered: { string }, -- id найденных колец
+	total: number,
+	milestones: { IndexMilestone },
+}
+
+export type IndexClaimResponse = { ok: boolean, reason: string?, state: IndexState? }
+
 export type GachaRollResponse = {
 	ok: boolean,
 	reason: string?,

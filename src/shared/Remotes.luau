@@ -31,6 +31,8 @@ local DEFINITIONS: { [string]: string } = {
 	LuckBoostsGet = "RemoteFunction", -- клиент -> сервер: () -> LuckBoosts (AFK-удача + Lucky Hour)
 	PlaytimeLuck = "RemoteEvent", -- сервер -> клиент: PlaytimeLuck (шаг AFK-удачи изменился)
 	LuckEvent = "RemoteEvent", -- сервер -> все клиенты: LuckEventStatus (Lucky Hour начался/закончился)
+	IndexGet = "RemoteFunction", -- клиент -> сервер: () -> IndexState
+	IndexClaim = "RemoteFunction", -- клиент -> сервер: (percent: number) -> IndexClaimResponse
 	CastCancelled = "RemoteEvent", -- сервер -> клиент кастера: (skillId: string, reason: string) — каст сорван
 }
 

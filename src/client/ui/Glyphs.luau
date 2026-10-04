@@ -390,4 +390,46 @@ function Glyphs.trophy(parent: Instance)
 	Theme.new("UIStroke", { Color = Color3.fromRGB(80, 56, 16), Thickness = 1.5 }, base)
 end
 
+-- Книга (Index): раскрытая книга с золотым корешком и «строчками»
+function Glyphs.book(parent: Instance)
+	local z = parent:IsA("GuiObject") and parent.ZIndex + 1 or 2
+	local holder = Theme.new("Frame", {
+		Name = "Glyph",
+		AnchorPoint = Vector2.new(0.5, 0.5),
+		Position = UDim2.fromScale(0.5, 0.5),
+		Size = UDim2.fromOffset(28, 24),
+		BackgroundTransparency = 1,
+		ZIndex = z,
+	}, parent)
+	for _, side in { 0, 1 } do
+		local page = Theme.new("Frame", {
+			AnchorPoint = Vector2.new(side, 0),
+			Position = UDim2.new(side, 0, 0, 2),
+			Size = UDim2.fromOffset(13, 20),
+			BorderSizePixel = 0,
+			ZIndex = z,
+		}, holder)
+		Theme.corner(page, 3)
+		shaded(page, Color3.fromRGB(240, 228, 190), Color3.fromRGB(176, 150, 100))
+		Theme.new("UIStroke", { Color = Color3.fromRGB(80, 56, 16), Thickness = 1.5 }, page)
+		for line = 1, 3 do
+			Theme.new("Frame", {
+				Position = UDim2.fromOffset(3, 3 + line * 4),
+				Size = UDim2.fromOffset(7, 1),
+				BackgroundColor3 = Color3.fromRGB(110, 86, 50),
+				BorderSizePixel = 0,
+				ZIndex = z + 1,
+			}, page)
+		end
+	end
+	local spine = Theme.new("Frame", {
+		AnchorPoint = Vector2.new(0.5, 0),
+		Position = UDim2.fromScale(0.5, 0),
+		Size = UDim2.fromOffset(3, 24),
+		BorderSizePixel = 0,
+		ZIndex = z + 1,
+	}, holder)
+	shaded(spine, Theme.GoldLight, Theme.GoldDark)
+end
+
 return Glyphs

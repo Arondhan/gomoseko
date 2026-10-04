@@ -25,6 +25,10 @@ local GachaController = require(Controllers:WaitForChild("GachaController"))
 local SettingsController = require(Controllers:WaitForChild("SettingsController"))
 local DpsController = require(Controllers:WaitForChild("DpsController"))
 local LuckController = require(Controllers:WaitForChild("LuckController"))
+local IndexController = require(Controllers:WaitForChild("IndexController"))
+local GachaConfig = require(
+	game:GetService("ReplicatedStorage"):WaitForChild("Shared"):WaitForChild("Configs"):WaitForChild("GachaConfig")
+)
 local LightningRenderer = require(script.Parent:WaitForChild("VFX"):WaitForChild("LightningRenderer"))
 local DamageNumbers = require(script.Parent:WaitForChild("VFX"):WaitForChild("DamageNumbers"))
 local TorchFlicker = require(script.Parent:WaitForChild("VFX"):WaitForChild("TorchFlicker"))
@@ -43,6 +47,7 @@ local Shop = require(ui:WaitForChild("Shop"))
 local Summon = require(ui:WaitForChild("Summon"))
 local CurrencyBar = require(ui:WaitForChild("CurrencyBar"))
 local LuckHud = require(ui:WaitForChild("LuckHud"))
+local IndexWindow = require(ui:WaitForChild("IndexWindow"))
 local SettingsWindow = require(ui:WaitForChild("SettingsWindow"))
 local DpsMeter = require(ui:WaitForChild("DpsMeter"))
 local Leaderboard = require(ui:WaitForChild("Leaderboard"))
@@ -166,8 +171,22 @@ local summon = Summon.build(gui, {
 })
 
 -- окна и привязка к кнопкам меню
+local indexMilestones: { number } = {}
+for _, milestone in GachaConfig.Index.Milestones do
+	table.insert(indexMilestones, milestone.Percent)
+end
 local windows = {
 	{ window = character.window, button = menu.character, key = Enum.KeyCode.C },
+	{
+		window = IndexWindow.build(gui, {
+			index = IndexController,
+			tooltip = tooltip,
+			notify = notice.show,
+			milestones = indexMilestones,
+		}),
+		button = menu.index,
+		key = Enum.KeyCode.N,
+	},
 	{
 		window = Inventory.build(gui, { controller = InventoryController, tooltip = tooltip }),
 		button = menu.inventory,
@@ -216,6 +235,7 @@ end)
 
 -- кольца из состояния сервера -> иконки в слотах RingBar
 InventoryController.changed.Event:Connect(function()
+	task.spawn(IndexController.refresh) -- возможно, найдено новое кольцо
 	tooltip.hide()
 	for i = 1, ringBar.slotCount do
 		local ring = InventoryController.getRingInSlot(i)
@@ -267,6 +287,7 @@ SettingsController.start()
 InventoryController.start()
 GachaController.start()
 LuckController.start()
+IndexController.start()
 TargetController.start(notice.show)
 SkillController.start(notice.show, ringBar.press)
 LightningRenderer.start()
