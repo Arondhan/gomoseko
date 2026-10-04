@@ -7,6 +7,7 @@
 	Храм на севере (-Z), точка спавна на юге (+Z), лицом к храму.
 ]]
 
+local CollectionService = game:GetService("CollectionService")
 local InsertService = game:GetService("InsertService")
 local Lighting = game:GetService("Lighting")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -832,7 +833,7 @@ local function buildDummy(index, cf)
 	local hrp = L("HumanoidRootPart", Vector3.new(2, 2, 1), Vector3.new(0, 3, 0), C.Wood, M.Wood)
 	hrp.Transparency = 1
 	hrp.CanCollide = false
-	local torso = L("Torso", Vector3.new(2, 2, 1), Vector3.new(0, 3, 0), Color3.fromRGB(190, 120, 50), M.Fabric)
+	L("Torso", Vector3.new(2, 2, 1), Vector3.new(0, 3, 0), Color3.fromRGB(190, 120, 50), M.Fabric)
 	local head = L("Head", Vector3.new(1.4, 1.4, 1.4), Vector3.new(0, 4.7, 0), skin, M.Wood, Enum.PartType.Ball)
 	L("Left Arm", Vector3.new(1, 2, 1), Vector3.new(-1.5, 3, 0), skin, M.Wood)
 	L("Right Arm", Vector3.new(1, 2, 1), Vector3.new(1.5, 3, 0), skin, M.Wood)
@@ -858,9 +859,9 @@ local function buildDummy(index, cf)
 	hum.RequiresNeck = false
 	hum.Parent = m
 
-	local cd = Instance.new("ClickDetector")
-	cd.MaxActivationDistance = 25
-	cd.Parent = torso
+	-- тег "Enemy": по таким моделям бьют скиллы (CombatService); клонирование шаблона при респавне сохраняет тег.
+	-- ClickDetector убран: клик теперь выбирает цель (TargetController), а не бьёт манекен.
+	CollectionService:AddTag(m, "Enemy")
 
 	local gui = Instance.new("BillboardGui")
 	gui.Name = "HPBar"

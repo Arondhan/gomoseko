@@ -1,0 +1,47 @@
+--!strict
+-- Единая точка доступа к ремоутам. Сервер создаёт их в Remotes.init() (ReplicatedStorage.Remotes),
+-- клиент получает через Remotes.get(name) (ждёт появления).
+
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local RunService = game:GetService("RunService")
+
+local Remotes = {}
+
+local FOLDER_NAME = "Remotes"
+
+-- имя -> класс. Здесь же документируем направление и формат.
+local DEFINITIONS: { [string]: string } = {
+	CastSkill = "RemoteFunction", -- клиент -> сервер: (skillId: string, target: Model?) -> CastResult
+	SkillVFX = "RemoteEvent", -- сервер -> все клиенты: LightningHop
+	InventoryGet = "RemoteFunction", -- клиент -> сервер: () -> InventoryState
+	InventoryEquip = "RemoteFunction", -- клиент -> сервер: (itemId: string, slot: number) -> boolean
+	InventoryUnequip = "RemoteFunction", -- клиент -> сервер: (slot: number) -> boolean
+	InventoryChanged = "RemoteEvent", -- сервер -> клиент: InventoryState
+}
+
+-- Только сервер: создаёт папку и все ремоуты
+function Remotes.init()
+	assert(RunService:IsServer(), "Remotes.init() можно вызывать только на сервере")
+	local folder = ReplicatedStorage:FindFirstChild(FOLDER_NAME)
+	if not folder then
+		folder = Instance.new("Folder")
+		folder.Name = FOLDER_NAME
+		folder.Parent = ReplicatedStorage
+	end
+	for name, className in DEFINITIONS do
+		if not folder:FindFirstChild(name) then
+			local remote = Instance.new(className)
+			remote.Name = name
+			remote.Parent = folder
+		end
+	end
+end
+
+-- Сервер и клиент: получить ремоут (клиент ждёт, пока сервер его создаст)
+function Remotes.get(name: string): Instance
+	assert(DEFINITIONS[name], "Неизвестный ремоут: " .. name)
+	local folder = ReplicatedStorage:WaitForChild(FOLDER_NAME)
+	return folder:WaitForChild(name)
+end
+
+return Remotes
