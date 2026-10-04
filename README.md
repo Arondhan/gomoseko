@@ -104,6 +104,7 @@ rojo build default.project.json -o build/gomoseko.rbxl
 | `O`                       | Settings: volume, Low graphics, summon effects (cinematic, shake, quick roll) |
 | `G`                       | Ring Summon window (Gacha): summon ×1 / ×10, free roll, odds, auto roll       |
 | `B`                       | Store window (Robux: Summon Crystals, luck potions, passes)                   |
+| `T`                       | Rift window: enter or leave the wave arena (or use the cyan portal in the temple) |
 | `V`                       | Boost window: your luck, AFK luck, Lucky Hour timer, link to luck potions      |
 | `N`                       | Ring Index: collection book with rewards at 25 / 50 / 100 %                   |
 | `Esc`                     | close open windows and clear the target                                       |
@@ -217,6 +218,19 @@ turned off and only the free roll remains. Review the current
 - **Lucky Hour** (`LuckEventService`): every 30 minutes for 5 minutes everyone gets +1.0x luck (schedule from the unix
   clock, so all servers agree). Config: `GachaConfig.LuckEvent`. Both bonuses are free luck sources: they apply to the
   free roll too and appear in the luck breakdown and the odds table, so the shown odds stay the real ones.
+
+## Rift (endless waves)
+
+The main activity that earns Summon Crystals: enter the **Rift** (cyan portal in the temple, the Rift tile or `T`) and fight
+waves of enemies in a separate arena (`server/Hub/RiftArena.luau`). One shared run per server: the first player starts it
+(10 s lobby), others can join between and during waves; enemies get tougher with the wave and with the number of players.
+Types: Grunt, Runner (from wave 3), Brute (from wave 6) and a Titan boss every 10th wave (`Configs/RiftConfig.luau`,
+`shared/Rift/WaveMath.luau`, tested). Each cleared wave pays Crystals and Essence by your share of the damage, kills pay
+extra, and your best wave is saved (`profile.Rift.BestWave`). If you fall you keep what you earned. A wave that drags on
+for 150 s enrages the enemies. You need a ring with a skill equipped to enter (the admin menu can bypass that).
+Enemies are plain Humanoid models with a shared AI loop (`RiftEnemyAI`, straight-line movement, melee hits), tagged
+`Enemy` so every skill works on them. Admin menu: *Rift: wave 1/10/30*, *Kill Rift enemies*, *Leave Rift*.
+Balance numbers (HP, damage, rewards, timings) are all in `RiftConfig`; they are untested in play and need tuning.
 
 ## Admin menu (testing)
 

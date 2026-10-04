@@ -36,6 +36,11 @@ local DEFINITIONS: { [string]: string } = {
 	IndexClaim = "RemoteFunction", -- клиент -> сервер: (percent: number) -> IndexClaimResponse
 	AdminGet = "RemoteFunction", -- клиент -> сервер: () -> { admin: boolean, flags: { [string]: boolean } }
 	AdminAction = "RemoteFunction", -- клиент -> сервер: (action: string, a: any, b: any) -> (ok: boolean, message: string)
+	RiftState = "RemoteEvent", -- сервер -> игроки в арене: RiftState (фаза, волна, враги, таймеры)
+	RiftGet = "RemoteFunction", -- клиент -> сервер: () -> RiftInfo (состояние забега и личный рекорд)
+	RiftAction = "RemoteFunction", -- клиент -> сервер: (action: "Enter" | "Leave") -> (ok: boolean, message: string)
+	RiftResult = "RemoteEvent", -- сервер -> игрок: RiftResult (итоги забега)
+	RiftWaveReward = "RemoteEvent", -- сервер -> игрок: RiftWaveReward (награда за зачищенную волну)
 	CastCancelled = "RemoteEvent", -- сервер -> клиент кастера: (skillId: string, reason: string) — каст сорван
 }
 

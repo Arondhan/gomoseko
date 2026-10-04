@@ -29,6 +29,10 @@ local StatsService = require(Services:WaitForChild("StatsService"))
 
 local CombatService = {}
 
+-- События для систем поверх боя (Rift): Fire(player, model, damage) после удара; Fire(player, model) при убийстве
+CombatService.enemyDamaged = Instance.new("BindableEvent")
+CombatService.enemyKilled = Instance.new("BindableEvent")
+
 -- Реестр скиллов. Новый скилл = конфиг (с полем Kind) + запись здесь; поведение задаёт обработчик HANDLERS[Kind].
 local SKILLS: { [string]: Types.SkillConfig } = {
 	[ArcLightningConfig.Id] = ArcLightningConfig,
@@ -118,7 +122,9 @@ local function applyDamage(player: Player, config: Types.SkillConfig, model: Mod
 		amount = damage,
 	}
 	damageRemote:FireClient(player, damageEvent)
+	CombatService.enemyDamaged:Fire(player, model, damage)
 	if humanoid.Health <= 0 then
+		CombatService.enemyKilled:Fire(player, model)
 		PlayerStatsService.addXp(player, CombatConfig.Progression.XpPerKill)
 		CurrencyService.rewardKill(player)
 	end
