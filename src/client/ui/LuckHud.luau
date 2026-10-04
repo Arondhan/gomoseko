@@ -20,22 +20,20 @@ function LuckHud.build(parent: Instance, deps: any)
 	local tooltip = deps.tooltip
 	local notify: (string, Color3?) -> () = deps.notify
 
-	-- AFK Luck
-	local afk = Chrome.panel(parent, {
+	-- AFK Luck: строка под валютами слева внизу (текст с обводкой, без панели)
+	local afk = Chrome.label(parent, {
 		Name = "AfkLuck",
-		AnchorPoint = Vector2.new(1, 1),
-		Position = UDim2.new(1, -16, 1, -130),
-		Size = UDim2.fromOffset(290, 34),
-		Active = true,
-	}, 8)
-	local afkLabel = Chrome.label(afk, {
-		Size = UDim2.fromScale(1, 1),
+		AnchorPoint = Vector2.new(0, 1),
+		Position = UDim2.new(0, 16, 1, -14),
+		Size = UDim2.fromOffset(360, 28),
 		Text = "AFK Luck: +0.0x",
 		FontFace = Theme.Fonts.Title,
-		TextSize = Theme.TextSize.Small,
+		TextSize = Theme.TextSize.Body,
 		TextColor3 = Theme.Good,
-		ZIndex = 4,
+		TextXAlignment = Enum.TextXAlignment.Left,
+		Active = true,
 	})
+	local afkLabel = afk
 
 	local function refreshAfk()
 		local playtime = luck.getPlaytime()
@@ -71,26 +69,24 @@ function LuckHud.build(parent: Instance, deps: any)
 		tooltip.hide()
 	end)
 
-	-- Lucky Hour (баннер сверху по центру)
-	local banner = Chrome.panel(parent, {
+	-- Lucky Hour: таймер справа сверху («LUCKY HOUR IN 03:12»), во время события — зелёный «ON»
+	local banner = Chrome.label(parent, {
 		Name = "LuckyHour",
-		AnchorPoint = Vector2.new(0.5, 0),
-		Position = UDim2.new(0.5, 0, 0, 8),
-		Size = UDim2.fromOffset(380, 46),
-		Visible = false,
-	}, 10)
-	local bannerLabel = Chrome.label(banner, {
-		Size = UDim2.fromScale(1, 1),
+		AnchorPoint = Vector2.new(1, 0),
+		Position = UDim2.new(1, -16, 0, 10),
+		Size = UDim2.fromOffset(420, 40),
 		Text = "",
-		FontFace = Theme.Fonts.Banner,
+		FontFace = Theme.Fonts.Title,
 		TextSize = Theme.TextSize.Title,
-		TextColor3 = Theme.GoldLight,
-		ZIndex = 4,
+		TextColor3 = Color3.fromRGB(110, 190, 255),
+		TextXAlignment = Enum.TextXAlignment.Right,
+		Visible = false,
 	})
+	local bannerLabel = banner
 	local pulse = Theme.new("UIScale", { Scale = 1 }, banner)
 	task.spawn(function()
 		while banner.Parent do
-			TweenService:Create(pulse, TweenInfo.new(0.8, Enum.EasingStyle.Sine), { Scale = 1.04 }):Play()
+			TweenService:Create(pulse, TweenInfo.new(0.8, Enum.EasingStyle.Sine), { Scale = 1.05 }):Play()
 			task.wait(0.8)
 			TweenService:Create(pulse, TweenInfo.new(0.8, Enum.EasingStyle.Sine), { Scale = 1 }):Play()
 			task.wait(0.8)
@@ -98,13 +94,23 @@ function LuckHud.build(parent: Instance, deps: any)
 	end)
 
 	local function refreshEvent()
-		local active, remaining, percent, name = luck.getEvent()
-		if active then
-			banner.Visible = true
-			bannerLabel.Text =
-				string.format("%s  +%.1fx luck  %s", string.upper(name), percent / 100, formatTime(remaining))
-		else
+		local current = luck.getEvent()
+		if not current then
 			banner.Visible = false
+			return
+		end
+		banner.Visible = true
+		if current.active then
+			banner.TextColor3 = Theme.Good
+			bannerLabel.Text = string.format(
+				"%s! +%.1fx  %s",
+				string.upper(current.name),
+				current.percent / 100,
+				formatTime(current.remaining)
+			)
+		else
+			banner.TextColor3 = Color3.fromRGB(110, 190, 255)
+			bannerLabel.Text = string.format("%s IN %s", string.upper(current.name), formatTime(current.remaining))
 		end
 	end
 

@@ -1,5 +1,5 @@
--- Точка входа клиента: UI в стиле WoW (Dragonflight) и запуск контроллеров боя.
--- UI: фреймы игрока и цели (HP/мана), 4 слота для колец внизу по центру, меню (Инвентарь, Магазин) справа внизу.
+-- Точка входа клиента: мультяшный UI (толстый шрифт, яркие плитки меню слева) и запуск контроллеров боя.
+-- UI: фреймы игрока и цели (HP/мана), 4 слота для колец внизу по центру, меню-плитки слева, валюты слева внизу.
 -- Контроллеры: инвентарь колец, таргет, скиллы; VFX: отрисовка молнии.
 
 local Players = game:GetService("Players")
@@ -39,7 +39,8 @@ local Sounds = require(game:GetService("ReplicatedStorage"):WaitForChild("Shared
 local ui = script.Parent:WaitForChild("ui")
 local Theme = require(ui:WaitForChild("Theme"))
 local RingBar = require(ui:WaitForChild("RingBar"))
-local MicroMenu = require(ui:WaitForChild("MicroMenu"))
+local SideMenu = require(ui:WaitForChild("SideMenu"))
+local BoostWindow = require(ui:WaitForChild("BoostWindow"))
 local Inventory = require(ui:WaitForChild("Inventory"))
 local Character = require(ui:WaitForChild("Character"))
 local Drag = require(ui:WaitForChild("Drag"))
@@ -131,18 +132,19 @@ local ringBar = RingBar.build(gui, {
 		end
 	end,
 })
-local menu = MicroMenu.build(gui, tooltip)
+local menu = SideMenu.build(gui, tooltip)
 local currencyBar = CurrencyBar.build(gui, tooltip)
 local luckHud = LuckHud.build(gui, { luck = LuckController, tooltip = tooltip, notify = notice.show })
 
--- на телефоне справа внизу кнопка прыжка Roblox: переносим меню и валюты вверх вправо
+-- на телефоне слева внизу стик, справа внизу кнопка прыжка Roblox: меню уменьшаем, валюты и удачу переносим вверх вправо
 if isPhone then
-	menu.frame.AnchorPoint = Vector2.new(1, 0)
-	menu.frame.Position = UDim2.new(1, -8, 0, 64)
+	Theme.new("UIScale", { Scale = 0.8 }, menu.frame)
+	menu.frame.Position = UDim2.fromOffset(16, 160)
 	currencyBar.frame.AnchorPoint = Vector2.new(1, 0)
-	currencyBar.frame.Position = UDim2.new(1, -8, 0, 136)
+	currencyBar.frame.Position = UDim2.new(1, -8, 0, 54)
 	luckHud.afk.AnchorPoint = Vector2.new(1, 0)
-	luckHud.afk.Position = UDim2.new(1, -8, 0, 176)
+	luckHud.afk.Position = UDim2.new(1, -8, 0, 178)
+	luckHud.afk.TextXAlignment = Enum.TextXAlignment.Right
 end
 TouchButtons.build(gui, {
 	onTarget = function()
@@ -175,8 +177,18 @@ local indexMilestones: { number } = {}
 for _, milestone in GachaConfig.Index.Milestones do
 	table.insert(indexMilestones, milestone.Percent)
 end
+local inventoryWindow = Inventory.build(gui, { controller = InventoryController, tooltip = tooltip })
+local shopWindow = Shop.build(gui, { notify = notice.show, openOdds = summon.openOdds, gacha = GachaController })
+local boostWindow = BoostWindow.build(gui, {
+	gacha = GachaController,
+	luck = LuckController,
+	openStore = function()
+		shopWindow.setOpen(true)
+	end,
+})
 local windows = {
-	{ window = character.window, button = menu.character, key = Enum.KeyCode.C },
+	{ window = character.window, key = Enum.KeyCode.C },
+	{ window = inventoryWindow, key = Enum.KeyCode.I },
 	{
 		window = IndexWindow.build(gui, {
 			index = IndexController,
@@ -187,11 +199,6 @@ local windows = {
 		button = menu.index,
 		key = Enum.KeyCode.N,
 	},
-	{
-		window = Inventory.build(gui, { controller = InventoryController, tooltip = tooltip }),
-		button = menu.inventory,
-		key = Enum.KeyCode.I,
-	},
 	{ window = summon.window, button = menu.summon, key = Enum.KeyCode.G },
 	{ window = Leaderboard.build(gui, { dps = DpsController }), button = menu.ranks, key = Enum.KeyCode.L },
 	{
@@ -199,17 +206,52 @@ local windows = {
 		button = menu.settings,
 		key = Enum.KeyCode.O,
 	},
-	{
-		window = Shop.build(gui, { notify = notice.show, openOdds = summon.openOdds, gacha = GachaController }),
-		button = menu.shop,
-		key = Enum.KeyCode.B,
-	},
+	{ window = shopWindow, button = menu.shop, key = Enum.KeyCode.B },
+	{ window = boostWindow, button = menu.boost, key = Enum.KeyCode.V },
 }
 
 for _, entry in windows do
-	entry.button.click.Event:Connect(entry.window.toggle)
-	entry.window.changed.Event:Connect(entry.button.setActive)
+	if entry.button then
+		entry.button.click.Event:Connect(entry.window.toggle)
+		entry.window.changed.Event:Connect(entry.button.setActive)
+	end
 end
+
+-- «Rings» открывает персонажа (слоты) и инвентарь вместе
+menu.rings.click.Event:Connect(function()
+	local open = not (character.window.isOpen or inventoryWindow.isOpen)
+	character.window.setOpen(open)
+	inventoryWindow.setOpen(open)
+end)
+local function refreshRingsTile()
+	menu.rings.setActive(character.window.isOpen or inventoryWindow.isOpen)
+end
+character.window.changed.Event:Connect(refreshRingsTile)
+inventoryWindow.changed.Event:Connect(refreshRingsTile)
+
+-- красные точки: есть бесплатный ролл / можно забрать награду Index
+local function refreshPings()
+	local gachaState = GachaController.getState()
+	menu.summon.setPing(gachaState ~= nil and GachaController.freeRollIn() <= 0)
+	local indexState = IndexController.getState()
+	local claimable = false
+	if indexState then
+		for _, milestone in indexState.milestones do
+			if milestone.reached and not milestone.claimed then
+				claimable = true
+			end
+		end
+	end
+	menu.index.setPing(claimable)
+end
+IndexController.changed.Event:Connect(refreshPings)
+GachaController.stateChanged.Event:Connect(refreshPings)
+task.spawn(function()
+	while true do
+		refreshPings()
+		task.wait(5)
+	end
+end)
 
 -- DPS-арена: панель замера и недельная награда
 DpsMeter.build(gui, DpsController)

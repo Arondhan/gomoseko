@@ -1,34 +1,30 @@
 --!strict
--- «Хром» интерфейса в стиле WoW: объёмные золотые рамки (фаска), панели с градиентом, угловые ромбы-заклёпки,
--- внутренняя тень слотов и свечение. Все окна и слоты строятся на этих функциях — один вид везде.
+-- «Хром» интерфейса в мультяшном стиле: толстая тёмная обводка, скруглённые панели с градиентом, лёгкий
+-- светлый блик внутри рамки, внутренняя тень слотов и свечение. Все окна и слоты строятся на этих функциях.
 -- Размеры/цвета правятся здесь и в Theme.
 
 local Theme = require(script.Parent.Theme)
 
 local Chrome = {}
 
--- Золотой градиент для обводки/заливок: светлый «блик» сверху, тёмный низ
-local function goldSequence(): ColorSequence
-	return ColorSequence.new({
-		ColorSequenceKeypoint.new(0, Theme.GoldLight),
-		ColorSequenceKeypoint.new(0.45, Theme.GoldMid),
-		ColorSequenceKeypoint.new(1, Theme.GoldDark),
-	})
+-- Тёмный контур (по умолчанию); у слотов с качеством заменяется цветом качества (см. tintBevel)
+local function outlineSequence(): ColorSequence
+	return ColorSequence.new(Theme.Outline, Theme.Outline)
 end
 
--- Фаска: внешняя золотая обводка с градиентом + тонкая тёмная внутренняя линия (иллюзия толщины металла).
--- simple = true — только внешняя обводка, без вложенного фрейма BevelInner. ОБЯЗАТЕЛЬНО для объектов, внутри
+-- Обводка: толстый тёмный контур + светлая линия внутри (блик).
+-- simple = true — только внешний контур, без вложенного фрейма BevelInner. ОБЯЗАТЕЛЬНО для объектов, внутри
 -- которых лежит UIListLayout / UIGridLayout (например, Tooltip): иначе BevelInner попадает в раскладку
 -- как обычный элемент и раздувается на весь экран.
 function Chrome.bevel(frame: GuiObject, thickness: number?, radius: number?, simple: boolean?): UIStroke
-	local width = thickness or 2
+	local width = (thickness or 2) + 1
 	local stroke = Theme.new("UIStroke", {
 		Name = "Bevel",
 		Color = Color3.new(1, 1, 1),
 		Thickness = width,
 		ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
 	}, frame)
-	Theme.new("UIGradient", { Rotation = 90, Color = goldSequence() }, stroke)
+	Theme.new("UIGradient", { Rotation = 90, Color = outlineSequence() }, stroke)
 	if simple then
 		return stroke
 	end
@@ -45,9 +41,9 @@ function Chrome.bevel(frame: GuiObject, thickness: number?, radius: number?, sim
 		Theme.corner(inner, radius - 1)
 	end
 	Theme.new("UIStroke", {
-		Color = Color3.new(0, 0, 0),
-		Transparency = 0.35,
-		Thickness = 1,
+		Color = Color3.new(1, 1, 1),
+		Transparency = 0.78,
+		Thickness = 1.5,
 		ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
 	}, inner)
 	return stroke
@@ -71,32 +67,13 @@ function Chrome.panel(parent: Instance, props: { [string]: any }, radius: number
 	return frame
 end
 
--- Золотой ромб (заклёпка/орнамент)
-function Chrome.diamond(parent: Instance, size: number, position: UDim2, zIndex: number?): Frame
-	local diamond = Theme.new("Frame", {
-		Name = "Diamond",
-		AnchorPoint = Vector2.new(0.5, 0.5),
-		Position = position,
-		Size = UDim2.fromOffset(size, size),
-		Rotation = 45,
-		BackgroundColor3 = Color3.new(1, 1, 1),
-		BorderSizePixel = 0,
-		ZIndex = zIndex or 5,
-	}, parent)
-	Theme.new("UIGradient", { Rotation = 90, Color = goldSequence() }, diamond)
-	Theme.new("UIStroke", { Color = Color3.fromRGB(40, 28, 10), Thickness = 1 }, diamond)
-	return diamond
+-- Ромбы-заклёпки WoW-стиля больше не рисуются: функция оставлена для совместимости и возвращает скрытый фрейм
+function Chrome.diamond(parent: Instance, _size: number, _position: UDim2, _zIndex: number?): Frame
+	return Theme.new("Frame", { Name = "Diamond", Visible = false, Size = UDim2.new() }, parent)
 end
 
--- Ромбы по четырём углам рамки (внутри, чтобы работали и в CanvasGroup)
-function Chrome.corners(frame: GuiObject, size: number?, inset: number?)
-	local s = size or 9
-	local o = inset or 5
-	Chrome.diamond(frame, s, UDim2.new(0, o, 0, o))
-	Chrome.diamond(frame, s, UDim2.new(1, -o, 0, o))
-	Chrome.diamond(frame, s, UDim2.new(0, o, 1, -o))
-	Chrome.diamond(frame, s, UDim2.new(1, -o, 1, -o))
-end
+-- Раньше — ромбы по углам окна; в мультяшном стиле ничего не рисует
+function Chrome.corners(_frame: GuiObject, _size: number?, _inset: number?) end
 
 -- Внутренняя тень слота: сверху темно, к середине светлеет (эффект «утопленности»)
 function Chrome.inset(frame: GuiObject, radius: number?): Frame
@@ -121,12 +98,12 @@ function Chrome.inset(frame: GuiObject, radius: number?): Frame
 	return shade
 end
 
--- Слот в стиле WoW: тёмное «гнездо» с внутренней тенью и золотой фаской. Возвращает (frame, bevelStroke)
+-- Слот: тёмное «гнездо» с внутренней тенью и толстой обводкой. Возвращает (frame, bevelStroke)
 function Chrome.slot(parent: Instance, size: UDim2, radius: number?): (Frame, UIStroke)
 	local r = radius or 6
 	local frame = Theme.new("Frame", {
 		Size = size,
-		BackgroundColor3 = Color3.fromRGB(16, 17, 23),
+		BackgroundColor3 = Color3.fromRGB(26, 34, 84),
 		BorderSizePixel = 0,
 	}, parent)
 	Theme.corner(frame, r)
@@ -146,7 +123,8 @@ function Chrome.glow(frame: GuiObject, color: Color3, thickness: number?): UIStr
 	}, frame)
 end
 
--- Текст с чёрной обводкой (читается на любом фоне, как в WoW)
+-- Текст с толстой чёрной обводкой (UIStroke по контуру букв): читается на любом фоне, как на референсе.
+-- TextStrokeTransparency из props задаёт прозрачность обводки (1 — без обводки).
 function Chrome.label(parent: Instance, props: { [string]: any }): TextLabel
 	local merged: { [string]: any } = {
 		BackgroundTransparency = 1,
@@ -154,15 +132,28 @@ function Chrome.label(parent: Instance, props: { [string]: any }): TextLabel
 		TextSize = 15,
 		TextColor3 = Theme.Text,
 		TextStrokeColor3 = Color3.new(0, 0, 0),
-		TextStrokeTransparency = 0.35,
+		TextStrokeTransparency = 0,
 	}
 	for key, value in props do
 		merged[key] = value
 	end
-	return Theme.new("TextLabel", merged, parent)
+	local outline = merged.TextStrokeTransparency
+	merged.TextStrokeTransparency = 1 -- настоящую обводку рисует UIStroke ниже
+	local label = Theme.new("TextLabel", merged, parent)
+	if outline < 1 then
+		Theme.new("UIStroke", {
+			Name = "TextOutline",
+			Color = merged.TextStrokeColor3,
+			Thickness = if merged.TextSize >= 28 then 3 else 2,
+			Transparency = outline,
+			ApplyStrokeMode = Enum.ApplyStrokeMode.Contextual,
+			LineJoinMode = Enum.LineJoinMode.Round,
+		}, label)
+	end
+	return label
 end
 
--- Окрасить фаску слота в цвет качества (color = nil — вернуть золото)
+-- Окрасить обводку слота в цвет качества (color = nil — вернуть тёмный контур)
 function Chrome.tintBevel(bevel: UIStroke, color: Color3?)
 	local gradient = bevel:FindFirstChildOfClass("UIGradient")
 	if not gradient then
@@ -175,7 +166,7 @@ function Chrome.tintBevel(bevel: UIStroke, color: Color3?)
 			ColorSequenceKeypoint.new(1, color:Lerp(Color3.new(0, 0, 0), 0.55)),
 		})
 	else
-		gradient.Color = goldSequence()
+		gradient.Color = outlineSequence()
 	end
 end
 

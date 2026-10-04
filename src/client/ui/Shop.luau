@@ -98,7 +98,7 @@ function Shop.build(parent: Instance, deps: any)
 		ZIndex = 5,
 	}, window.body)
 	Theme.corner(oddsButton, 6)
-	Theme.gradient(oddsButton, 90, Color3.fromRGB(110, 84, 36), Color3.fromRGB(58, 42, 16))
+	Theme.gradient(oddsButton, 90, Theme.ButtonTop, Theme.ButtonBottom)
 	Chrome.bevel(oddsButton, 2, 6, true)
 	oddsButton.MouseButton1Click:Connect(function()
 		deps.openOdds()
@@ -209,8 +209,8 @@ function Shop.build(parent: Instance, deps: any)
 		Theme.gradient(
 			buy,
 			90,
-			if canBuy then Color3.fromRGB(110, 84, 36) else Color3.fromRGB(58, 58, 62),
-			if canBuy then Color3.fromRGB(58, 42, 16) else Color3.fromRGB(32, 32, 36)
+			if canBuy then Theme.ButtonTop else Color3.fromRGB(58, 58, 62),
+			if canBuy then Theme.ButtonBottom else Color3.fromRGB(32, 32, 36)
 		)
 		Chrome.bevel(buy, 2, 6, true)
 		buy.MouseButton1Click:Connect(function()

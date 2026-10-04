@@ -1,4 +1,4 @@
--- Фабрика окон в стиле WoW: объёмная золотая рамка с ромбами по углам, баннер заголовка,
+-- Фабрика окон в мультяшном стиле: толстая тёмная обводка, цветной баннер заголовка,
 -- кнопка закрытия, перетаскивание за заголовок, анимация открытия/закрытия.
 
 local UserInputService = game:GetService("UserInputService")
@@ -41,12 +41,12 @@ function Window.new(parent: Instance, config: { name: string, title: string, siz
 	-- баннер заголовка
 	local bar = Theme.new("Frame", {
 		Name = "TitleBar",
-		Size = UDim2.new(1, 0, 0, 40),
+		Size = UDim2.new(1, 0, 0, 46),
 		BackgroundColor3 = Color3.new(1, 1, 1),
 		BorderSizePixel = 0,
 		ZIndex = 2,
 	}, frame)
-	Theme.gradient(bar, 90, Color3.fromRGB(64, 56, 40), Color3.fromRGB(30, 27, 22))
+	Theme.gradient(bar, 90, Theme.ButtonTop, Theme.ButtonBottom)
 	local line = Theme.new("Frame", {
 		Name = "Line",
 		AnchorPoint = Vector2.new(0, 1),
@@ -69,44 +69,39 @@ function Window.new(parent: Instance, config: { name: string, title: string, siz
 		Size = UDim2.fromScale(1, 1),
 		Text = config.title,
 		FontFace = Theme.Fonts.Title,
-		TextSize = 20,
-		TextColor3 = Theme.GoldLight,
-		TextStrokeTransparency = 0,
+		TextSize = 26,
+		TextColor3 = Color3.new(1, 1, 1),
 		ZIndex = 4,
 	})
-	Chrome.diamond(bar, 8, UDim2.new(0, 16, 0.5, 0), 4)
-	Chrome.diamond(bar, 8, UDim2.new(1, -48, 0.5, 0), 4)
 
 	local close = Theme.new("TextButton", {
 		Name = "Close",
 		AnchorPoint = Vector2.new(1, 0.5),
 		Position = UDim2.new(1, -8, 0.5, 0),
-		Size = UDim2.fromOffset(26, 26),
+		Size = UDim2.fromOffset(34, 34),
 		BackgroundColor3 = Color3.new(1, 1, 1),
 		BorderSizePixel = 0,
 		Text = "X",
 		FontFace = Theme.Fonts.Numbers,
-		TextSize = 17,
-		TextColor3 = Color3.fromRGB(255, 232, 170),
+		TextSize = 22,
+		TextColor3 = Color3.new(1, 1, 1),
 		TextStrokeTransparency = 0.3,
 		ZIndex = 5,
 	}, bar)
 	Theme.corner(close, 6)
-	Theme.gradient(close, 90, Color3.fromRGB(96, 44, 36), Color3.fromRGB(44, 20, 18))
+	Theme.gradient(close, 90, Color3.fromRGB(255, 90, 80), Color3.fromRGB(200, 40, 40))
 	Chrome.bevel(close, 1.5, 6)
 	close.MouseEnter:Connect(function()
-		Theme.tween(close, 0.1, { TextColor3 = Theme.Danger })
+		Theme.tween(close, 0.1, { TextColor3 = Theme.GoldLight })
 	end)
 	close.MouseLeave:Connect(function()
-		Theme.tween(close, 0.1, { TextColor3 = Color3.fromRGB(255, 232, 170) })
+		Theme.tween(close, 0.1, { TextColor3 = Color3.new(1, 1, 1) })
 	end)
-
-	Chrome.corners(frame, 9, 7)
 
 	local body = Theme.new("Frame", {
 		Name = "Body",
-		Position = UDim2.fromOffset(0, 42),
-		Size = UDim2.new(1, 0, 1, -42),
+		Position = UDim2.fromOffset(0, 48),
+		Size = UDim2.new(1, 0, 1, -48),
 		BackgroundTransparency = 1,
 	}, frame)
 	Theme.new("UIPadding", {

@@ -55,7 +55,7 @@ local function makeButton(parent: Instance, size: UDim2, position: UDim2, title:
 		ZIndex = 5,
 	}, parent)
 	Theme.corner(button, 8)
-	local gradient = Theme.gradient(button, 90, Color3.fromRGB(110, 84, 36), Color3.fromRGB(58, 42, 16))
+	local gradient = Theme.gradient(button, 90, Theme.ButtonTop, Theme.ButtonBottom)
 	Chrome.bevel(button, 2, 8, true)
 	local glow = Chrome.glow(button, Theme.GoldLight, 3)
 
@@ -86,7 +86,7 @@ local function makeButton(parent: Instance, size: UDim2, position: UDim2, title:
 		api.enabled = enabled
 		button.Active = enabled
 		gradient.Color = if enabled
-			then ColorSequence.new(Color3.fromRGB(110, 84, 36), Color3.fromRGB(58, 42, 16))
+			then ColorSequence.new(Theme.ButtonTop, Theme.ButtonBottom)
 			else ColorSequence.new(Color3.fromRGB(58, 58, 62), Color3.fromRGB(32, 32, 36))
 		titleLabel.TextTransparency = if enabled then 0 else 0.45
 		subLabel.TextTransparency = if enabled then 0 else 0.45

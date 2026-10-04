@@ -61,7 +61,7 @@ function Leaderboard.build(parent: Instance, deps: any)
 			ZIndex = 5,
 		}, body)
 		Theme.corner(button, 6)
-		Theme.gradient(button, 90, Color3.fromRGB(110, 84, 36), Color3.fromRGB(58, 42, 16))
+		Theme.gradient(button, 90, Theme.ButtonTop, Theme.ButtonBottom)
 		Chrome.bevel(button, 2, 6, true)
 		tabButtons[tab.key] = button
 	end
