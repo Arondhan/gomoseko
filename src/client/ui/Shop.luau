@@ -11,9 +11,9 @@ local ROWS = 6
 function Shop.build(parent: Instance)
 	local window = Window.new(parent, {
 		name = "ShopWindow",
-		title = "Shop",
+		title = "Store",
 		size = UDim2.fromOffset(392, 430),
-		position = UDim2.new(0.5, 200, 0.45, 0),
+		position = UDim2.new(0.74, 0, 0.47, 0),
 	})
 
 	local list = Theme.new("ScrollingFrame", {

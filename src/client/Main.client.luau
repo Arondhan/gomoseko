@@ -17,12 +17,16 @@ local SkillController = require(Controllers:WaitForChild("SkillController"))
 local LightningRenderer = require(script.Parent:WaitForChild("VFX"):WaitForChild("LightningRenderer"))
 local DamageNumbers = require(script.Parent:WaitForChild("VFX"):WaitForChild("DamageNumbers"))
 local TorchFlicker = require(script.Parent:WaitForChild("VFX"):WaitForChild("TorchFlicker"))
+local Sfx = require(script.Parent:WaitForChild("VFX"):WaitForChild("Sfx"))
+local Sounds = require(game:GetService("ReplicatedStorage"):WaitForChild("Shared"):WaitForChild("Sounds"))
 
 local ui = script.Parent:WaitForChild("ui")
 local Theme = require(ui:WaitForChild("Theme"))
 local RingBar = require(ui:WaitForChild("RingBar"))
 local MicroMenu = require(ui:WaitForChild("MicroMenu"))
 local Inventory = require(ui:WaitForChild("Inventory"))
+local Character = require(ui:WaitForChild("Character"))
+local Drag = require(ui:WaitForChild("Drag"))
 local Shop = require(ui:WaitForChild("Shop"))
 local PlayerFrame = require(ui:WaitForChild("PlayerFrame"))
 local TargetFrame = require(ui:WaitForChild("TargetFrame"))
@@ -60,7 +64,24 @@ XpBar.build(gui)
 local castBar = CastBar.build(gui)
 local tooltip = Tooltip.build(gui, SkillController.getSkill)
 
+-- перенос кольца ИЗ слота (панель колец или окно персонажа): на другой слот — обмен, в пустоту — снять
+local function startSlotDrag(ring: any, fromSlot: number)
+	Drag.start(gui, ring, function(slot)
+		if slot == nil then
+			InventoryController.unequip(fromSlot)
+		elseif slot ~= fromSlot then
+			InventoryController.equip(ring.Id, slot)
+		end
+	end)
+end
+
 local ringBar = RingBar.build(gui, {
+	onDragStart = function(slot)
+		local ring = InventoryController.getRingInSlot(slot)
+		if ring then
+			startSlotDrag(ring, slot)
+		end
+	end,
 	onActivate = SkillController.castSlot, -- ЛКМ по слоту = нажатие его клавиши
 	onUnequip = InventoryController.unequip, -- ПКМ по слоту снимает кольцо
 	onHover = function(slot)
@@ -72,12 +93,23 @@ local ringBar = RingBar.build(gui, {
 		end
 	end,
 })
-local menu = MicroMenu.build(gui, tooltip)
+local menu = MicroMenu.build(gui, tooltip, { summon = false }) -- Summon появится вместе с Gacha
+
+local character = Character.build(gui, {
+	controller = InventoryController,
+	tooltip = tooltip,
+	startDrag = startSlotDrag,
+})
+
+-- цели переноса колец: панель колец и окно персонажа
+Drag.registerTarget({ getSlotAtPosition = ringBar.getSlotAtPosition, highlight = ringBar.highlightSlot })
+Drag.registerTarget({ getSlotAtPosition = character.getSlotAtPosition, highlight = character.highlightSlot })
 
 -- окна и привязка к кнопкам меню
 local windows = {
+	{ window = character.window, button = menu.character, key = Enum.KeyCode.C },
 	{
-		window = Inventory.build(gui, { controller = InventoryController, ringBar = ringBar, tooltip = tooltip }),
+		window = Inventory.build(gui, { controller = InventoryController, tooltip = tooltip }),
 		button = menu.inventory,
 		key = Enum.KeyCode.I,
 	},
@@ -93,7 +125,9 @@ end
 InventoryController.changed.Event:Connect(function()
 	tooltip.hide()
 	for i = 1, ringBar.slotCount do
-		ringBar.setSlot(i, InventoryController.getRingInSlot(i))
+		local ring = InventoryController.getRingInSlot(i)
+		ringBar.setSlot(i, ring)
+		character.setSlot(i, ring)
 	end
 end)
 
@@ -117,6 +151,10 @@ end)
 
 -- cast bar следует за событиями скилл-контроллера
 SkillController.castStarted.Event:Connect(castBar.start)
+-- звук начала каста (заряд молнии) — только у самого кастера
+SkillController.castStarted.Event:Connect(function()
+	Sfx.play2D(Sounds.id("ArcLightningCharge"), 0.8)
+end)
 SkillController.castFinished.Event:Connect(castBar.finish)
 SkillController.castCancelled.Event:Connect(castBar.cancel)
 

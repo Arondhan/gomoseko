@@ -81,7 +81,7 @@ Config.Lighting = {
 		Glare = 0,
 		Haze = 1.3,
 	},
-	Bloom = { Intensity = 0.55, Size = 26, Threshold = 0.95 },
+	Bloom = { Intensity = 0.35, Size = 26, Threshold = 1.6 }, -- высокий порог: светлый пол не «цветёт»
 	ColorCorrection = {
 		TintColor = Color3.fromRGB(255, 246, 236),
 		Saturation = 0.12,
@@ -104,9 +104,14 @@ Config.Lighting = {
 	-- Факелы и фонари (мерцание — client/VFX/TorchFlicker)
 	Torch = {
 		Color = Color3.fromRGB(255, 160, 80),
-		Brightness = 2.5,
+		Brightness = 1.8,
 		Range = 24,
 	},
+}
+
+-- Звук: громкость группы SFX (client/VFX/Sfx)
+Config.Audio = {
+	SfxVolume = 1,
 }
 
 Config.Dummies = {

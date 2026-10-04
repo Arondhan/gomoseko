@@ -11,20 +11,32 @@ local Window = {}
 local topZ = 1 -- общий счётчик, чтобы активное окно было поверх
 
 function Window.new(parent: Instance, config: { name: string, title: string, size: UDim2, position: UDim2 })
+	-- Корень — CanvasGroup только ради плавного GroupTransparency при открытии/закрытии.
+	-- ВАЖНО: на самом CanvasGroup нельзя вешать UIGradient — он тонирует ВСЁ содержимое (текст и иконки становятся
+	-- тёмными). Фон с градиентом лежит в отдельном дочернем фрейме "Background".
 	local frame = Theme.new("CanvasGroup", {
 		Name = config.name,
 		AnchorPoint = Vector2.new(0.5, 0.5),
 		Position = config.position,
 		Size = config.size,
-		BackgroundColor3 = Color3.new(1, 1, 1),
+		BackgroundTransparency = 1,
 		BorderSizePixel = 0,
 		Visible = false,
 		GroupTransparency = 1,
 	}, parent)
 	Theme.corner(frame, 10)
-	Theme.gradient(frame, 90, Theme.PanelTop, Theme.PanelBottom)
 	Chrome.bevel(frame, 3, 10)
 	local scale = Theme.new("UIScale", { Name = "Scale", Scale = 0.94 }, frame)
+
+	local background = Theme.new("Frame", {
+		Name = "Background",
+		Size = UDim2.fromScale(1, 1),
+		BackgroundColor3 = Color3.new(1, 1, 1),
+		BorderSizePixel = 0,
+		ZIndex = 0,
+	}, frame)
+	Theme.corner(background, 10)
+	Theme.gradient(background, 90, Theme.PanelTop, Theme.PanelBottom)
 
 	-- баннер заголовка
 	local bar = Theme.new("Frame", {
@@ -34,7 +46,7 @@ function Window.new(parent: Instance, config: { name: string, title: string, siz
 		BorderSizePixel = 0,
 		ZIndex = 2,
 	}, frame)
-	Theme.gradient(bar, 90, Color3.fromRGB(54, 48, 36), Color3.fromRGB(24, 22, 20))
+	Theme.gradient(bar, 90, Color3.fromRGB(64, 56, 40), Color3.fromRGB(30, 27, 22))
 	local line = Theme.new("Frame", {
 		Name = "Line",
 		AnchorPoint = Vector2.new(0, 1),
@@ -51,6 +63,7 @@ function Window.new(parent: Instance, config: { name: string, title: string, siz
 			ColorSequenceKeypoint.new(1, Theme.GoldDark),
 		}),
 	}, line)
+	-- заголовок: обычный TextLabel (градиентов выше по иерархии у него нет), светлое золото с тёмной обводкой
 	Chrome.label(bar, {
 		Name = "Title",
 		Size = UDim2.fromScale(1, 1),
@@ -58,8 +71,8 @@ function Window.new(parent: Instance, config: { name: string, title: string, siz
 		FontFace = Theme.Fonts.Title,
 		TextSize = 20,
 		TextColor3 = Theme.GoldLight,
-		TextStrokeTransparency = 0.2,
-		ZIndex = 3,
+		TextStrokeTransparency = 0,
+		ZIndex = 4,
 	})
 	Chrome.diamond(bar, 8, UDim2.new(0, 16, 0.5, 0), 4)
 	Chrome.diamond(bar, 8, UDim2.new(1, -48, 0.5, 0), 4)
@@ -73,18 +86,19 @@ function Window.new(parent: Instance, config: { name: string, title: string, siz
 		BorderSizePixel = 0,
 		Text = "X",
 		FontFace = Theme.Fonts.Numbers,
-		TextSize = 14,
-		TextColor3 = Theme.GoldLight,
-		ZIndex = 4,
+		TextSize = 15,
+		TextColor3 = Color3.fromRGB(255, 232, 170),
+		TextStrokeTransparency = 0.3,
+		ZIndex = 5,
 	}, bar)
 	Theme.corner(close, 6)
-	Theme.gradient(close, 90, Color3.fromRGB(70, 36, 30), Color3.fromRGB(30, 16, 14))
+	Theme.gradient(close, 90, Color3.fromRGB(96, 44, 36), Color3.fromRGB(44, 20, 18))
 	Chrome.bevel(close, 1.5, 6)
 	close.MouseEnter:Connect(function()
 		Theme.tween(close, 0.1, { TextColor3 = Theme.Danger })
 	end)
 	close.MouseLeave:Connect(function()
-		Theme.tween(close, 0.1, { TextColor3 = Theme.GoldLight })
+		Theme.tween(close, 0.1, { TextColor3 = Color3.fromRGB(255, 232, 170) })
 	end)
 
 	Chrome.corners(frame, 9, 7)
