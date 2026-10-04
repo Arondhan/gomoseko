@@ -1,0 +1,20 @@
+#:schema https://raw.githubusercontent.com/jackTabsCode/asphalt/refs/heads/main/schema.json
+
+# Заливка ассетов в Roblox: `rokit add jacktabscode/asphalt`, затем (ключ Open Cloud с правами asset:read и asset:write):
+#   PowerShell:  $env:ASPHALT_API_KEY = "<ваш ключ>"; asphalt sync
+#   bash:        ASPHALT_API_KEY=<ваш ключ> asphalt sync
+# Asphalt загрузит файлы из assets/ и сгенерирует src/shared/Assets.luau с rbxassetid://..., а также asphalt.lock.toml
+# (его нужно коммитить). Ключ нигде не сохраняйте и никому не присылайте.
+
+[creator]
+type = "user"
+id = 0 # <-- ВПИШИТЕ свой Roblox UserId (или поменяйте на type = "group" и id группы)
+
+[codegen]
+style = "flat"
+strip_extensions = true
+
+[inputs.assets]
+path = "assets/**/*"
+output_path = "src/shared"
+output_basename = "Assets"

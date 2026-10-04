@@ -4,6 +4,7 @@
 -- свечение при наведении и вспышка при нажатии. Логики здесь нет — действия уходят через hooks (см. Main.client).
 
 local Chrome = require(script.Parent.Chrome)
+local Drag = require(script.Parent.Drag)
 local RadialCooldown = require(script.Parent.RadialCooldown)
 local RingIcon = require(script.Parent.RingIcon)
 local Theme = require(script.Parent.Theme)
@@ -34,6 +35,7 @@ export type Hooks = {
 	onActivate: ((slot: number) -> ())?,
 	onUnequip: ((slot: number) -> ())?,
 	onHover: ((slot: number?) -> ())?,
+	onDragStart: ((slot: number) -> ())?, -- зажали и потащили кольцо из слота
 }
 
 function RingBar.build(parent: Instance, hooks: Hooks?)
@@ -158,6 +160,14 @@ function RingBar.build(parent: Instance, hooks: Hooks?)
 		hit.MouseButton2Click:Connect(function()
 			if callbacks.onUnequip then
 				callbacks.onUnequip(i)
+			end
+		end)
+		-- перенос кольца из слота (обмен слотов / снять): сам перенос запускает Main через onDragStart
+		Drag.makeSource(hit, function()
+			return if slot.icon then true else nil
+		end, function()
+			if callbacks.onDragStart then
+				callbacks.onDragStart(i)
 			end
 		end)
 	end

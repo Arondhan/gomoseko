@@ -103,4 +103,77 @@ function Glyphs.coin(parent: Instance)
 	Theme.new("UIStroke", { Color = Color3.fromRGB(110, 74, 16), Thickness = 1.5 }, inner)
 end
 
+-- Персонаж: голова, плечи и торс (силуэт как на кнопке Character в WoW)
+function Glyphs.character(parent: Instance)
+	local z = parent:IsA("GuiObject") and parent.ZIndex + 1 or 2
+	local holder = Theme.new("Frame", {
+		Name = "Glyph",
+		AnchorPoint = Vector2.new(0.5, 0.5),
+		Position = UDim2.fromScale(0.5, 0.54),
+		Size = UDim2.fromOffset(26, 26),
+		BackgroundTransparency = 1,
+		ZIndex = z,
+	}, parent)
+
+	local shoulders = Theme.new("Frame", {
+		AnchorPoint = Vector2.new(0.5, 1),
+		Position = UDim2.fromScale(0.5, 1),
+		Size = UDim2.fromOffset(24, 13),
+		BorderSizePixel = 0,
+		ZIndex = z,
+	}, holder)
+	Theme.corner(shoulders, 8)
+	shaded(shoulders, Color3.fromRGB(176, 150, 110), Color3.fromRGB(104, 84, 56))
+	Theme.new("UIStroke", { Color = Color3.fromRGB(50, 36, 20), Thickness = 1.5 }, shoulders)
+
+	local head = Theme.new("Frame", {
+		AnchorPoint = Vector2.new(0.5, 0),
+		Position = UDim2.fromScale(0.5, 0),
+		Size = UDim2.fromOffset(12, 12),
+		BorderSizePixel = 0,
+		ZIndex = z + 1,
+	}, holder)
+	Theme.corner(head, 6)
+	shaded(head, Color3.fromRGB(236, 206, 164), Color3.fromRGB(176, 140, 100))
+	Theme.new("UIStroke", { Color = Color3.fromRGB(50, 36, 20), Thickness = 1.5 }, head)
+
+	local belt = Theme.new("Frame", {
+		AnchorPoint = Vector2.new(0.5, 1),
+		Position = UDim2.new(0.5, 0, 1, -2),
+		Size = UDim2.fromOffset(10, 3),
+		BorderSizePixel = 0,
+		ZIndex = z + 1,
+	}, holder)
+	shaded(belt, Theme.GoldLight, Theme.GoldDark)
+end
+
+-- Призыв: фиолетовый светящийся орб с золотым ободком и искрой
+function Glyphs.summon(parent: Instance)
+	local z = parent:IsA("GuiObject") and parent.ZIndex + 1 or 2
+	local orb = Theme.new("Frame", {
+		Name = "Glyph",
+		AnchorPoint = Vector2.new(0.5, 0.5),
+		Position = UDim2.fromScale(0.5, 0.5),
+		Size = UDim2.fromOffset(24, 24),
+		BorderSizePixel = 0,
+		ZIndex = z,
+	}, parent)
+	Theme.corner(orb, 12)
+	shaded(orb, Color3.fromRGB(190, 120, 255), Color3.fromRGB(70, 30, 140))
+	local rim = Theme.new("UIStroke", { Color = Color3.new(1, 1, 1), Thickness = 2 }, orb)
+	Theme.new("UIGradient", { Rotation = 60, Color = ColorSequence.new(Theme.GoldLight, Theme.GoldDark) }, rim)
+
+	local spark = Theme.new("Frame", {
+		AnchorPoint = Vector2.new(0.5, 0.5),
+		Position = UDim2.fromScale(0.36, 0.34),
+		Size = UDim2.fromOffset(6, 6),
+		BackgroundColor3 = Color3.new(1, 1, 1),
+		BackgroundTransparency = 0.15,
+		BorderSizePixel = 0,
+		Rotation = 45,
+		ZIndex = z + 1,
+	}, orb)
+	Theme.corner(spark, 1)
+end
+
 return Glyphs

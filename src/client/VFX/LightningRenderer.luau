@@ -11,6 +11,8 @@ local Workspace = game:GetService("Workspace")
 local Shared = ReplicatedStorage:WaitForChild("Shared")
 local Types = require(Shared:WaitForChild("Types"))
 local Remotes = require(Shared:WaitForChild("Remotes"))
+local Sounds = require(Shared:WaitForChild("Sounds"))
+local Sfx = require(script.Parent:WaitForChild("Sfx"))
 local ArcLightningConfig =
 	require(Shared:WaitForChild("Configs"):WaitForChild("Skills"):WaitForChild("ArcLightningConfig"))
 
@@ -138,14 +140,11 @@ local function playHop(hop: Types.LightningHop)
 
 	impactEffect(anchor, hop.to, config)
 
+	-- звук разряда в точке попадания (последний Attachment ломаной); ID из конфига скилла или из Assets (Asphalt)
 	local lifetime = config.FadeTime
-	if config.SoundId ~= "" then
-		local sound = Instance.new("Sound")
-		sound.SoundId = config.SoundId
-		sound.Volume = config.SoundVolume
-		sound.RollOffMaxDistance = 150
-		sound.Parent = anchor
-		sound:Play()
+	local zapId = if config.SoundId ~= "" then config.SoundId else Sounds.id("ArcLightningZap")
+	if zapId ~= "" then
+		Sfx.play3D(zapId, attachments[#attachments], config.SoundVolume)
 		lifetime = math.max(lifetime, SOUND_LIFETIME) -- якорь живёт, пока доиграет звук
 	end
 

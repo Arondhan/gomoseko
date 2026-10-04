@@ -91,11 +91,14 @@ local function equip(player: Player, itemId: any, slot: any): boolean
 		return false
 	end
 	-- кольцо не может быть надето в двух слотах сразу: переносим
+	-- если целевой слот занят, а кольцо уже надето в другом слоте — меняем их местами
+	local target = slot :: number
 	local old = slotIndexOf(state, itemId)
+	local displaced = state.equipped[target]
 	if old then
-		state.equipped[old] = EMPTY
+		state.equipped[old] = if old ~= target and displaced ~= EMPTY then displaced else EMPTY
 	end
-	state.equipped[slot :: number] = itemId
+	state.equipped[target] = itemId
 	notify(player)
 	return true
 end

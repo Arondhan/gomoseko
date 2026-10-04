@@ -1,10 +1,12 @@
--- Окно «Инвентарь»: сетка 6x5 как сумка WoW — слоты-«гнёзда» с рамкой цвета качества у предметов, метка слота
--- у надетых колец и строка золота. Кольцо надевается ПКМ (в первый свободный слот; повторный ПКМ — снять)
--- или перетаскиванием на слот RingBar. Данные берутся из InventoryController (сервер — источник правды).
+-- Окно «Inventory»: сетка 6x5 как сумка WoW — слоты-«гнёзда» с рамкой цвета качества у предметов, метка слота
+-- у надетых колец, счётчик ячеек и строка золота. Кольцо надевается ПКМ (в первый свободный слот; повторный ПКМ —
+-- снять) или перетаскиванием на слот панели колец / окна персонажа (ui/Drag).
+-- Данные берутся из InventoryController (сервер — источник правды).
 
-local UserInputService = game:GetService("UserInputService")
+local Players = game:GetService("Players")
 
 local Chrome = require(script.Parent.Chrome)
+local Drag = require(script.Parent.Drag)
 local Glyphs = require(script.Parent.Glyphs)
 local RingIcon = require(script.Parent.RingIcon)
 local Theme = require(script.Parent.Theme)
@@ -14,26 +16,32 @@ local Inventory = {}
 
 local CELLS = 30
 local CELL_SIZE = 48
-local DRAG_SIZE = 56
+local CELL_GAP = 6
 
--- deps: { controller = InventoryController, ringBar = RingBar.build(...), tooltip = Tooltip.build(...) }
+-- deps: { controller = InventoryController, tooltip = Tooltip.build(...) }
 function Inventory.build(parent: Instance, deps: any)
 	local controller = deps.controller
-	local ringBar = deps.ringBar
 	local tooltip = deps.tooltip
+	local player = Players.LocalPlayer
 
+	-- ширина: 6 ячеек + отступы окна; высота: заголовок + 5 рядов + строка золота
+	local gridWidth = 6 * CELL_SIZE + 5 * CELL_GAP
+	local gridHeight = 5 * CELL_SIZE + 4 * CELL_GAP
 	local window = Window.new(parent, {
 		name = "InventoryWindow",
 		title = "Inventory",
-		size = UDim2.fromOffset(384, 420),
-		position = UDim2.new(0.5, -200, 0.45, 0),
+		size = UDim2.fromOffset(gridWidth + 28, 42 + 12 + gridHeight + 8 + 28 + 14),
+		position = UDim2.new(0.5, 0, 0.47, 0),
 	})
 
-	local grid =
-		Theme.new("Frame", { Name = "Grid", Size = UDim2.new(1, 0, 1, -34), BackgroundTransparency = 1 }, window.body)
+	local grid = Theme.new("Frame", {
+		Name = "Grid",
+		Size = UDim2.new(1, 0, 0, gridHeight),
+		BackgroundTransparency = 1,
+	}, window.body)
 	Theme.new("UIGridLayout", {
 		CellSize = UDim2.fromOffset(CELL_SIZE, CELL_SIZE),
-		CellPadding = UDim2.fromOffset(6, 6),
+		CellPadding = UDim2.fromOffset(CELL_GAP, CELL_GAP),
 		HorizontalAlignment = Enum.HorizontalAlignment.Center,
 		SortOrder = Enum.SortOrder.LayoutOrder,
 	}, grid)
@@ -45,18 +53,34 @@ function Inventory.build(parent: Instance, deps: any)
 		cell.LayoutOrder = i
 		cells[i] = cell
 		cellBevels[i] = bevel
+		local glow = Chrome.glow(cell, Theme.GoldLight, 2)
+		cell.MouseEnter:Connect(function()
+			Theme.tween(glow, 0.1, { Transparency = 0.55 })
+		end)
+		cell.MouseLeave:Connect(function()
+			Theme.tween(glow, 0.1, { Transparency = 1 })
+		end)
 	end
 
-	-- строка золота: монета + сумма
-	local goldRow = Theme.new("Frame", {
-		Name = "Gold",
+	-- нижняя строка: счётчик ячеек слева, золото справа (монета + сумма)
+	local footer = Theme.new("Frame", {
+		Name = "Footer",
 		AnchorPoint = Vector2.new(0, 1),
 		Position = UDim2.fromScale(0, 1),
 		Size = UDim2.new(1, 0, 0, 28),
 		BackgroundTransparency = 1,
 	}, window.body)
-	Chrome.label(goldRow, {
-		Size = UDim2.new(1, -30, 1, 0),
+	local countLabel = Chrome.label(footer, {
+		Size = UDim2.fromScale(0.5, 1),
+		Text = "0 / " .. CELLS,
+		TextSize = 14,
+		TextColor3 = Theme.Muted,
+		FontFace = Theme.Fonts.Body,
+		TextXAlignment = Enum.TextXAlignment.Left,
+	})
+	local goldLabel = Chrome.label(footer, {
+		Position = UDim2.fromScale(0.5, 0),
+		Size = UDim2.new(0.5, -30, 1, 0),
 		Text = "0",
 		FontFace = Theme.Fonts.Numbers,
 		TextSize = 16,
@@ -68,42 +92,20 @@ function Inventory.build(parent: Instance, deps: any)
 		Position = UDim2.new(1, 0, 0.5, 0),
 		Size = UDim2.fromOffset(26, 26),
 		BackgroundTransparency = 1,
-	}, goldRow)
+	}, footer)
 	Glyphs.coin(coinHolder)
 
-	-- перетаскивание кольца на слот RingBar
+	-- золото живёт в атрибуте Player.Gold (его ведёт сервер); пока атрибута нет — 0
+	local function refreshGold()
+		local gold = player:GetAttribute("Gold")
+		goldLabel.Text = tostring(if type(gold) == "number" then gold else 0)
+	end
+	player:GetAttributeChangedSignal("Gold"):Connect(refreshGold)
+	refreshGold()
+
+	-- перетаскивание кольца на слот (панель колец или окно персонажа)
 	local function startDrag(ring: any)
-		local ghost = Theme.new("Frame", {
-			Name = "DragGhost",
-			AnchorPoint = Vector2.new(0.5, 0.5),
-			Size = UDim2.fromOffset(DRAG_SIZE, DRAG_SIZE),
-			BackgroundTransparency = 1,
-			ZIndex = 200,
-		}, parent)
-		RingIcon.new(ghost, ring)
-
-		local function place()
-			local mouse = UserInputService:GetMouseLocation()
-			ghost.Position = UDim2.fromOffset(mouse.X, mouse.Y)
-			ringBar.highlightSlot(ringBar.getSlotAtPosition(mouse))
-		end
-		place()
-
-		local moveConnection, endConnection
-		moveConnection = UserInputService.InputChanged:Connect(function(input)
-			if input.UserInputType == Enum.UserInputType.MouseMovement then
-				place()
-			end
-		end)
-		endConnection = UserInputService.InputEnded:Connect(function(input)
-			if input.UserInputType ~= Enum.UserInputType.MouseButton1 then
-				return
-			end
-			moveConnection:Disconnect()
-			endConnection:Disconnect()
-			local slot = ringBar.getSlotAtPosition(UserInputService:GetMouseLocation())
-			ringBar.highlightSlot(nil)
-			ghost:Destroy()
+		Drag.start(parent, ring, function(slot)
 			if slot then
 				controller.equip(ring.Id, slot)
 			end
@@ -130,7 +132,9 @@ function Inventory.build(parent: Instance, deps: any)
 		end
 		tooltip.hide()
 
-		for index, ring in controller.getItems() do
+		local items = controller.getItems()
+		countLabel.Text = #items .. " / " .. CELLS
+		for index, ring in items do
 			local cell = cells[index]
 			if not cell then
 				break
@@ -171,11 +175,11 @@ function Inventory.build(parent: Instance, deps: any)
 			item.MouseButton2Click:Connect(function()
 				equipOrUnequip(ring)
 			end)
-			item.InputBegan:Connect(function(input)
-				if input.UserInputType == Enum.UserInputType.MouseButton1 then
-					tooltip.hide()
-					startDrag(ring)
-				end
+			Drag.makeSource(item, function()
+				return ring
+			end, function()
+				tooltip.hide()
+				startDrag(ring)
 			end)
 		end
 	end
